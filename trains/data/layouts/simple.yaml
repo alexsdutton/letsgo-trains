@@ -1,0 +1,59 @@
+runs:
+  - - piece: curve
+      placement:
+        x: 0
+        y: 0
+        angle: 0
+    - piece: straight
+    - piece: straight
+    - piece: points
+      anchors:
+        branch: branchAnchor
+      direction: right
+      state: out
+    - piece: points
+      anchors:
+        branch: branchAnchor
+      direction: left
+      state: branch
+    - piece: curve
+    - piece: curve
+    - piece: curve
+      direction: right
+  - - piece: straight
+      anchors:
+        in: branchAnchor
+    - piece: straight
+    - piece: crossover
+      anchors:
+        right: crossoverRight
+    - piece: straight
+    - piece: straight
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: curve
+      direction: right
+    - piece: straight
+    - piece: straight
+      anchors:
+        out: crossoverRight

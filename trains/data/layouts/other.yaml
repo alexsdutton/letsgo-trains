@@ -1,0 +1,66 @@
+runs:
+  - - piece: straight
+      count: 6
+      anchors:
+        in: outerJoin
+    - piece: curve
+      count: 4
+    - piece: straight
+      count: 2
+    - piece: crossover
+      anchors:
+        right: crossoverLeft
+    - piece: curve
+      count: 4
+    - piece: points
+      direction: left
+      state: branch
+      anchors:
+        branch: outerBranch
+      placement:
+        x: 0
+        y: 0
+        angle: 0
+    - piece: straight
+      count: 4
+    - piece: curve
+      count: 3
+    - piece: curve
+      id: trainHerePlease
+    - piece: straight
+      count: 3
+    - piece: curve
+      count: 4
+      anchors:
+        out: outerJoin
+  - - piece: straight
+      anchors:
+        in: outerBranch
+        out: innerBranch
+  - - piece: points
+      anchors:
+        in: innerJoin
+        branch: innerBranch
+    - piece: straight
+      count: 2
+    - piece: curve
+      direction: right
+      count: 8
+    - piece: straight
+      count: 4
+    - piece: curve
+      direction: right
+      count: 8
+      anchors:
+        out: innerJoin
+
+  - - piece: straight
+      anchors:
+        in: crossoverLeft
+
+trains:
+  - carriage_lengths: [32, 24, 32]
+    position:
+      piece_id: trainHerePlease
+      anchor_name: in
+      offset: 4
