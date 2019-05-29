@@ -5,7 +5,7 @@ import pkg_resources
 import yaml
 from cairo import Context
 
-from trains.drawing import DrawnPiece
+from trains.drawing import DrawnPiece, hex_to_rgb
 from trains.layout import Layout
 from trains.track import Straight, Curve, TrackPiece
 
@@ -145,7 +145,8 @@ class LayoutDrawer:
                 cr.translate(front_bogey_xy[0], front_bogey_xy[1])
                 cr.rotate(math.pi + math.atan2(front_bogey_xy[1] - rear_bogey_xy[1],
                                                front_bogey_xy[0] - rear_bogey_xy[0]))
-                cr.set_source_rgb(1, 0, 0)
+
+                cr.set_source_rgb(*hex_to_rgb(train.meta.get('color', '#a0a0ff')))
 
                 cr.set_line_width(4)
                 cr.move_to(-front_bogey_offset, 0)
