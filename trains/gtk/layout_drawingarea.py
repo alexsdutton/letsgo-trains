@@ -102,24 +102,28 @@ class LayoutDrawer:
         relative_positions = drawn_piece.relative_positions()
 
         for anchor_name, anchor in piece.anchors.items():
-            if anchor_name != piece.anchor_names[0]:
-                cr.save()
+            next_piece, next_anchor_name = anchor.next(piece)
+            cr.save()
+
+            if anchor_name in relative_positions:
                 cr.translate(relative_positions[anchor_name].x, relative_positions[anchor_name].y)
                 cr.rotate(relative_positions[anchor_name].angle)
-                next_piece, next_anchor_name = anchor.next(piece)
-                if next_piece and next_piece not in seen_pieces:
-                    if next_anchor_name != next_piece.anchor_names[0]:
-                        next_drawn_piece = DrawnPiece.for_piece(next_piece)
-                        next_position = next_drawn_piece.relative_positions()[next_anchor_name]
-                        cr.rotate(-next_position.angle + math.pi)
-                        cr.translate(-next_position.x, -next_position.y)
-                    self.draw_piece(next_piece, seen_pieces, cr)
+            else:
+                cr.rotate(math.pi)
 
-                cr.set_source_rgb(1, .5, .5)
-                cr.arc(0, 0, 1, 0, math.tau)
-                cr.fill()
+            if next_piece and next_piece not in seen_pieces:
+                if next_anchor_name != next_piece.anchor_names[0]:
+                    next_drawn_piece = DrawnPiece.for_piece(next_piece)
+                    next_position = next_drawn_piece.relative_positions()[next_anchor_name]
+                    cr.rotate(-next_position.angle + math.pi)
+                    cr.translate(-next_position.x, -next_position.y)
+                self.draw_piece(next_piece, seen_pieces, cr)
 
-                cr.restore()
+            cr.set_source_rgb(1, .5, .5)
+            cr.arc(0, 0, 1, 0, math.tau)
+            cr.fill()
+
+            cr.restore()
 
     def transform_track_point(self, track_point):
         drawn_piece = DrawnPiece.for_piece(track_point.piece)
