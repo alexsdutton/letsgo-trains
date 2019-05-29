@@ -27,12 +27,12 @@ class LayoutDrawer:
         self.mouse_down = None
         self.layout = layout
 
-        GObject.timeout_add(50, self.move_trains)
+        GObject.timeout_add(20, self.move_trains)
 
     def move_trains(self):
         print("Moving trains")
         for train in self.layout.trains:
-            train.move(2)
+            train.move(1)
 
         ## This invalidates the screen, causing the expose event to fire.
         alloc = self.drawing_area.get_allocation()
