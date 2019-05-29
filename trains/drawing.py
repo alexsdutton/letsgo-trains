@@ -23,11 +23,7 @@ for hc in HexColors:
     setattr(Colors, hc.name, (int(hc.value[1:3], 16) / 255,
                               int(hc.value[3:5], 16) / 255,
                               int(hc.value[5:7], 16) / 255))
-#
-# Colors = type('Colors', (enum.Enum,), {
-#     hc.name: [int(hc.value[i:i+2], 16) for i in (1, 3, 5)]
-#     for hc in HexColors
-# })
+
 
 class DrawnPieceMeta(type):
     def __new__(mcs, name, bases, attrs):
