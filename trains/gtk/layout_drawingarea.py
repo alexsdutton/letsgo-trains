@@ -1,4 +1,5 @@
 import math
+import random
 
 import gi
 import pkg_resources
@@ -39,6 +40,10 @@ class LayoutDrawer:
         rect = Gdk.Rectangle(alloc.x, alloc.y, alloc.width, alloc.height)
 #        self.drawing_area.get_toplevel().invalidate_rect(rect, True)
         self.drawing_area.queue_draw_area(alloc.x, alloc.y, alloc.width, alloc.height)
+
+        for points in self.layout.points:
+            if random.random() < 0.01:
+                points.state = 'out' if points.state == 'branch' else 'branch'
 
         return True
 

@@ -58,6 +58,12 @@ class Layout:
             if piece.placement:
                 yield piece
 
+    @property
+    def points(self):
+        for piece in self.pieces:
+            if isinstance(piece, track.Points):
+                yield piece
+
     def to_yaml(self):
         remaining_pieces = set(self)
 
