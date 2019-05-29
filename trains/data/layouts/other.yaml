@@ -41,6 +41,7 @@ runs:
       anchors:
         in: innerJoin
         branch: innerBranch
+      state: branch
     - piece: straight
       count: 2
     - piece: curve
@@ -57,9 +58,15 @@ runs:
   - - piece: straight
       anchors:
         in: crossoverLeft
-
 trains:
-  - carriage_lengths: [32, 24, 32]
+  - cars:
+    - length: 33
+      bogey_offsets: [12, 26]
+      nose: circular
+    - length: 26
+      bogey_offsets: [5, 21]
+    - length: 26
+      bogey_offsets: [5, 21]
     position:
       piece_id: trainHerePlease
       anchor_name: in
