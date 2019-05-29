@@ -1,6 +1,8 @@
 import uuid
+from numbers import Number
 from typing import Optional, List
 
+from trains.train_controller import TrainController
 from . import track
 
 
@@ -35,7 +37,9 @@ class TrackPoint:
 
     def _sub(self, piece, anchor_name, offset):
         anchor_name, anchor_distance = piece.available_traversal(anchor_name)
-        return self._add(piece, anchor_name, anchor_distance + offset)
+        piece, anchor_name, offset = self._add(piece, anchor_name, anchor_distance + offset)
+        anchor_name, anchor_distance = piece.available_traversal(anchor_name)
+        return piece, anchor_name, anchor_distance - offset
 
     def __sub__(self, distance):
         return TrackPoint(*self._sub(self.piece, self.anchor_name, distance - self.offset))
@@ -48,14 +52,27 @@ class TrackPoint:
         return f'TrackPoint({self.piece} {self.anchor_name} {self.offset})'
 
 
+class Car:
+    def __init__(self, length: Number, bogey_offsets: List[Number], nose='vestibule', tail='vestibule'):
+        self.length = length
+        self.bogey_offsets = bogey_offsets
+
+
 class Train:
     def __init__(self,
-                 carriage_lengths: List[int],
+                 cars: List[Car],
                  position: Optional[TrackPoint]=None,
                  meta: Optional[dict]=None,
-                 id: str=None):
-        self.carriage_lengths = carriage_lengths
+                 id: str=None,
+                 controller: TrainController=None):
+        self.cars = cars
         self.position = position
-        self.length = sum(carriage_lengths) + 2 * (len(carriage_lengths) - 1)
+        self.length = sum(car.length for car in cars) + 2 * (len(cars) - 1)
+        self.rear_position = self.position - self.length
+        self.rear_position -= 0
         self.meta = meta or {}
         self.id = id or str(uuid.uuid4())
+
+    def move(self, distance):
+        self.position += distance
+        self.rear_position += distance

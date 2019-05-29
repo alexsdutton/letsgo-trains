@@ -1,5 +1,5 @@
 from trains import track
-from trains.train import Train, TrackPoint
+from trains.train import Train, TrackPoint, Car
 
 
 class Layout:
@@ -46,6 +46,7 @@ class Layout:
                 train_object['position'] = TrackPoint(pieces_by_id[position['piece_id']],
                                                       position['anchor_name'],
                                                       position.get('offset', 0))
+            train_object['cars'] = [Car(**car) for car in train_object['cars']]
             train = Train(**train_object)
             trains.append(train)
 

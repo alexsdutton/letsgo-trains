@@ -18,8 +18,8 @@ class TrackPointTestCase(unittest.TestCase):
         track_point = TrackPoint(piece, 'in', 3)
         track_point -= 2
         self.assertEqual(piece, track_point.piece)
-        self.assertEqual('out', track_point.anchor_name)
-        self.assertEqual(15, track_point.offset)
+        self.assertEqual('in', track_point.anchor_name)
+        self.assertEqual(1, track_point.offset)
 
     def test_forward_across_one_piece_with_nowhere_to_go(self):
         piece = track.Straight()

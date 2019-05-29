@@ -83,6 +83,12 @@ class DrawnStraight(DrawnPiece):
             'out': Position(self.piece.length, 0, 0),
         }
 
+    def point_position(self, in_anchor, offset):
+        if in_anchor == 'in':
+            return offset, 0
+        elif in_anchor == 'out':
+            return self.piece.length - offset, 0
+
 
 class DrawnCrossover(DrawnPiece):
     name = 'crossover'
@@ -136,6 +142,16 @@ class DrawnCrossover(DrawnPiece):
             'left': Position(self.piece.length / 2, -self.piece.length / 2, -math.pi / 2),
             'right': Position(self.piece.length / 2, self.piece.length / 2, math.pi / 2),
         }
+
+    def point_position(self, in_anchor, offset):
+        if in_anchor == 'in':
+            return offset, 0
+        elif in_anchor == 'out':
+            return self.piece.length - offset, 0
+        elif in_anchor == 'left':
+            return self.piece.length / 2, self.piece.length / 2 - offset
+        elif in_anchor == 'right':
+            return self.piece.length / 2, offset - self.piece.length / 2
 
 
 class DrawnCurve(DrawnPiece):
@@ -196,11 +212,19 @@ class DrawnCurve(DrawnPiece):
 
     def relative_positions(self):
         rotate = math.tau / self.piece.per_circle
-        x = ((cmath.rect(self.piece.radius, rotate) - self.piece.radius) * cmath.rect(1, - math.pi/2 ))
+        x = ((cmath.rect(self.piece.radius, rotate) - self.piece.radius) * cmath.rect(1, - math.pi/2))
         flip = -1 if self.piece.direction == 'left' else 1
         return {
             'out': Position(x.real, x.imag * flip, rotate * flip)
         }
+
+    def point_position(self, in_anchor, offset):
+        theta = offset / self.piece.radius
+        if in_anchor == 'out':
+            theta = math.tau / self.piece.per_circle - theta
+        x = ((cmath.rect(self.piece.radius, theta) - self.piece.radius) * cmath.rect(1, - math.pi/2))
+        flip = -1 if self.piece.direction == 'left' else 1
+        return x.real, x.imag * flip
 
 
 class Points(DrawnPiece):
@@ -259,6 +283,16 @@ class Points(DrawnPiece):
             'out': Position(32, 0, 0),
             'branch': Position(33, 13 * self.flip, math.tau / 16 * self.flip),
         }
+
+    def point_position(self, in_anchor, offset):
+        if in_anchor == 'in' and self.piece.state == 'out':
+            return offset, 0
+        if in_anchor == 'in' and self.piece.state == 'branch':
+            return 0, 0  # TODO
+        if in_anchor == 'branch':
+            return 0, 0  # TODO
+        if in_anchor == 'out':
+            return 32 - offset, 0
 
 #
 # border = 2

@@ -32,7 +32,7 @@ class LayoutDrawer:
     def move_trains(self):
         print("Moving trains")
         for train in self.layout.trains:
-            train.position += 1
+            train.move(2)
 
         ## This invalidates the screen, causing the expose event to fire.
         alloc = self.drawing_area.get_allocation()
@@ -92,8 +92,7 @@ class LayoutDrawer:
 
         drawn_piece.draw(cr)
 
-        self.piece_matrices[piece] = cr.get_matrix()
-        #print(cr.device_to_user(0, 0))
+        self.piece_matrices[piece] = cr.get_matrix() * self.base_ctm
 
         relative_positions = drawn_piece.relative_positions()
 
@@ -111,21 +110,53 @@ class LayoutDrawer:
                         cr.translate(-next_position.x, -next_position.y)
                     self.draw_piece(next_piece, seen_pieces, cr)
 
-                cr.set_source_rgb(1, 1, 0)
+                cr.set_source_rgb(1, .5, .5)
                 cr.arc(0, 0, 1, 0, math.tau)
                 cr.fill()
 
                 cr.restore()
 
-    def draw_trains(self, layout: Layout, cr: Context):
-        print("Drawing trains")
-        for train in layout.trains:
-            cr.save()
-            cr.set_matrix(self.piece_matrices[train.position.piece])
+    def transform_track_point(self, track_point):
+        drawn_piece = DrawnPiece.for_piece(track_point.piece)
+        px, py = drawn_piece.point_position(track_point.anchor_name, track_point.offset)
+        return self.piece_matrices[track_point.piece].transform_point(px, py)
 
-            #piece_x_y = 40, 40
-            cr.set_source_rgb(0, 0, 1)
-            cr.arc(0, 0, 5, 0, math.tau)
-            print(cr.device_to_user(0, 0))
-            cr.fill()
-            cr.restore()
+    def point_back(self, track_point, distance):
+        error = distance
+        px, py = self.transform_track_point(track_point)
+        for i in range(2):
+            track_point = track_point - error
+            px2, py2 = self.transform_track_point(track_point)
+            new_distance = math.sqrt((px-px2)**2 + (py-py2)**2)
+            error = distance - new_distance
+        return track_point, (px2, py2)
+
+    def draw_trains(self, layout: Layout, cr: Context):
+        for train in layout.trains:
+            car_start = train.position
+            for car in train.cars:
+                front_bogey_offset, rear_bogey_offset = car.bogey_offsets
+                bogey_spacing = rear_bogey_offset - front_bogey_offset
+                front_bogey_position = car_start - front_bogey_offset
+                front_bogey_xy = self.transform_track_point(front_bogey_position)
+                rear_bogey_position, rear_bogey_xy = self.point_back(front_bogey_position, bogey_spacing)
+
+                cr.save()
+                cr.translate(front_bogey_xy[0], front_bogey_xy[1])
+                cr.rotate(math.pi + math.atan2(front_bogey_xy[1] - rear_bogey_xy[1],
+                                               front_bogey_xy[0] - rear_bogey_xy[0]))
+                cr.set_source_rgb(1, 0, 0)
+
+                cr.set_line_width(4)
+                cr.move_to(-front_bogey_offset, 0)
+                cr.line_to(car.length - front_bogey_offset, 0)
+                cr.stroke()
+
+                cr.set_line_width(6)
+                cr.move_to(1 - front_bogey_offset, 0)
+                cr.line_to(car.length - front_bogey_offset - 1, 0)
+                cr.stroke()
+
+                cr.restore()
+                car_start = rear_bogey_position - (car.length - rear_bogey_offset + 1)
+
