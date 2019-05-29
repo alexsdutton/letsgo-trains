@@ -163,84 +163,9 @@ class Crossover(TrackPiece):
     name = 'crossover'
     label = 'crossover'
 
-
     def __init__(self, length: int=16, **kwargs):
         self.length = length
         super().__init__(**kwargs)
 
     def traversals(self, anchor_from):
         return {self.anchor_names[3 - self.anchor_names.index(anchor_from)]: (self.length, True)}
-
-
-
-
-
-#
-#     asymmetrical = False
-#
-#     def __init__(self, start):
-#         assert isinstance(start, Join)
-#         self.start = start
-#         self.start.attach(self)
-#
-#     @property
-#     def location(self):
-#         return self._location
-#
-#     @location.setter
-#     def location(self, location):
-#         self._location = location
-#         for end in self.ends:
-#             end.location = location + end.owner_offset
-#
-#     @cached_property
-#     def ends(self):
-#         return [
-#             Join(self, join_location)
-#             for join_location in self.join_locations()
-#         ]
-#
-# #    def rotate(self, n=1):
-#
-#
-#
-# class Straight(Track):
-#     length = 16
-#     color = 1, 0, 0
-#
-#     def join_locations(self):
-#         return [
-#             Location(cmath.rect(self.length, 0), 0),
-#         ]
-#
-#
-# class Curve(Track):
-#     asymmetrical = True
-#     radius = 40
-#     color = 0, 1, 0
-#
-#     @property
-#     def length(self):
-#         self.radius * math.tau / 16
-#
-#     @property
-#     def centre(self):
-#         rotate = math.tau / 16
-#         return self.location + ((cmath.rect(self.radius, rotate) - self.radius) * cmath.rect(1, - math.pi / 2))
-#
-#     def join_locations(self):
-#         rotate = math.tau / 16
-#         return [
-#             Location(
-#                 ((cmath.rect(self.radius, rotate) - self.radius) * cmath.rect(1, - math.pi/2 )),
-#                 rotate,
-#             )
-#         ]
-#
-#
-# class Points(Track):
-#     def join_locations(self):
-#         return [
-#             Location(cmath.rect(16, 0), 0),
-#             Location(16 - 8j, 0)
-#         ]
