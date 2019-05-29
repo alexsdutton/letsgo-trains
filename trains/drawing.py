@@ -241,14 +241,6 @@ class Points(DrawnPiece):
         cr.set_line_width(8)
         cr.set_source_rgb(*Colors.dark_bluish_gray)
 
-        cr.move_to(0, 0)
-        cr.line_to(32, 0)
-        cr.stroke()
-
-        cr.move_to(0, 0)
-        cr.curve_to(10, 0, 20, 5 * self.flip, 33, 13 * self.flip)
-        cr.stroke()
-
         if self.piece.state == 'out':
             self.draw_branch_rails(cr)
             self.draw_out_rails(cr)
@@ -256,44 +248,59 @@ class Points(DrawnPiece):
             self.draw_out_rails(cr)
             self.draw_branch_rails(cr)
 
-
     def draw_branch_rails(self, cr):
-        cr.set_line_width(3)
+        cr.move_to(0, 0)
+        cr.curve_to(16, 0, 12, 3.4 * self.flip, 33, 13 * self.flip)
+
+        cr.set_line_width(8)
         cr.set_source_rgb(*Colors.dark_bluish_gray)
-        cr.move_to(0, -2.5)
-        cr.curve_to(16, 0, 20, 2 * self.flip, 33, 11 * self.flip)
-        cr.move_to(0, 2.5)
-        cr.curve_to(1, 0, 20, 5 * self.flip, 33, 15 * self.flip)
         cr.stroke_preserve()
-        cr.set_line_width(1)
+
+        cr.set_line_width(6)
         cr.set_source_rgb(*Colors.tan)
+        cr.stroke_preserve()
+
+        cr.set_line_width(4)
+        cr.set_source_rgb(*Colors.dark_bluish_gray)
         cr.stroke()
 
     def draw_out_rails(self, cr):
-        cr.set_line_width(3)
+        cr.move_to(0, 0)
+        cr.line_to(32, 0)
+
+        cr.set_line_width(8)
         cr.set_source_rgb(*Colors.dark_bluish_gray)
-        cr.move_to(0, -2.5)
-        cr.line_to(32, -2.5)
-        cr.move_to(0, 2.5)
-        cr.line_to(32, 2.5)
         cr.stroke_preserve()
-        cr.set_line_width(1)
+
+        cr.set_line_width(6)
         cr.set_source_rgb(*Colors.tan)
+        cr.stroke_preserve()
+
+        cr.set_line_width(4)
+        cr.set_source_rgb(*Colors.dark_bluish_gray)
         cr.stroke()
 
     def relative_positions(self):
         return {
             'out': Position(32, 0, 0),
-            'branch': Position(33, 13 * self.flip, math.tau / 16 * self.flip),
+            'branch': Position(self.piece.branch_point[0],
+                               self.piece.branch_point[1] * self.flip,
+                               math.tau / 16 * self.flip),
         }
 
     def point_position(self, in_anchor, offset):
         if in_anchor == 'in' and self.piece.state == 'out':
             return offset, 0
         if in_anchor == 'in' and self.piece.state == 'branch':
-            return 0, 0  # TODO
+            flip = -1 if self.piece.direction == 'left' else 1
+            t = self.piece.intermediate_branch_t[max(0, min(int(offset / self.piece.branch_length * 100), 99))]
+            x, y = self.piece.branch_bezier(t)
+            return x, y * flip
         if in_anchor == 'branch':
-            return 0, 0  # TODO
+            flip = -1 if self.piece.direction == 'left' else 1
+            t = self.piece.intermediate_branch_t[max(0, min(99 - int(offset / self.piece.branch_length * 100), 99))]
+            x, y = self.piece.branch_bezier(t)
+            return x, y * flip
         if in_anchor == 'out':
             return 32 - offset, 0
 

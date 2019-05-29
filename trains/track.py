@@ -96,6 +96,17 @@ class Curve(TrackPiece):
         return {'out' if anchor_from == 'in' else 'in': (math.tau * self.radius / self.per_circle, True)}
 
 
+def _bezier(xy1, xy2, xy3, t):
+    (x1, y1), (x2, y2), (x3, y3) = xy1, xy2, xy3
+    return (3 * (1 - t) ** 2 * t * x1 + 3 * (1 - t) * t ** 2 * x2 + t ** 3 * x3,
+            3 * (1 - t) ** 2 * t * y1 + 3 * (1 - t) * t ** 2 * y2 + t ** 3 * y3)
+
+
+def _distance(xy1, xy2):
+    (x1, y1), (x2, y2) = xy1, xy2
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+
 class Points(TrackPiece):
     anchor_names = ('in', 'branch', 'out')
     name = 'points'
@@ -105,6 +116,34 @@ class Points(TrackPiece):
         self.direction = direction
         self.state = state
         super().__init__(**kwargs)
+
+        # Bezier curve control points for the branch
+        self.control_points = [(16, 0), (12, 3.4)]
+        self.branch_point = cmath.rect(40, math.tau * 5/16) + 48 - 24j
+        self.branch_point = self.branch_point.real, self.branch_point.imag
+
+        intermediate_branch_point_count = 1000
+        intermediate_branch_lengths = []
+        branch_length = 0
+        for t in range(1, intermediate_branch_point_count + 1):
+            branch_length += _distance(self.branch_bezier(t / intermediate_branch_point_count),
+                                       self.branch_bezier((t + 1) / intermediate_branch_point_count))
+            intermediate_branch_lengths.append(branch_length)
+
+        self.branch_length = branch_length
+
+        self.intermediate_branch_t = [0]
+        for i in range(1, intermediate_branch_point_count):
+            t = i / intermediate_branch_point_count
+            x, y = intermediate_branch_lengths[i-1:i+1]
+            if intermediate_branch_lengths[i-1] < self.branch_length * len(self.intermediate_branch_t) / 100 <= intermediate_branch_lengths[i]:
+                self.intermediate_branch_t.append(t)
+
+        print()
+
+
+    def branch_bezier(self, t):
+        return _bezier(*self.control_points, self.branch_point, t)
 
     def traversals(self, anchor_from):
         traversals = {}
@@ -116,7 +155,7 @@ class Points(TrackPiece):
         elif anchor_from == 'out':
             return {'in': (32, True)}
         elif anchor_from == 'branch':
-            return {'in': (35, True)}
+            return {'in': (self.branch_length, True)}
 
 
 class Crossover(TrackPiece):
