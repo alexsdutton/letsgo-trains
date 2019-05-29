@@ -1,15 +1,10 @@
 runs:
-  - - piece: straight
-      count: 6
+  - - piece: curve
+      count: 4
       anchors:
         in: outerJoin
-    - piece: curve
-      count: 4
     - piece: straight
-      count: 2
-    - piece: crossover
-      anchors:
-        right: crossoverLeft
+      count: 4
     - piece: curve
       count: 4
     - piece: points
@@ -28,18 +23,34 @@ runs:
     - piece: curve
       id: trainHerePlease
     - piece: straight
-      count: 3
+      count: 4
     - piece: curve
       count: 4
+    - piece: straight
+      count: 4
       anchors:
-        out: outerJoin
+        out: outerJoin1
+  - - piece: points
+      direction: right
+      anchors:
+        in: outerJoin
+        out: outerJoin1
+        branch: r1
+  - - piece: straight
+      anchors:
+        in: r1
+        out: r2
   - - piece: straight
       anchors:
         in: outerBranch
         out: innerBranch
-  - - piece: points
+  - - piece: curve
+      direction: right
+      count: 8
       anchors:
         in: innerJoin
+    - piece: points
+      anchors:
         branch: innerBranch
       state: branch
     - piece: straight
@@ -48,16 +59,16 @@ runs:
       direction: right
       count: 8
     - piece: straight
-      count: 4
-    - piece: curve
+      count: 2
+      anchors:
+        out: innerJoin2
+  - - piece: points
       direction: right
-      count: 8
       anchors:
-        out: innerJoin
+        in: innerJoin
+        out: innerJoin2
+        branch: r2
 
-  - - piece: straight
-      anchors:
-        in: crossoverLeft
 trains:
   - cars:
     - length: 33
