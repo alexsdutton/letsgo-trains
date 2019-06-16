@@ -1,0 +1,45 @@
+sets:
+  - id: 60197
+    name: LEGO City Passenger Train
+    cars:
+      - id: 60197-1
+        name: Engine
+        mass: 0.481
+        length: 33
+        bogey_offsets: [12, 26]
+      - id: 60197-2
+        name: Buffet Car
+        mass: 0.279
+        length: 26
+        bogey_offsets: [5, 21]
+      - id: 60197-3
+        name: Passenger Car
+        mass: 0.272
+        length: 26
+        bogey_offsets: [5, 21]
+  - id: 60051
+    name: LEGO City High-Speed Passenger Train
+    cars:
+      - id: 60051-1
+        name: Engine
+        mass: 0.472
+        length: 35
+        bogey_offsets: [14, 30]
+      - id: 60051-2
+        name: Cycle Car
+        mass: 0.255
+        length: 26
+        bogey_offsets: [5, 21]
+      - id: 60051-3
+        name: End Car
+        mass: 0.294
+        length: 35
+        bogey_offsets: [5, 21]
+  - id: 7813
+    name: LEGO Shell Tanker Wagon
+    cars:
+      - id: 7813-1
+        name: Shell Tanker Wagon
+        mass: 0.126
+        length: 18
+        bogey_offsets: [4, 14]

@@ -53,6 +53,7 @@ runs:
       anchors:
         branch: innerBranch
       state: branch
+      id: trainHerePleaseToo
     - piece: straight
       count: 2
     - piece: curve
@@ -82,3 +83,20 @@ trains:
       piece_id: trainHerePlease
       anchor_name: in
       offset: 4
+    meta:
+      mac_address: 90:84:2B:0D:00:8D
+  - cars:
+    - length: 33
+      bogey_offsets: [12, 26]
+      nose: circular
+    - length: 26
+      bogey_offsets: [5, 21]
+    - length: 26
+      bogey_offsets: [5, 21]
+    position:
+      piece_id: trainHerePleaseToo
+      anchor_name: in
+      offset: 4
+    meta:
+      color: '#ffa0a0'
+      mac_address: 90:84:2B:07:99:E0

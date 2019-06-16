@@ -47,6 +47,14 @@ class DrawnPiece(metaclass=DrawnPieceMeta):
     def __init__(self, piece):
         self.piece = piece
 
+    def get_base_color(self):
+        if self.piece.claimed_by:
+            return [v/2 for v in hex_to_rgb(self.piece.claimed_by.meta.get('color',  '#a0a0ff'))]
+        elif self.piece.reservations:
+            return 1, 0.5, 0
+        else:
+            return Colors.dark_bluish_gray
+
 
 class DrawnStraight(DrawnPiece):
     name = 'straight'
@@ -69,7 +77,7 @@ class DrawnStraight(DrawnPiece):
         cr.set_line_width(8)
         cr.move_to(0, 0)
         cr.line_to(self.piece.length, 0)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
         cr.stroke()
         cr.set_line_width(1)
         cr.set_source_rgb(*Colors.tan)
@@ -117,7 +125,7 @@ class DrawnCrossover(DrawnPiece):
 
     def draw(self, cr):
         cr.set_line_width(8)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
 
         cr.move_to(0, 0)
         cr.line_to(self.piece.length, 0)
@@ -194,7 +202,7 @@ class DrawnCurve(DrawnPiece):
 
     def draw(self, cr):
         cr.set_line_width(8)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
 
         if self.piece.direction == 'left':
             cy = - self.piece.radius
@@ -238,9 +246,6 @@ class Points(DrawnPiece):
         return -1 if self.piece.direction == 'left' else 1
 
     def draw(self, cr):
-        cr.set_line_width(8)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
-
         if self.piece.state == 'out':
             self.draw_branch_rails(cr)
             self.draw_out_rails(cr)
@@ -253,7 +258,7 @@ class Points(DrawnPiece):
         cr.curve_to(16, 0, 12, 3.4 * self.flip, 33, 13 * self.flip)
 
         cr.set_line_width(8)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
         cr.stroke_preserve()
 
         cr.set_line_width(6)
@@ -261,7 +266,7 @@ class Points(DrawnPiece):
         cr.stroke_preserve()
 
         cr.set_line_width(4)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
         cr.stroke()
 
     def draw_out_rails(self, cr):
@@ -269,7 +274,7 @@ class Points(DrawnPiece):
         cr.line_to(32, 0)
 
         cr.set_line_width(8)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
         cr.stroke_preserve()
 
         cr.set_line_width(6)
@@ -277,7 +282,7 @@ class Points(DrawnPiece):
         cr.stroke_preserve()
 
         cr.set_line_width(4)
-        cr.set_source_rgb(*Colors.dark_bluish_gray)
+        cr.set_source_rgb(*self.get_base_color())
         cr.stroke()
 
     def relative_positions(self):

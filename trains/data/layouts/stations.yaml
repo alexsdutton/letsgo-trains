@@ -1,0 +1,185 @@
+runs:
+  - - piece: points
+      direction: left
+      id: trainHerePleaseToo
+      placement:
+        x: 0
+        y: 0
+        angle: 0
+      anchors:
+        in: s1
+        branch: s1-loop-start
+    - piece: points
+      direction: right
+      id: s1-e1
+      anchors:
+        branch: s1-p2-start
+    - piece: straight
+      count: 8
+    - piece: curve
+      direction: right
+      anchors:
+        out: s1-p1-end
+  - - piece: curve
+      direction: right
+      anchors:
+        in: s1-loop-start
+    - piece: straight
+      count: 7
+    - piece: curve
+      direction: left
+      count: 3
+    - piece: straight
+    - piece: curve
+      count: 7
+      direction: right
+    - piece: straight
+    - piece: curve
+      count: 4
+      direction: right
+    - piece: points
+      direction: right
+      id: s1-e2
+      anchors:
+        branch: s1-p1-end
+    - piece: straight
+      count: 8
+    - piece: curve
+      direction: right
+      anchors:
+        out: p2-start
+  - - piece: points
+      direction: left
+      id: trainHerePlease
+      anchors:
+        in: s2
+        branch: s2-loop-start
+    - piece: points
+      id: s2-e1
+      direction: right
+      anchors:
+        branch: s2-p2-start
+    - piece: straight
+      count: 8
+    - piece: curve
+      direction: right
+      anchors:
+        out: s2-p1-end
+  - - piece: curve
+      direction: right
+      anchors:
+        in: s2-loop-start
+    - piece: straight
+      count: 7
+    - piece: curve
+      direction: left
+      count: 3
+    - piece: straight
+    - piece: curve
+      count: 7
+      direction: right
+    - piece: straight
+    - piece: curve
+      count: 4
+      direction: right
+    - piece: points
+      id: s2-e2
+      direction: right
+      anchors:
+        branch: s2-p1-end
+    - piece: straight
+      count: 8
+    - piece: curve
+      direction: right
+      anchors:
+        out: s2-p2-start
+  - - piece: straight
+      count: 10
+      anchors:
+        in: s1
+    - piece: curve
+      count: 4
+    - piece: straight
+      count: 4
+    - piece: curve
+      count: 4
+    - piece: straight
+      count: 10
+      anchors:
+        out: s2
+trains:
+  - cars:
+    - length: 33
+      bogey_offsets: [12, 26]
+      nose: circular
+    - length: 26
+      bogey_offsets: [5, 21]
+    - length: 26
+      bogey_offsets: [5, 21]
+    position:
+      piece_id: trainHerePlease
+      anchor_name: in
+      offset: 4
+    itinerary_id: itinerary
+    itinerary_index: 0
+    meta:
+      mac_address: 90:84:2B:0D:00:8D
+  - cars:
+    - length: 33
+      bogey_offsets: [12, 26]
+      nose: circular
+    - length: 26
+      bogey_offsets: [5, 21]
+    - length: 26
+      bogey_offsets: [5, 21]
+    position:
+      piece_id: trainHerePleaseToo
+      anchor_name: in
+      offset: 4
+    itinerary_id: itinerary
+    itinerary_index: 0
+    meta:
+      color: '#ffa0a0'
+      mac_address: 90:84:2B:07:99:E0
+stations:
+  - id: s1
+    platforms:
+      - position:
+          piece_id: s1-e1
+          anchor_name: out
+          offset: 0
+      - position:
+          piece_id: s1-e1
+          anchor_name: branch
+          offset: 0
+      - position:
+          piece_id: s1-e2
+          anchor_name: out
+          offset: 0
+      - position:
+          piece_id: s1-e2
+          anchor_name: branch
+          offset: 0
+  - id: s2
+    platforms:
+      - position:
+          piece_id: s2-e1
+          anchor_name: out
+          offset: 0
+      - position:
+          piece_id: s2-e1
+          anchor_name: branch
+          offset: 0
+      - position:
+          piece_id: s2-e2
+          anchor_name: out
+          offset: 0
+      - position:
+          piece_id: s2-e2
+          anchor_name: branch
+          offset: 0
+itineraries:
+  - id: itinerary
+    stops:
+      - station_id: s1
+      - station_id: s2

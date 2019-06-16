@@ -2,16 +2,17 @@ import math
 import random
 
 import gi
-import pkg_resources
-import yaml
 from cairo import Context
 
 from trains.drawing import DrawnPiece, hex_to_rgb
 from trains.layout import Layout
-from trains.track import Straight, Curve, TrackPiece
+from trains.track import TrackPiece
+from .. import signals
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, GObject, GLib, Gdk
+gi.require_version('Gdk', '3.0')
+from gi.repository import GObject, Gdk
+
 
 class LayoutDrawer:
     def __init__(self, drawing_area, layout):
@@ -28,33 +29,22 @@ class LayoutDrawer:
         self.mouse_down = None
         self.layout = layout
 
-        GObject.timeout_add(20, self.move_trains)
+        signals.tick.connect(self.tick)
 
-    def move_trains(self):
-        print("Moving trains")
-        for train in self.layout.trains:
-            train.move(1)
-
-        ## This invalidates the screen, causing the expose event to fire.
+    def tick(self, sender, time, time_elapsed):
         alloc = self.drawing_area.get_allocation()
-        rect = Gdk.Rectangle(alloc.x, alloc.y, alloc.width, alloc.height)
-#        self.drawing_area.get_toplevel().invalidate_rect(rect, True)
         self.drawing_area.queue_draw_area(alloc.x, alloc.y, alloc.width, alloc.height)
-
-        for points in self.layout.points:
-            if random.random() < 0.01:
-                points.state = 'out' if points.state == 'branch' else 'branch'
-
-        return True
 
     def mouse_press(self, widget, event):
         if event.button == Gdk.BUTTON_PRIMARY:
             self.offset_orig = self.offset
             self.mouse_down = event.x, event.y
+
     def mouse_release(self, widget, event):
         if event.button & Gdk.BUTTON_PRIMARY:
             self.offset_orig = None
             self.mouse_down = None
+
     def mouse_motion(self, widget, event):
         if self.mouse_down:
             self.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
@@ -79,6 +69,7 @@ class LayoutDrawer:
         self.piece_matrices = {}
 
         self.draw_layout(self.layout, cr)
+        self.draw_points_labels(self.layout, cr)
         self.draw_trains(self.layout, cr)
 
     def draw_layout(self, layout: Layout, cr: Context):
@@ -125,6 +116,22 @@ class LayoutDrawer:
 
             cr.restore()
 
+    def draw_points_labels(self, layout: Layout, cr: Context):
+        for i, points in enumerate(layout.points):
+            cr.save()
+            cr.set_font_size(4)
+            cr.translate(*self.piece_matrices[points].transform_point(4, -10 if points.direction == 'left' else 10))
+            cr.rectangle(-4, -4, 8, 8)
+            cr.set_source_rgb(1, 1, 1)
+            cr.fill_preserve()
+            cr.set_source_rgb(0, 0, 0)
+            cr.set_line_width(1)
+            cr.stroke()
+            cr.move_to(-2, 2)
+            cr.show_text(str(i))
+            cr.restore()
+
+
     def transform_track_point(self, track_point):
         drawn_piece = DrawnPiece.for_piece(track_point.piece)
         px, py = drawn_piece.point_position(track_point.anchor_name, track_point.offset)
@@ -143,7 +150,10 @@ class LayoutDrawer:
     def draw_trains(self, layout: Layout, cr: Context):
         for train in layout.trains:
             car_start = train.position
-            for car in train.cars:
+
+            annotation = train.meta.get('annotation')
+
+            for i, car in enumerate(train.cars):
                 front_bogey_offset, rear_bogey_offset = car.bogey_offsets
                 bogey_spacing = rear_bogey_offset - front_bogey_offset
                 front_bogey_position = car_start - front_bogey_offset
@@ -157,6 +167,11 @@ class LayoutDrawer:
 
                 cr.set_source_rgb(*hex_to_rgb(train.meta.get('color', '#a0a0ff')))
 
+                if i == 0 and annotation:
+                    cr.move_to(0, -10)
+                    cr.set_font_size(5)
+                    cr.show_text(annotation)
+
                 cr.set_line_width(4)
                 cr.move_to(-front_bogey_offset, 0)
                 cr.line_to(car.length - front_bogey_offset, 0)
@@ -166,6 +181,14 @@ class LayoutDrawer:
                 cr.move_to(1 - front_bogey_offset, 0)
                 cr.line_to(car.length - front_bogey_offset - 1, 0)
                 cr.stroke()
+
+                if i == 0 and train.lights_on:
+                    cr.set_source_rgba(1, 1, 0.2, 0.5)
+                    for y in (-2.5, 2.5):
+                        cr.move_to(-front_bogey_offset - 1, y)
+                        cr.arc(-front_bogey_offset - 1, y, 10, 6/7 * math.pi, math.pi * 8/7)
+                        cr.close_path()
+                        cr.fill()
 
                 cr.restore()
                 car_start = rear_bogey_position - (car.length - rear_bogey_offset + 1)

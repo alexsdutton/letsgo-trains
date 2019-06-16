@@ -1,7 +1,36 @@
 import collections
+import uuid
 from numbers import Number
+from typing import Optional, List
 
-from trains.train import TrackPoint, Train
+from trains.station import Station
+from trains.track_point import TrackPoint
+
+
+class Stop:
+    def __init__(self,
+                 station: Station,
+                 dwell: Optional[Number] = None,
+                 dwell_min: Optional[Number] = None,
+                 dwell_max: Optional[Number] = None,
+                 no_stopping: bool = False,
+                 ):
+        self.station = station
+        self.dwell_min = dwell or dwell_min
+        self.dwell_max = dwell or dwell_max
+        self.no_stopping = no_stopping
+
+
+class Itinerary:
+    """A list of stations to travel through"""
+
+    def __init__(self,
+                 id: str = None,
+                 stops: List[Stop] = (),
+                 repeat: bool = True):
+        self.id = id or str(uuid.uuid4())
+        self.stops = stops
+        self.repeat = repeat
 
 
 class Route:
@@ -10,7 +39,7 @@ class Route:
 class Router:
     """Routes trains"""
 
-    def route(self, train: Train, from_trackpoint: TrackPoint, to_trackpoint: TrackPoint):
+    def route(self, train, from_trackpoint: TrackPoint, to_trackpoint: TrackPoint):
         routes = collections.defaultdict(set)
         track_points = [(0, from_trackpoint, ())]
         while track_points:

@@ -57,6 +57,8 @@ class TrackPiece(metaclass=TrackPieceMeta):
         if placement:
             self.placement = Position(**placement)
         self.id = id or str(uuid.uuid4())
+        self.claimed_by = None
+        self.reservations = {}
 
     def traversals(self, anchor_from: str) -> Dict[str, Tuple[Number, bool]]:
         return {}
@@ -138,9 +140,6 @@ class Points(TrackPiece):
             x, y = intermediate_branch_lengths[i-1:i+1]
             if intermediate_branch_lengths[i-1] < self.branch_length * len(self.intermediate_branch_t) / 100 <= intermediate_branch_lengths[i]:
                 self.intermediate_branch_t.append(t)
-
-        print()
-
 
     def branch_bezier(self, t):
         return _bezier(*self.control_points, self.branch_point, t)
