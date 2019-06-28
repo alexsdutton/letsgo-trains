@@ -149,7 +149,7 @@ class Points(TrackPiece):
         if anchor_from == 'in':
             return {
                 'out': (32, self.state == 'out'),
-                'branch': (35, self.state == 'branch'),
+                'branch': (self.branch_length, self.state == 'branch'),
             }
         elif anchor_from == 'out':
             return {'in': (32, True)}
