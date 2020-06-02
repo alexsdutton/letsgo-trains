@@ -1,9 +1,13 @@
 from gi.repository import GObject, Gtk
 
-import lego_wireless.signals
-from lego_wireless.signals import hub_connected
 from trains.train import Train
 from .. import signals
+
+
+def get_train_controller(layout):
+    for controller in layout.controllers.values():
+        if Train in controller.controller_for:
+            return controller
 
 
 class TrainControls(Gtk.Grid):
@@ -37,7 +41,7 @@ class TrainControls(Gtk.Grid):
         decrease_speed.connect('clicked', self.on_speed_button, lambda s: s - 0.1)
         box.add(decrease_speed)
         increase_speed = Gtk.Button(label='\N{Heavy Plus Sign}')
-        increase_speed.connect('clicked', self.on_speed_button, lambda s: s + 0.4)
+        increase_speed.connect('clicked', self.on_speed_button, lambda s: s + 0.1)
         box.add(increase_speed)
 
         self.attach(box, 1, 1, 1, 1)
@@ -50,8 +54,8 @@ class TrainControls(Gtk.Grid):
         self.battery_level = Gtk.Label()
         self.attach(self.battery_level, 0, 2, 1, 2)
 
-        signals.train_hub_connected.connect(self.on_hub_connected, sender=self.train)
-        signals.train_hub_disconnected.connect(self.on_hub_disconnected, sender=self.train)
+        signals.connected_changed.connect(self.on_connected_changed, sender=self.train)
+        signals.battery_level_changed.connect(self.on_battery_level_changed, sender=self.train)
 
     def on_speed_button(self, widget, func):
         self.train.maximum_motor_speed = func(self.train.maximum_motor_speed)
@@ -60,8 +64,6 @@ class TrainControls(Gtk.Grid):
 
     def on_lights_toggled(self, widget):
         self.train.lights_on = widget.get_active()
-        if self.hub and self.hub.led_light:
-            self.hub.led_light.set_brightness(100 if self.train.lights_on else 0)
 
     def on_backwards_toggled(self, widget):
         pass
@@ -72,16 +74,11 @@ class TrainControls(Gtk.Grid):
         self.popover.show_all()
         self.popover.popup()
 
-    def on_hub_connected(self, sender, hub):
-        self.hub = hub
-        lego_wireless.signals.hub_battery_level.connect(self.on_hub_battery_level, sender=self.hub)
+    def on_connected_changed(self, sender, connected):
+        pass
 
-    def on_hub_disconnected(self, sender, hub):
-        self.hub = None
-
-    def on_hub_battery_level(self, sender, battery_level):
-        self.battery_level.set_label(f'{battery_level}%')
-
+    def on_battery_level_changed(self, sender, battery_level):
+        self.battery_level.set_label(f'{battery_level}%' if battery_level is not None else '')
 
 class TrainPopover(Gtk.Popover):
     def __new__(cls, builder: Gtk.Builder):
@@ -105,25 +102,36 @@ class TrainPopover(Gtk.Popover):
         self._train = train
         if train:
             self.name_entry.set_text(train.name or '')
-            self.pair_button.set_label('Unpair' if train.meta.get('mac_address') else 'Pair')
+            self.pair_button.set_label('Unpair' if train.controller else 'Pair')
 
     def on_pair_clicked(self, widget):
-        if self.train.meta.get('mac_address'):
-            self.train.meta['pairing'] = False
+        train_controller = get_train_controller(self.train.layout)
+        if self.train.controller:
             widget.set_label('Pair')
+            self.train.controller = None
+            self.train.controller_parameters = {}
         else:
-            self.train.meta['pairing'] = True
+            train_controller.pair_with.append(self.train)
             self.pair_status.set_label('Searching…')
-            hub_connected.connect(self.on_hub_connected)
+            signals.controller_changed.connect(self.on_controller_changed, sender=self.train)
             GObject.timeout_add(10000, self.stop_pairing, self.train)
 
-    def on_hub_connected(self, sender, hub):
-        self.pair_status.set_label('Connected')
-        self.pair_button.set_label('Disconnect')
+    def on_controller_changed(self, sender, controller):
+        if controller:
+            self.pair_status.set_label('Connected')
+            self.pair_button.set_label('Disconnect')
+        else:
+            self.pair_status.set_label('')
+            self.pair_button.set_label('Pair')
 
     def stop_pairing(self, train):
-        train.meta['pairing'] = False
-        hub_connected.disconnect(self.on_hub_connected)
+        signals.controller_changed.disconnect(self.on_controller_changed, sender=self.train)
+        train_controller = get_train_controller(train.layout)
+        try:
+            train_controller.pair_with.remove(train)
+        except ValueError:
+            pass
+
         if self.pair_status.get_label() == 'Searching…':
             self.pair_status.set_label('')
 

@@ -6,12 +6,16 @@ from cairo import Context
 
 from trains.drawing import DrawnPiece, hex_to_rgb
 from trains.layout import Layout
+from trains.sensor import Sensor
 from trains.track import TrackPiece
 from .. import signals
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 from gi.repository import GObject, Gdk
+
+SENSOR_NORMAL = (1, 0, 0)
+SENSOR_ACTIVATED = (0, 1, 0)
 
 
 class LayoutDrawer:
@@ -52,8 +56,6 @@ class LayoutDrawer:
             self.drawing_area.queue_draw()
 
     def draw(self, widget, cr):
-        cr.set_line_width(9)
-        cr.set_source_rgb(0.7, 0.2, 0.0)
 
         w = widget.get_allocated_width()
         h = widget.get_allocated_height()
@@ -63,16 +65,32 @@ class LayoutDrawer:
         cr.scale(3, 3)
         self.base_ctm = cr.get_matrix()
         self.base_ctm.invert()
-        #print(self.base_ctm)
-
 
         self.piece_matrices = {}
 
+        self.draw_grid(cr)
         self.draw_layout(self.layout, cr)
         self.draw_points_labels(self.layout, cr)
+        self.draw_sensors(self.layout, cr)
         self.draw_trains(self.layout, cr)
 
+    def draw_grid(self, cr: Context):
+        cr.set_line_width(0.5)
+        cr.set_source_rgba(0.8, 0.8, 0.8, 0.4)
+
+        for x in range(-10, 10):
+            cr.move_to(x * 32, -320)
+            cr.line_to(x * 32, 320)
+        for y in range(-10, 10):
+            cr.move_to(-320, y * 32)
+            cr.line_to(320, y *  32)
+
+        cr.stroke()
+
     def draw_layout(self, layout: Layout, cr: Context):
+        cr.set_line_width(9)
+        cr.set_source_rgb(0.7, 0.2, 0.0)
+
         seen_pieces = set()
         for piece in layout.placed_pieces:
             self.draw_piece(piece, seen_pieces, cr)
@@ -131,10 +149,30 @@ class LayoutDrawer:
             cr.show_text(str(i))
             cr.restore()
 
+    def draw_sensors(self, layout: Layout, cr: Context):
+        for sensor in layout.sensors.values():
+            self.draw_sensor(sensor, layout, cr)
+
+    def draw_sensor(self, sensor: Sensor, layout: Layout, cr: Context):
+        drawn_piece = DrawnPiece.for_piece(sensor.position.piece)
+        px, py, angle = drawn_piece.point_position(sensor.position.anchor_name, sensor.position.offset)
+        cr.save()
+        cr.translate(*self.piece_matrices[sensor.position.piece].transform_point(px, py))
+        cr.rotate(math.atan2(*self.piece_matrices[sensor.position.piece].transform_distance(0, 1)) - angle)
+
+        cr.set_source_rgb(0.1, 0.1, 0)
+        cr.rectangle(-1, 3, 2, 6)
+        cr.fill()
+
+        cr.set_source_rgb(*(SENSOR_ACTIVATED if sensor.activated else SENSOR_NORMAL))
+        cr.arc(0, 8, .8, 0, math.tau)
+        cr.fill()
+
+        cr.restore()
 
     def transform_track_point(self, track_point):
         drawn_piece = DrawnPiece.for_piece(track_point.piece)
-        px, py = drawn_piece.point_position(track_point.anchor_name, track_point.offset)
+        px, py, angle = drawn_piece.point_position(track_point.anchor_name, track_point.offset)
         return self.piece_matrices[track_point.piece].transform_point(px, py)
 
     def point_back(self, track_point, distance):
@@ -148,7 +186,7 @@ class LayoutDrawer:
         return track_point, (px2, py2)
 
     def draw_trains(self, layout: Layout, cr: Context):
-        for train in layout.trains:
+        for train in layout.trains.values():
             car_start = train.position
 
             annotation = train.meta.get('annotation')

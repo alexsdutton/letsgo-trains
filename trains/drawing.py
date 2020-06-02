@@ -42,12 +42,13 @@ class DrawnPiece(metaclass=DrawnPieceMeta):
 
     @classmethod
     def for_piece(cls, piece):
-        return cls.registry[piece.name](piece)
+        return cls.registry[piece.registry_type](piece)
 
     def __init__(self, piece):
         self.piece = piece
 
     def get_base_color(self):
+        return Colors.dark_bluish_gray
         if self.piece.claimed_by:
             return [v/2 for v in hex_to_rgb(self.piece.claimed_by.meta.get('color',  '#a0a0ff'))]
         elif self.piece.reservations:
@@ -96,9 +97,9 @@ class DrawnStraight(DrawnPiece):
 
     def point_position(self, in_anchor, offset):
         if in_anchor == 'in':
-            return offset, 0
+            return offset, 0, 0
         elif in_anchor == 'out':
-            return self.piece.length - offset, 0
+            return self.piece.length - offset, 0, math.pi
 
 
 class DrawnCrossover(DrawnPiece):
@@ -156,13 +157,13 @@ class DrawnCrossover(DrawnPiece):
 
     def point_position(self, in_anchor, offset):
         if in_anchor == 'in':
-            return offset, 0
+            return offset, 0, 0
         elif in_anchor == 'out':
-            return self.piece.length - offset, 0
+            return self.piece.length - offset, 0, math.pi
         elif in_anchor == 'left':
-            return self.piece.length / 2, self.piece.length / 2 - offset
+            return self.piece.length / 2, self.piece.length / 2 - offset, - math.pi / 2
         elif in_anchor == 'right':
-            return self.piece.length / 2, offset - self.piece.length / 2
+            return self.piece.length / 2, offset - self.piece.length / 2, math.pi / 2
 
 
 class DrawnCurve(DrawnPiece):
@@ -235,7 +236,7 @@ class DrawnCurve(DrawnPiece):
             theta = math.tau / self.piece.per_circle - theta
         x = ((cmath.rect(self.piece.radius, theta) - self.piece.radius) * cmath.rect(1, - math.pi/2))
         flip = -1 if self.piece.direction == 'left' else 1
-        return x.real, x.imag * flip
+        return x.real, x.imag * flip, theta * flip
 
 
 class Points(DrawnPiece):
@@ -295,19 +296,24 @@ class Points(DrawnPiece):
 
     def point_position(self, in_anchor, offset):
         if in_anchor == 'in' and self.piece.state == 'out':
-            return offset, 0
+            return offset, 0, 0
         if in_anchor == 'in' and self.piece.state == 'branch':
             flip = -1 if self.piece.direction == 'left' else 1
             t = self.piece.intermediate_branch_t[max(0, min(int(offset / self.piece.branch_length * 100), 99))]
             x, y = self.piece.branch_bezier(t)
-            return x, y * flip
+            # TODO: We return NaN for the angle because it's too much hassle to work out the actual angle, and our
+            #       assumption is that no one will actually need to know the angle of the track on the branch. If we
+            #       wanted to do this properly we would calculate the angle between branch_bezier(t-epsilon) and
+            #       branch_bezier(t+epsilon).
+            return x, y * flip, float('nan')
         if in_anchor == 'branch':
             flip = -1 if self.piece.direction == 'left' else 1
             t = self.piece.intermediate_branch_t[max(0, min(99 - int(offset / self.piece.branch_length * 100), 99))]
             x, y = self.piece.branch_bezier(t)
-            return x, y * flip
+            # TODO: See above
+            return x, y * flip, float('nan')
         if in_anchor == 'out':
-            return 32 - offset, 0
+            return 32 - offset, 0, math.pi
 
 #
 # border = 2

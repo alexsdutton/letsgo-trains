@@ -23,8 +23,8 @@ class TophamHatt:
         self.slow_down_distance = slow_down_distance
 
     def tick(self, sender, time, time_elapsed):
-        print("Tick")
-        for train in self.layout.trains:
+        # print("Tick")
+        for train in self.layout.trains.values():
             self.route_train(train)
 
     def route_train(self, train):
@@ -44,10 +44,14 @@ class TophamHatt:
 
         speed_limit = float('inf')
 
-        if train.meta.get('last_speed_limit') == 0:
-            print("EE")
+        # if train.meta.get('last_speed_limit') == 0:
+        #     print("EE")
 
-        while True:
+        seen_pieces = set()
+
+        while position.piece not in seen_pieces:
+            seen_pieces.add(position.piece)
+
             try:
                 position, distance = position.next_piece(distance)
             except EndOfTheLine as e:
@@ -91,7 +95,7 @@ class TophamHatt:
 
         train.speed_limits[self] = speed_limit
         train.meta['last_speed_limit'] = speed_limit
-        print(speed_limit)
+        # print(speed_limit)
 
         if isinstance(position.piece, Points):
 
@@ -111,4 +115,4 @@ class TophamHatt:
         target_stop = train.itinerary.stops[train.itinerary_index]
         target_station = target_stop.station
         platforms = target_station.available_platforms(train)
-        print(platforms)
+        # print(platforms)

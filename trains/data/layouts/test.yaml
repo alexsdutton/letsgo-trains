@@ -1,0 +1,62 @@
+runs:
+  - - type: curve
+      count: 7
+      anchors:
+        in: l
+    - type: curve
+      id: s
+    - type: straight
+      count: 3
+    - type: curve
+      count: 8
+    - type: points
+      direction: left
+      anchors:
+        branch: b
+      placement:
+        x: 0
+        y: 0
+        angle: 0
+    - type: straight
+      anchors:
+        out: l
+  - - type: straight
+      count: 3
+      anchors:
+        in: b
+
+trains:
+  - cars:
+    - length: 33
+      bogey_offsets: [12, 26]
+      nose: circular
+      magnet_offset: 18
+    - length: 26
+      bogey_offsets: [5, 21]
+    - length: 26
+      bogey_offsets: [5, 21]
+    position:
+      piece_id: s
+      anchor_name: out
+      offset: 4
+    controller_id: powered_up
+    controller_parameters:
+      mac_address: 90:84:2B:0D:00:8D
+
+controllers:
+  - id: maestro
+    type: maestro
+  - id: powered_up
+    type: powered_up
+
+sensors:
+  - position:
+      piece_id: s
+      anchor_name: out
+      offset: 0
+    controller_id: maestro
+    controller_parameters:
+      index: 0
+      normally_high: yes
+    type: hall
+    single_direction: yes

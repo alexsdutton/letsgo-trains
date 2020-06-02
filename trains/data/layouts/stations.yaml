@@ -1,5 +1,5 @@
 runs:
-  - - piece: points
+  - - type: points
       direction: left
       id: trainHerePleaseToo
       placement:
@@ -9,101 +9,101 @@ runs:
       anchors:
         in: s1
         branch: s1-loop-start
-    - piece: points
+    - type: points
       direction: right
       id: s1-e1
       anchors:
         branch: s1-p2-start
-    - piece: straight
+    - type: straight
       count: 8
-    - piece: curve
+    - type: curve
       direction: right
       anchors:
         out: s1-p1-end
-  - - piece: curve
+  - - type: curve
       direction: right
       anchors:
         in: s1-loop-start
-    - piece: straight
+    - type: straight
       count: 7
-    - piece: curve
+    - type: curve
       direction: left
       count: 3
-    - piece: straight
-    - piece: curve
+    - type: straight
+    - type: curve
       count: 7
       direction: right
-    - piece: straight
-    - piece: curve
+    - type: straight
+    - type: curve
       count: 4
       direction: right
-    - piece: points
+    - type: points
       direction: right
       id: s1-e2
       anchors:
         branch: s1-p1-end
-    - piece: straight
+    - type: straight
       count: 8
-    - piece: curve
+    - type: curve
       direction: right
       anchors:
         out: p2-start
-  - - piece: points
+  - - type: points
       direction: left
       id: trainHerePlease
       anchors:
         in: s2
         branch: s2-loop-start
-    - piece: points
+    - type: points
       id: s2-e1
       direction: right
       anchors:
         branch: s2-p2-start
-    - piece: straight
+    - type: straight
       count: 8
-    - piece: curve
+    - type: curve
       direction: right
       anchors:
         out: s2-p1-end
-  - - piece: curve
+  - - type: curve
       direction: right
       anchors:
         in: s2-loop-start
-    - piece: straight
+    - type: straight
       count: 7
-    - piece: curve
+    - type: curve
       direction: left
       count: 3
-    - piece: straight
-    - piece: curve
+    - type: straight
+    - type: curve
       count: 7
       direction: right
-    - piece: straight
-    - piece: curve
+    - type: straight
+    - type: curve
       count: 4
       direction: right
-    - piece: points
+    - type: points
       id: s2-e2
       direction: right
       anchors:
         branch: s2-p1-end
-    - piece: straight
+    - type: straight
       count: 8
-    - piece: curve
+    - type: curve
       direction: right
       anchors:
         out: s2-p2-start
-  - - piece: straight
+  - - type: straight
       count: 10
       anchors:
         in: s1
-    - piece: curve
+    - type: curve
       count: 4
-    - piece: straight
+    - type: straight
       count: 4
-    - piece: curve
+    - type: curve
       count: 4
-    - piece: straight
+    - type: straight
       count: 10
       anchors:
         out: s2
@@ -112,6 +112,7 @@ trains:
     - length: 33
       bogey_offsets: [12, 26]
       nose: circular
+      magnet_offset: 18
     - length: 26
       bogey_offsets: [5, 21]
     - length: 26
@@ -128,6 +129,7 @@ trains:
     - length: 33
       bogey_offsets: [12, 26]
       nose: circular
+      magnet_offset: 18
     - length: 26
       bogey_offsets: [5, 21]
     - length: 26
@@ -183,3 +185,19 @@ itineraries:
     stops:
       - station_id: s1
       - station_id: s2
+controllers:
+  - id: maestro
+    type: maestro
+  - id: powered_up
+    type: powered_up
+sensors:
+  - position:
+      piece_id: s2-e1
+      anchor_name: out
+      offset: 8
+    controller_id: maestro
+    controller_parameters:
+      index: 0
+      normally_high: yes
+    type: hall
+    single_direction: yes

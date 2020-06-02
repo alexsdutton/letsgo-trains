@@ -1,0 +1,109 @@
+runs:
+  - - type: points
+      direction: left
+      anchors:
+        in: j
+        branch: p1
+      placement:
+        x: 0
+        y: 0
+        angle: 0
+      state: branch
+    - type: straight
+      count: 5
+    - type: curve
+      direction: left
+      id: p1-s
+    - type: curve
+      direction: left
+      count: 10
+    - type: straight
+    - type: curve
+      direction: right
+      count: 2
+    - type: straight
+      anchors:
+        out: p1
+  - - type: points
+      direction: right
+      anchors:
+        in: j
+        branch: p2
+      state: branch
+    - type: straight
+      count: 4
+    - type: straight
+      id: p2-s
+    - type: curve
+      direction: right
+      count: 11
+    - type: straight
+    - type: curve
+      direction: left
+      count: 2
+    - type: straight
+      anchors:
+        out: p2
+
+
+trains:
+  - cars:
+      - length: 33
+        bogey_offsets: [12, 26]
+        nose: circular
+        magnet_offset: 18
+      - length: 26
+        bogey_offsets: [5, 21]
+      - length: 26
+        bogey_offsets: [5, 21]
+    position:
+      piece_id: p1-s
+      anchor_name: out
+      offset: 4
+    controller_id: powered_up
+    controller_parameters:
+      mac_address: 90:84:2B:0D:00:8D
+#  - cars:
+#    - length: 33
+#      bogey_offsets: [12, 26]
+#      nose: circular
+#      magnet_offset: 18
+#    - length: 26
+#      bogey_offsets: [5, 21]
+#    - length: 26
+#      bogey_offsets: [5, 21]
+#    position:
+#      piece_id: p2-s
+#      anchor_name: in
+#      offset: 4
+#    controller_id: powered_up
+#    controller_parameters:
+#      mac_address: 90:84:2B:07:99:E0
+
+controllers:
+  - id: maestro
+    type: maestro
+  - id: powered_up
+    type: powered_up
+
+sensors:
+  - position:
+      piece_id: p1-s
+      anchor_name: in
+      offset: 0
+    controller_id: maestro
+    controller_parameters:
+      index: 0
+      normally_high: yes
+    type: hall
+    single_direction: yes
+  - position:
+      piece_id: p2-s
+      anchor_name: in
+      offset: 0
+    controller_id: maestro
+    controller_parameters:
+      index: 1
+      normally_high: yes
+    type: hall
+    single_direction: yes

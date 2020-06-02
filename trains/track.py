@@ -5,6 +5,7 @@ import uuid
 from numbers import Number
 from typing import Dict, Tuple
 
+from trains.registry_meta import WithRegistry
 
 Position = collections.namedtuple('Position', ('x', 'y', 'angle'))
 
@@ -36,29 +37,18 @@ class Anchor(dict):
         else:
             return None, None
 
-
-class TrackPieceMeta(type):
-    def __new__(mcs, name, bases, attrs):
-        cls = type.__new__(mcs, name, bases, attrs)
-        if cls.name:
-            cls.registry[cls.name] = cls
-        return cls
-
-
-class TrackPiece(metaclass=TrackPieceMeta):
-    registry = {}
-    name = None
+class TrackPiece(WithRegistry):
+    registry_type = None
     anchor_names = ()
     placement = None
 
-    def __init__(self, placement: dict=None, id: str=None):
+    def __init__(self, placement: Position=None, **kwargs):
         self.anchors = {anchor_name: Anchor({self: anchor_name})
                         for anchor_name in self.anchor_names}
-        if placement:
-            self.placement = Position(**placement)
-        self.id = id or str(uuid.uuid4())
+        self.placement = placement
         self.claimed_by = None
         self.reservations = {}
+        super().__init__(**kwargs)
 
     def traversals(self, anchor_from: str) -> Dict[str, Tuple[Number, bool]]:
         return {}
@@ -68,10 +58,15 @@ class TrackPiece(metaclass=TrackPieceMeta):
             if available:
                 return anchor_name, distance
 
+    layout_priority = float('inf')
+
+    @classmethod
+    def get_layout_options(cls):
+        return []
 
 class Straight(TrackPiece):
     anchor_names = ('in', 'out')
-    name = 'straight'
+    registry_type = 'straight'
     label = 'straight'
 
     def __init__(self, length: int=16, **kwargs):
@@ -81,10 +76,20 @@ class Straight(TrackPiece):
     def traversals(self, anchor_from):
         return {'out' if anchor_from == 'in' else 'in': (self.length, True)}
 
+    layout_priority = 10
+
+    @classmethod
+    def get_layout_options(cls):
+        return [
+            {'length': 16, 'label': 'Straight'},
+            {'length': 8, 'label': 'Half-straight'},
+            {'length': 4, 'label': 'Quarter-straight'},
+        ]
+
 
 class Curve(TrackPiece):
     anchor_names = ('in', 'out')
-    name = 'curve'
+    registry_type = 'curve'
     label = 'curve'
     ldraw_id = '53400'
 
@@ -96,6 +101,18 @@ class Curve(TrackPiece):
 
     def traversals(self, anchor_from):
         return {'out' if anchor_from == 'in' else 'in': (math.tau * self.radius / self.per_circle, True)}
+
+    layout_priority = 20
+
+    @classmethod
+    def get_layout_options(cls):
+        return [
+            {'radius': 40, 'per_circle': 16, 'label': 'Curve'},
+            {'radius': 40, 'per_circle': 32, 'label': 'Curve (half)'},
+            {'radius': 24, 'per_circle': 16, 'label': 'R24 curve'},
+            {'radius': 56, 'per_circle': 16, 'label': 'R56 curve'},
+            {'radius': 72, 'per_circle': 32, 'label': 'R72 curve'},
+        ]
 
 
 def _bezier(xy1, xy2, xy3, t):
@@ -111,7 +128,7 @@ def _distance(xy1, xy2):
 
 class Points(TrackPiece):
     anchor_names = ('in', 'branch', 'out')
-    name = 'points'
+    registry_type = 'points'
     label = 'points'
 
     def __init__(self, direction: str='left', state: str='out', **kwargs):
@@ -156,10 +173,20 @@ class Points(TrackPiece):
         elif anchor_from == 'branch':
             return {'in': (self.branch_length, True)}
 
+    layout_priority = 30
+
+    @classmethod
+    def get_layout_options(cls):
+        return [
+            {'direction': 'left', 'label': 'Points (left)'},
+            {'direction': 'right', 'label': 'Points (right)'},
+        ]
+
+
 
 class Crossover(TrackPiece):
     anchor_names = ('in', 'left', 'right', 'out')
-    name = 'crossover'
+    registry_type = 'crossover'
     label = 'crossover'
 
     def __init__(self, length: int=16, **kwargs):
@@ -168,3 +195,13 @@ class Crossover(TrackPiece):
 
     def traversals(self, anchor_from):
         return {self.anchor_names[3 - self.anchor_names.index(anchor_from)]: (self.length, True)}
+
+    layout_priority = 40
+
+    @classmethod
+    def get_layout_options(cls):
+        return [
+            {'label': 'Crossover'},
+            {'length': 8, 'label': 'Crossover (short)'},
+        ]
+
