@@ -1,12 +1,11 @@
 runs:
-  - - type: points
-      direction: left
+  - - type: left-points
       anchors:
         in: j
         branch: p1
       placement:
         x: 0
-        y: 0
+        y: 24
         angle: 0
       state: branch
     - type: straight
@@ -24,8 +23,7 @@ runs:
     - type: straight
       anchors:
         out: p1
-  - - type: points
-      direction: right
+  - - type: right-points
       anchors:
         in: j
         branch: p2

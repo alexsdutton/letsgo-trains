@@ -63,23 +63,27 @@ class DrawnStraight(DrawnPiece):
     def bounds(self):
         return dict(x=0, y=-4, width=self.piece.length, height=8)
 
-    def as_svg(self):
-        width = str(self.piece.length)
-        return SVG.g(
-            # base
-            SVG.rect(x="0", y="-4", width=width, height="8", fill=HexColors.dark_bluish_gray.value),
-            # top rail
-            SVG.rect(x="0", y="-3", width=width, height="1", fill=HexColors.tan.value),
-            # bottom rail
-            SVG.rect(x="0", y="2", width=width, height="1", fill=HexColors.tan.value),
-        )
-
     def draw(self, cr):
-        cr.set_line_width(8)
-        cr.move_to(0, 0)
-        cr.line_to(self.piece.length, 0)
         cr.set_source_rgb(*self.get_base_color())
+
+        cr.move_to(0.5, -4)
+        cr.line_to(0.5, 4)
+        cr.move_to(self.piece.length - 0.5, -4)
+        cr.line_to(self.piece.length - 0.5, 4)
+
+        cr.set_line_width(1)
         cr.stroke()
+
+        for x in range(4, self.piece.length, 4):
+            cr.move_to(x, -4)
+            cr.line_to(x, 4)
+
+        cr.set_line_width(2)
+        cr.stroke()
+        #
+        # cr.move_to(0, 0)
+        # cr.line_to(self.piece.length, 0)
+        # cr.stroke()
         cr.set_line_width(1)
         cr.set_source_rgb(*Colors.tan)
 
@@ -107,22 +111,6 @@ class DrawnCrossover(DrawnPiece):
 
     def bounds(self):
         return dict(x=0, y=-8, width=16, height=16)
-
-    def as_svg(self):
-        return SVG.g(
-            # base
-            SVG.rect(x="0", y="-4", width="16", height="8", fill=HexColors.dark_bluish_gray.value),
-            # cross
-            SVG.rect(x="4", y="-8", width="8", height="16", fill=HexColors.dark_bluish_gray.value),
-            # top rail
-            SVG.rect(x="0", y="-3", width="16", height="1", fill=HexColors.tan.value),
-            # bottom rail
-            SVG.rect(x="0", y="2", width="16", height="1", fill=HexColors.tan.value),
-            # left rail
-            SVG.rect(x="5", y="-8", width="1", height="16", fill=HexColors.tan.value),
-            # right rail
-            SVG.rect(x="10", y="-8", width="1", height="16", fill=HexColors.tan.value),
-        )
 
     def draw(self, cr):
         cr.set_line_width(8)
@@ -177,29 +165,6 @@ class DrawnCurve(DrawnPiece):
         return dict(x=0, y=-4,
                     width=self._get_end(-4j, self.piece.radius + 4).real,
                     height=self._get_end(8j, self.piece.radius - 4).imag)
-
-    def as_svg(self):
-        radius, per_circle = self.piece.radius, self.piece.per_circle
-        def get_end(offset, r):
-            end = self._get_end(offset, r)
-            return f'{end.real} {end.imag}'
-        return SVG.g(
-            # base
-            SVG.path(
-                d=f'M 0 0 A {radius} {radius} {360 / per_circle} 0 1 {get_end(0, radius)}',
-                style=f'stroke: {HexColors.dark_bluish_gray.value}; stroke-width: 8; stroke-linecap: butt; fill: none',
-            ),
-            # top rail
-            SVG.path(
-                d=f'M 0 2.5 A {radius - 2.5} {radius - 2.5} {360 / per_circle} 0 1 {get_end(2.5j, radius - 2.5)}',
-                style=f'stroke: {HexColors.tan.value}; stroke-width: 1; stroke-linecap: butt; fill: none',
-            ),
-            # bottom rail
-            SVG.path(
-                d=f'M 0 -2.5 A {radius + 2.5} {radius + 2.5} {360 / per_circle} 0 1 {get_end(-2.5j, radius + 2.5)}',
-                style=f'stroke: {HexColors.tan.value}; stroke-width: 1; stroke-linecap: butt; fill: none',
-            ),
-        )
 
     def draw(self, cr):
         cr.set_line_width(8)
@@ -314,32 +279,3 @@ class Points(DrawnPiece):
             return x, y * flip, float('nan')
         if in_anchor == 'out':
             return 32 - offset, 0, math.pi
-
-#
-# border = 2
-# max_width = max(drawn_piece().bounds()['width'] for drawn_piece in DrawnPiece.registry.values())
-# max_height = max(drawn_piece().bounds()['height'] for drawn_piece in DrawnPiece.registry.values())
-# max_dimension = max(max_height, max_width) + 2 * border
-#
-#
-# for drawn_piece in DrawnPiece.registry.values():
-#     dp = drawn_piece()
-#     bounds = dp.bounds()
-#     centre_x = bounds['x'] + bounds['width'] / 2
-#     centre_y = bounds['y'] + bounds['height'] / 2
-#
-#     svg = SVG.svg(
-#         drawn_piece().as_svg(),
-#         viewBox=f'{centre_x - max_dimension / 2} {centre_y - max_dimension / 2} {max_dimension} {max_dimension}',
-#     width='256', height='256')
-#     svg_string = etree.tostring(svg)
-#
-#     with open(os.path.join(os.path.dirname(__file__), 'data', 'pieces', drawn_piece.name + ".svg"), 'wb') as f:
-#         f.write(svg_string)
-#
-#     with open(os.path.join(os.path.dirname(__file__), 'data', 'pieces', drawn_piece.name + ".png"), 'wb') as f:
-#         svg2png(svg_string, file_obj=f)
-#     svg2png(svg_string, write_to=os.path.join(os.path.dirname(__file__), 'data', 'pieces', drawn_piece.name + ".png"))
-
-
-#print(etree.tostring(curve()))

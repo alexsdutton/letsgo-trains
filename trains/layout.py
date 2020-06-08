@@ -1,8 +1,11 @@
 import threading
 import time
 
+from trains.track import Position
+
 from trains import track
 from trains.control import Controller
+from trains.pieces import piece_classes
 from trains.routeing import Stop, Itinerary
 from trains.sensor import Sensor
 from trains.station import Station, Platform
@@ -86,6 +89,7 @@ class Layout:
             controller.start()
 
     def stop(self):
+        return
         if not self.running.is_set():
             raise AssertionError
         self.running.clear()
@@ -144,10 +148,12 @@ class Layout:
         for run in yaml['runs']:
             previous_anchor = None
             for track_object in run:
-                piece_kwargs = {k: v for k, v in track_object.items() if k not in ('piece', 'anchors', 'count')}
+                piece_kwargs = {k: v for k, v in track_object.items() if k not in ('type', 'anchors', 'count')}
+                if piece_kwargs.get('placement'):
+                    piece_kwargs['placement'] = Position(**piece_kwargs['placement'])
                 n = track_object.get('count', 1)
                 for i in range(0, n):
-                    piece = track.TrackPiece.from_yaml(layout=self, **piece_kwargs)
+                    piece = piece_classes[track_object['type']](layout=self, **piece_kwargs)
                     pieces_by_id[piece.id] = piece
                     in_anchor = piece.anchors[piece.anchor_names[0]]
                     out_anchor = piece.anchors[piece.anchor_names[-1]]

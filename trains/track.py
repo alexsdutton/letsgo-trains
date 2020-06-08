@@ -87,33 +87,6 @@ class Straight(TrackPiece):
         ]
 
 
-class Curve(TrackPiece):
-    anchor_names = ('in', 'out')
-    registry_type = 'curve'
-    label = 'curve'
-    ldraw_id = '53400'
-
-    def __init__(self, radius: int=40, per_circle: int=16, direction: str='left', **kwargs):
-        self.radius = radius
-        self.per_circle = per_circle
-        self.direction = direction
-        super().__init__(**kwargs)
-
-    def traversals(self, anchor_from):
-        return {'out' if anchor_from == 'in' else 'in': (math.tau * self.radius / self.per_circle, True)}
-
-    layout_priority = 20
-
-    @classmethod
-    def get_layout_options(cls):
-        return [
-            {'radius': 40, 'per_circle': 16, 'label': 'Curve'},
-            {'radius': 40, 'per_circle': 32, 'label': 'Curve (half)'},
-            {'radius': 24, 'per_circle': 16, 'label': 'R24 curve'},
-            {'radius': 56, 'per_circle': 16, 'label': 'R56 curve'},
-            {'radius': 72, 'per_circle': 32, 'label': 'R72 curve'},
-        ]
-
 
 def _bezier(xy1, xy2, xy3, t):
     (x1, y1), (x2, y2), (x3, y3) = xy1, xy2, xy3
@@ -182,26 +155,4 @@ class Points(TrackPiece):
             {'direction': 'right', 'label': 'Points (right)'},
         ]
 
-
-
-class Crossover(TrackPiece):
-    anchor_names = ('in', 'left', 'right', 'out')
-    registry_type = 'crossover'
-    label = 'crossover'
-
-    def __init__(self, length: int=16, **kwargs):
-        self.length = length
-        super().__init__(**kwargs)
-
-    def traversals(self, anchor_from):
-        return {self.anchor_names[3 - self.anchor_names.index(anchor_from)]: (self.length, True)}
-
-    layout_priority = 40
-
-    @classmethod
-    def get_layout_options(cls):
-        return [
-            {'label': 'Crossover'},
-            {'length': 8, 'label': 'Crossover (short)'},
-        ]
 

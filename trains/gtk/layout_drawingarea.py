@@ -3,8 +3,9 @@ import random
 
 import gi
 from cairo import Context
+from trains.drawing_options import DrawingOptions
 
-from trains.drawing import DrawnPiece, hex_to_rgb
+from trains.drawing import Colors, hex_to_rgb
 from trains.layout import Layout
 from trains.sensor import Sensor
 from trains.track import TrackPiece
@@ -28,7 +29,14 @@ class LayoutDrawer:
         self.drawing_area.connect('button-press-event', self.mouse_press)
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
-        self.offset = 0, 0
+
+        self.drawing_options = DrawingOptions(
+            offset=(0, 0),
+            scale=3,
+            rail_color=Colors.dark_bluish_gray,
+            sleeper_color=Colors.tan,
+        )
+
         self.offset_orig = None
         self.mouse_down = None
         self.layout = layout
@@ -41,7 +49,7 @@ class LayoutDrawer:
 
     def mouse_press(self, widget, event):
         if event.button == Gdk.BUTTON_PRIMARY:
-            self.offset_orig = self.offset
+            self.offset_orig = self.drawing_options.offset
             self.mouse_down = event.x, event.y
 
     def mouse_release(self, widget, event):
@@ -51,18 +59,20 @@ class LayoutDrawer:
 
     def mouse_motion(self, widget, event):
         if self.mouse_down:
-            self.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
-                           self.offset_orig[1] + event.y - self.mouse_down[1])
+            self.drawing_options.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
+                                           self.offset_orig[1] + event.y - self.mouse_down[1])
             self.drawing_area.queue_draw()
 
-    def draw(self, widget, cr):
+    def draw(self, widget, cr: Context):
 
         w = widget.get_allocated_width()
         h = widget.get_allocated_height()
 
-        #cr.identity_matrix()
-        cr.translate(w / 2 + self.offset[0], h / 2 + self.offset[1])
-        cr.scale(3, 3)
+        # Initial translation and scale
+        cr.translate(w / 2 + self.drawing_options.offset[0],
+                     h / 2 + self.drawing_options.offset[1])
+        cr.scale(self.drawing_options.scale, self.drawing_options.scale)
+
         self.base_ctm = cr.get_matrix()
         self.base_ctm.invert()
 
@@ -88,27 +98,27 @@ class LayoutDrawer:
         cr.stroke()
 
     def draw_layout(self, layout: Layout, cr: Context):
-        cr.set_line_width(9)
-        cr.set_source_rgb(0.7, 0.2, 0.0)
+        # cr.set_line_width(9)
+        # cr.set_source_rgb(0.7, 0.2, 0.0)
 
         seen_pieces = set()
         for piece in layout.placed_pieces:
+            cr.save()
             self.draw_piece(piece, seen_pieces, cr)
+            cr.restore()
 
     def draw_piece(self, piece: TrackPiece, seen_pieces: set, cr: Context):
         seen_pieces.add(piece)
-
-        drawn_piece = DrawnPiece.for_piece(piece)
 
         if piece.placement:
             cr.translate(piece.placement.x, piece.placement.y)
             cr.rotate(piece.placement.angle)
 
-        drawn_piece.draw(cr)
+        piece.draw(cr, self.drawing_options)
 
         self.piece_matrices[piece] = cr.get_matrix() * self.base_ctm
 
-        relative_positions = drawn_piece.relative_positions()
+        relative_positions = piece.relative_positions()
 
         for anchor_name, anchor in piece.anchors.items():
             next_piece, next_anchor_name = anchor.next(piece)
@@ -122,8 +132,7 @@ class LayoutDrawer:
 
             if next_piece and next_piece not in seen_pieces:
                 if next_anchor_name != next_piece.anchor_names[0]:
-                    next_drawn_piece = DrawnPiece.for_piece(next_piece)
-                    next_position = next_drawn_piece.relative_positions()[next_anchor_name]
+                    next_position = next_piece.relative_positions()[next_anchor_name]
                     cr.rotate(-next_position.angle + math.pi)
                     cr.translate(-next_position.x, -next_position.y)
                 self.draw_piece(next_piece, seen_pieces, cr)
@@ -154,8 +163,8 @@ class LayoutDrawer:
             self.draw_sensor(sensor, layout, cr)
 
     def draw_sensor(self, sensor: Sensor, layout: Layout, cr: Context):
-        drawn_piece = DrawnPiece.for_piece(sensor.position.piece)
-        px, py, angle = drawn_piece.point_position(sensor.position.anchor_name, sensor.position.offset)
+        piece = sensor.position.piece
+        px, py, angle = piece.point_position(sensor.position.anchor_name, sensor.position.offset)
         cr.save()
         cr.translate(*self.piece_matrices[sensor.position.piece].transform_point(px, py))
         cr.rotate(math.atan2(*self.piece_matrices[sensor.position.piece].transform_distance(0, 1)) - angle)
@@ -171,8 +180,7 @@ class LayoutDrawer:
         cr.restore()
 
     def transform_track_point(self, track_point):
-        drawn_piece = DrawnPiece.for_piece(track_point.piece)
-        px, py, angle = drawn_piece.point_position(track_point.anchor_name, track_point.offset)
+        px, py, angle = track_point.piece.point_position(track_point.anchor_name, track_point.offset)
         return self.piece_matrices[track_point.piece].transform_point(px, py)
 
     def point_back(self, track_point, distance):
