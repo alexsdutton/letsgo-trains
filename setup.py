@@ -20,7 +20,7 @@ setup(
     entry_points={
         'trains.piece': [
             'straight = trains.pieces:Straight',
-            'half-straight = trains.pieces:Straight',
+            'half-straight = trains.pieces:HalfStraight',
             'quarter-straight = trains.pieces:QuarterStraight',
             'curve = trains.pieces:Curve',
             'half-curve = trains.pieces:HalfCurve',

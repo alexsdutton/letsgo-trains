@@ -64,7 +64,7 @@ class Layout:
         signals.controller_added.send(self, controller=controller)
 
     def remove_controller(self, controller):
-        del self.itineraries[controller.id]
+        del self.controllers[controller.id]
         signals.controller_removed.send(self, controller=controller)
 
     def add_sensor(self, sensor):
@@ -73,7 +73,7 @@ class Layout:
         signals.sensor_activity.connect(self.on_sensor_activity, sender=sensor)
 
     def remove_sensor(self, sensor):
-        del self.itineraries[sensor.id]
+        del self.sensors[sensor.id]
         signals.sensor_removed.send(self, sensor=sensor)
         signals.sensor_activity.disconnect(self.on_sensor_activity, sender=sensor)
 
@@ -285,6 +285,19 @@ class Layout:
 
         return runs
 
+    def clear(self):
+        # Could do `while self.trains: self.remove_train(self.trains.popvalue())` or some such, but never mind
+        for train in list(self.trains.values()):
+            self.remove_train(train)
+        for station in list(self.stations.values()):
+            self.remove_station(station)
+        for sensor in list(self.sensors.values()):
+            self.remove_sensor(sensor)
+        for controller in list(self.controllers.values()):
+            self.remove_controller(controller)
+        for piece in list(self.pieces):
+            self.remove_piece(piece)
+        signals.layout_cleared.send(self)
 
 if __name__ == '__main__':
     import pkg_resources

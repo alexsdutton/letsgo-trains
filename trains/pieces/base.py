@@ -6,6 +6,9 @@ from typing import Dict, Tuple, TYPE_CHECKING
 
 import typing
 
+import cairo
+import math
+
 if TYPE_CHECKING:
     from cairo import Context
     from trains.layout import Layout
@@ -46,3 +49,20 @@ class Piece:
 
     def draw(self, cr: Context, drawing_options: DrawingOptions):
         raise NotImplementedError
+
+    @classmethod
+    def get_icon_surface(cls, drawing_options: DrawingOptions):
+        self = cls()
+
+        bounds = self.bounds()
+
+        image = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                   math.ceil(drawing_options.scale * bounds['width'] + 10),
+                                   math.ceil(drawing_options.scale * bounds['height'] + 10))
+        cr = cairo.Context(image)
+        cr.translate(5, 5)
+        cr.scale(drawing_options.scale, drawing_options.scale)
+        cr.translate(-bounds['x'], -bounds['y'])
+        self.draw(cr, drawing_options)
+
+        return image

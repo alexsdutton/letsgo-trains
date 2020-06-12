@@ -16,7 +16,7 @@ class BaseCrossover(Piece):
 
     layout_priority = 40
 
-    #Drawing
+    # Drawing
 
     def bounds(self):
         return dict(x=0,
@@ -42,10 +42,10 @@ class BaseCrossover(Piece):
         cr.line_to(self.length, -2.5)
         cr.move_to(0, 2.5)
         cr.line_to(self.length, 2.5)
-        cr.move_to(5.5, -self.length/2)
-        cr.line_to(5.5, self.length/2)
-        cr.move_to(10.5, -self.length/2)
-        cr.line_to(10.5, self.length/2)
+        cr.move_to(self.length / 2 - 2.5, -self.length/2)
+        cr.line_to(self.length / 2 - 2.5, self.length/2)
+        cr.move_to(self.length / 2 + 2.5, -self.length/2)
+        cr.line_to(self.length / 2 + 2.5, self.length/2)
         cr.stroke()
 
     def relative_positions(self):

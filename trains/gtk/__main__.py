@@ -30,14 +30,15 @@ class Application(Gtk.Application):
     WINDOW_STATE_TO_SAVE = (
             Gdk.WindowState.MAXIMIZED |
             Gdk.WindowState.LEFT_TILED |
-            Gdk.WindowState.RIGHT_TILED  |
-            Gdk.WindowState.TOP_TILED  |
+            Gdk.WindowState.RIGHT_TILED |
+            Gdk.WindowState.TOP_TILED |
             Gdk.WindowState.BOTTOM_TILED
     )
 
     def __init__(self):
         super().__init__(application_id=self.APPLICATION_ID,
                                     flags=Gio.ApplicationFlags.FLAGS_NONE)
+
         schema_source = Gio.SettingsSchemaSource.new_from_directory(os.path.join(os.path.dirname(__file__), '..', 'data'),
                                                                     Gio.SettingsSchemaSource.get_default(), False)
         schema = Gio.SettingsSchemaSource.lookup(schema_source, 'apps.' + self.APPLICATION_ID, False)
@@ -48,6 +49,7 @@ class Application(Gtk.Application):
         self.builder = Gtk.Builder()
         self.builder.add_from_string(pkg_resources.resource_string('trains', 'data/trains.glade').decode())
         self.window = self.builder.get_object('main-window')
+        self.window.set_title('Trains!')
         self.window.connect('window-state-event', self.on_window_state_event)
 
         self.status_bar: Gtk.Statusbar = self.builder.get_object('status-bar')
@@ -72,12 +74,13 @@ class Application(Gtk.Application):
         self.layout_listbox = LayoutListBox(self.layout, self.builder)
         self.configure_dialog = ConfigureDialog(self.layout, self.builder)
         self.builder.get_object('configure-button').connect('clicked', self.on_configure_clicked)
+        self.builder.get_object('new-button').connect('clicked', self.on_new_clicked)
 
         self.layout_drawer = LayoutDrawer(self.layout_area, self.layout)
 
         signals.piece_added.connect(self.on_piece_added, sender=self.layout)
 
-        self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/point-eight.yaml')))
+        self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/stations.yaml')))
 
         self.last_tick = time.time()
         GLib.timeout_add(20, self.send_tick)
@@ -89,6 +92,9 @@ class Application(Gtk.Application):
         window_state = self.settings.get_int('window-state')
         if window_state & Gdk.WindowState.MAXIMIZED:
             self.window.maximize()
+
+    def on_new_clicked(self, widget):
+        self.layout.clear()
 
     def on_configure_clicked(self, widget):
         if self.configure_dialog.get_visible():
@@ -149,46 +155,6 @@ class Application(Gtk.Application):
         super().run(*args, **kwargs)
         self.layout.start()
 
-    #
-    # def hub_discovered(self, sender, hub):
-    #     pair_with_train = None
-    #     for train in self.layout.trains:
-    #         if hub.mac_address.lower() == train.meta.get('mac_address', '').lower():
-    #             pair_with_train = train
-    #             break
-    #     else:
-    #         for train in self.layout.trains:
-    #             if train.meta.get('pairing'):
-    #                 train.meta['mac_address'] = hub.mac_address
-    #                 pair_with_train = train
-    #                 break
-    #     if pair_with_train:
-    #         hub.train = pair_with_train
-    #         hub.connect()
-    #
-    # def hub_connected(self, sender, hub):
-    #     for train in self.layout.trains:
-    #         if hub.mac_address.lower() == train.meta.get('mac_address', '').lower():
-    #             signals.train_hub_connected.send(train, hub=hub)
-    #             break
-    #
-    # def hub_disconnected(self, sender, hub):
-    #     for train in self.layout.trains:
-    #         if hub.mac_address.lower() == train.meta.get('mac_address', '').lower():
-    #             signals.train_hub_disconnected.send(train, hub=hub)
-    #             break
-
-
-
-    # def hub_connected(self, sender, hub):
-    #     hub_status_context = self.status_bar.get_context_id('hub')
-    #     self.status_bar.push(hub_status_context, 'Hub connected')
-    #     self.train_box.pack_end(TrainEntry(hub), False, False, 0)
-    #
-    # def hub_disconnected(self, sender, hub):
-    #     hub_status_context = self.status_bar.get_context_id('hub')
-    #     self.status_bar.push(hub_status_context, 'Hub disconnected')
-
     def do_activate(self):
         Gtk.Application.do_activate(self)
         self.window.set_application(self)
@@ -202,6 +168,9 @@ class Application(Gtk.Application):
         Gtk.Application.do_shutdown(self)
 
 
-if __name__ == '__main__':
+def main():
     app = Application()
     app.run(sys.argv)
+
+if __name__ == '__main__':
+    main()

@@ -1,4 +1,5 @@
 from gi.repository import GObject, Gtk
+from trains.layout import Layout
 
 from trains.train import Train
 from .. import signals
@@ -148,10 +149,23 @@ class TrainListBox(Gtk.ListBox):
         self.__class__ = cls
         self.layout = layout
         self.builder = builder
+        self._train_controls_by_train = {}
         self.popover = TrainPopover(self.builder)
-        signals.train_added.connect(self.on_train_added, sender=self.layout)
+        signals.train_added.connect(self.on_train_added, layout)
+        signals.train_removed.connect(self.on_train_removed, layout)
         return self
 
-    def on_train_added(self, sender, train):
-        self.add(TrainControls(train=train, popover=self.popover))
+    def on_layout_set(self, sender, layout):
+        signals.train_added.disconnect(self.on_train_added)
+        for train_controls in self.get_children():
+            train_controls.destroy()
+        signals.train_added.connect(self.on_train_added, layout)
 
+    def on_train_added(self, sender, train):
+        train_controls = TrainControls(train=train, popover=self.popover)
+        self._train_controls_by_train[train] = train_controls
+        self.add(train_controls)
+
+    def on_train_removed(self, sender, train):
+        train_controls = self._train_controls_by_train.pop(train)
+        train_controls.destroy()

@@ -1,6 +1,5 @@
 runs:
-  - - type: points
-      direction: left
+  - - type: left-points
       id: trainHerePleaseToo
       placement:
         x: 0
@@ -9,8 +8,7 @@ runs:
       anchors:
         in: s1
         branch: s1-loop-start
-    - type: points
-      direction: right
+    - type: right-points
       id: s1-e1
       anchors:
         branch: s1-p2-start
@@ -37,8 +35,7 @@ runs:
     - type: curve
       count: 4
       direction: right
-    - type: points
-      direction: right
+    - type: right-points
       id: s1-e2
       anchors:
         branch: s1-p1-end
@@ -48,15 +45,13 @@ runs:
       direction: right
       anchors:
         out: p2-start
-  - - type: points
-      direction: left
+  - - type: left-points
       id: trainHerePlease
       anchors:
         in: s2
         branch: s2-loop-start
-    - type: points
+    - type: right-points
       id: s2-e1
-      direction: right
       anchors:
         branch: s2-p2-start
     - type: straight
@@ -82,9 +77,8 @@ runs:
     - type: curve
       count: 4
       direction: right
-    - type: points
+    - type: right-points
       id: s2-e2
-      direction: right
       anchors:
         branch: s2-p1-end
     - type: straight

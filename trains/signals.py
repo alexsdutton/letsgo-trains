@@ -1,5 +1,7 @@
 from blinker import signal
 
+layout_cleared = signal('layout-cleared')
+
 piece_added = signal('piece-added')
 piece_removed = signal('piece-removed')
 

@@ -3,17 +3,19 @@ import random
 
 import gi
 from cairo import Context
+from trains.pieces import piece_classes
+
 from trains.drawing_options import DrawingOptions
 
 from trains.drawing import Colors, hex_to_rgb
 from trains.layout import Layout
 from trains.sensor import Sensor
-from trains.track import TrackPiece
+from trains.track import Position, TrackPiece
 from .. import signals
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
-from gi.repository import GObject, Gdk
+from gi.repository import GObject, Gdk, Gtk
 
 SENSOR_NORMAL = (1, 0, 0)
 SENSOR_ACTIVATED = (0, 1, 0)
@@ -23,6 +25,12 @@ class LayoutDrawer:
     def __init__(self, drawing_area, layout):
         self.drawing_area = drawing_area
         self.drawing_area.connect('draw', self.draw)
+
+        self.drawing_area.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
+        self.drawing_area.connect("drag-motion", self.on_drag_motion)
+        self.drawing_area.connect("drag-data-received", self.on_drag_data_received)
+        self.drawing_area.drag_dest_add_text_targets()
+
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
@@ -63,6 +71,21 @@ class LayoutDrawer:
                                            self.offset_orig[1] + event.y - self.mouse_down[1])
             self.drawing_area.queue_draw()
 
+    def on_drag_motion(self, widget, drag_context, x, y, time):
+        print(drag_context)
+
+    def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
+        # Calculate x and y in layout space
+        x = (x - self.drawing_options.offset[0] - widget.get_allocated_width() / 2) / self.drawing_options.scale
+        y = (y - self.drawing_options.offset[1] - widget.get_allocated_height() / 2) / self.drawing_options.scale
+
+        print(data.get_text())
+        print(widget, drag_context, x, y, data, info, time)
+        piece_cls = piece_classes[data.get_text()]
+        piece = piece_cls(self.layout, placement=Position(x, y, angle=0))
+        self.layout.add_piece(piece)
+
+
     def draw(self, widget, cr: Context):
 
         w = widget.get_allocated_width()
@@ -86,16 +109,20 @@ class LayoutDrawer:
 
     def draw_grid(self, cr: Context):
         cr.set_line_width(0.5)
-        cr.set_source_rgba(0.8, 0.8, 0.8, 0.4)
 
         for x in range(-10, 10):
+            v = 0.7 if (x % 3) == 0 else 0.8
+            cr.set_source_rgba(v, v, v, 0.4)
             cr.move_to(x * 32, -320)
             cr.line_to(x * 32, 320)
+            cr.stroke()
+
         for y in range(-10, 10):
+            v = 0.7 if (y % 3) == 0 else 0.8
+            cr.set_source_rgba(v, v, v, 0.4)
             cr.move_to(-320, y * 32)
             cr.line_to(320, y *  32)
-
-        cr.stroke()
+            cr.stroke()
 
     def draw_layout(self, layout: Layout, cr: Context):
         # cr.set_line_width(9)
@@ -137,7 +164,11 @@ class LayoutDrawer:
                     cr.translate(-next_position.x, -next_position.y)
                 self.draw_piece(next_piece, seen_pieces, cr)
 
-            cr.set_source_rgb(1, .5, .5)
+            if next_piece:
+                cr.set_source_rgb(1, .5, .5)
+            else:
+                cr.set_source_rgb(.5, 1, .5)
+
             cr.arc(0, 0, 1, 0, math.tau)
             cr.fill()
 

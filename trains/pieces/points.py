@@ -76,9 +76,12 @@ class BasePoints(Piece):
         return -1 if self.direction == 'left' else 1
 
     def bounds(self):
-        return dict(x=0, y=-20,
-                    width=40,
-                    height=40)
+        width = self.branch_point[0]  + 4 * math.sin(math.pi / 8)
+        height = abs(self.branch_point[1]) + 4 * math.cos(math.pi / 8) + 4
+        return dict(x=0,
+                    y=4 - height if self.direction == 'left' else -4,
+                    width=width,
+                    height=height)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
         cr.set_source_rgb(*drawing_options.sleeper_color)
@@ -113,7 +116,7 @@ class BasePoints(Piece):
         # cr.stroke()
 
         for i in range(0, 10):
-            x, y, theta = self.point_position('in', i / 9 * self.branch_length)
+            x, y, theta = self.point_position('in', i / 9 * self.branch_length, out_anchor='branch')
             theta += - math.pi / 2
             x_off, y_off = math.cos(theta) * 4, math.sin(theta) * 4
             cr.move_to(x + x_off, y + y_off)
