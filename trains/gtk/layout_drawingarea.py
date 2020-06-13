@@ -15,6 +15,7 @@ from trains.layout import Layout
 from trains.sensor import Sensor
 from trains.track import Anchor, Position, TrackPiece
 from .. import signals
+from ..utils.quadtree import ResizingIndex
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
@@ -61,60 +62,11 @@ class LayoutDrawer:
         self.mouse_down = None
         self.layout = layout
 
-        self.qtree_index = pyqtree.Index(x=0, y=0, width=160, height=160)
-        self.qtree_bbox = -80, -80, 80, 80
-        self.qtree_bounds = {}
+        self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
 
         self.highlight_pieces = []
 
         signals.tick.connect(self.tick)
-
-    def add_to_qtree(self, item: Union[Anchor, Piece], position: Position):
-        bounds = item.bounds()
-        corners = [
-            (bounds.x, bounds.y),
-            (bounds.x + bounds.width, bounds.y),
-            (bounds.x, bounds.y + bounds.height),
-            (bounds.x + bounds.width, bounds.y + bounds.height),
-        ]
-        corners = [
-            (
-                (math.cos(position.angle) * x + math.sin(position.angle) * y),
-                (math.sin(position.angle) * x + math.cos(position.angle) * y),
-            ) for x, y in corners
-        ]
-        bbox = (
-            position.x + min(x for x, y in corners),
-            position.y + min(y for x, y in corners),
-            position.x + max(x for x, y in corners),
-            position.y + max(y for x, y in corners),
-        )
-
-        previous_bbox = self.qtree_bounds.get(item)
-
-        if bbox == previous_bbox:
-            return
-
-        if previous_bbox:
-            self.qtree_index.remove(item, previous_bbox)
-        self.qtree_bounds[item] = bbox
-
-        if bbox[0] <= self.qtree_bbox[0] or bbox[1] <= self.qtree_bbox[1] or bbox[2] >= self.qtree_bbox[2] or bbox[3] >= self.qtree_bbox[3]:
-            # If it falls outside the quadtree bounds, increase the size of the quadtree to fits
-            minx, miny, maxx, maxy = -80, -80, 80, 80
-            for item_minx, item_miny, item_maxx, item_maxy in self.qtree_bounds.values():
-                minx, miny = min(minx, item_minx), min(miny, item_miny)
-                maxx, maxy = max(maxx, item_maxx), max(maxy, item_maxy)
-            minx, maxx = minx - (maxx - minx) * 0.2, maxx + (maxx - minx) * 0.2
-            miny, maxy = miny - (maxy - miny) * 0.2, maxy + (maxy - miny) * 0.2
-            self.qtree_index = pyqtree.Index(
-                bbox=(minx, miny, maxx, maxy),
-            )
-            self.qtree_bbox = (minx, miny, maxx, maxy)
-            for item, item_bbox in self.qtree_bounds.items():
-                self.qtree_index.insert(item, item_bbox)
-        else:
-            self.qtree_index.insert(item, bbox)
 
     def tick(self, sender, time, time_elapsed):
         alloc = self.drawing_area.get_allocation()
@@ -132,7 +84,7 @@ class LayoutDrawer:
 
     def mouse_motion(self, widget, event):
         x, y = self.xy_to_layout(event.x, event.y)
-        self.highlight_pieces = self.qtree_index.intersect((x, y, x, y))[:1]
+        self.highlight_pieces = self.pieces_qtree.intersect((x, y, x, y))[:1]
         if self.mouse_down:
             self.drawing_options.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
                                            self.offset_orig[1] + event.y - self.mouse_down[1])
@@ -218,7 +170,7 @@ class LayoutDrawer:
         cr.stroke()
 
         self.piece_matrices[piece] = cr.get_matrix() * self.base_ctm
-        self.add_to_qtree(piece, Position.from_matrix(self.piece_matrices[piece]))
+        self.pieces_qtree.insert_item(piece, Position.from_matrix(self.piece_matrices[piece]))
 
         relative_positions = piece.relative_positions()
 
