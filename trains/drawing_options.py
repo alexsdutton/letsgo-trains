@@ -8,3 +8,14 @@ class DrawingOptions:
         self.scale = scale
         self.rail_color = rail_color
         self.sleeper_color = sleeper_color
+
+    def replace(self, **kwargs):
+        return type(self)(
+            **{
+                'offset': self.offset,
+                'scale': self.scale,
+                'rail_color': self.rail_color,
+                'sleeper_color': self.sleeper_color,
+                **kwargs,
+            }
+        )

@@ -22,10 +22,9 @@ class Piece:
     layout_priority = float('inf')
 
     def __init__(self, layout: Layout = None, placement: Position = None, id: str = None):
-        self.placement = placement
         self.anchors = {anchor_name: Anchor({self: anchor_name})
                         for anchor_name in self.anchor_names}
-        self.placement = placement
+        self._placement = placement
         self.claimed_by = None
         self.reservations = {}
 
@@ -35,6 +34,16 @@ class Piece:
             if self.layout.by_id.get(self.id) not in (None, self):
                 raise AssertionError("Can't reuse an ID for a new object")
             self.layout.by_id[self.id] = self
+
+    @property
+    def placement(self) -> Position:
+        return self._placement
+
+    @placement.setter
+    def placement(self, value: Position):
+        if value != self._placement:
+            self._placement = value
+            self.layout.changed()
 
     def traversals(self, anchor_from: str) -> Dict[str, Tuple[Number, bool]]:
         raise NotImplementedError

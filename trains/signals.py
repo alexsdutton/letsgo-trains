@@ -1,6 +1,7 @@
 from blinker import signal
 
-layout_cleared = signal('layout-cleared')
+layout_changed = signal('layout-changed')
+"Signal sent when a layout is changed in any way. Will have cleared=True if the layout has been completely changed."
 
 piece_added = signal('piece-added')
 piece_removed = signal('piece-removed')

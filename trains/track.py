@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import collections
+import math
+from numbers import Number
+from typing import Dict, Tuple, TYPE_CHECKING
 
 import cairo
 import cmath
-import math
 import uuid
-from numbers import Number
-from typing import Dict, Tuple
+
+if TYPE_CHECKING:
+    from trains.pieces import Piece
 
 from trains.registry_meta import WithRegistry
 
@@ -20,6 +25,14 @@ Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
 
 
 class Anchor(dict):
+    """A connection between two track pieces.
+
+    An anchor is a dict of (piece: anchor_name) mappings. i.e. if a Points branch is connected to the right anchor of a
+    crossover, the anchor is `{<Points …>: "branch", <Crossover …>: "right"}`.
+
+    An anchor can only connect two pieces of track, and two anchors can be connected together by in-place addition, e.g.
+    `anchor_1 += anchor_2`.
+    """
     def __init__(self, *args, id=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.id = id or str(uuid.uuid4())
@@ -29,14 +42,17 @@ class Anchor(dict):
         super().__setitem__(key, value)
 
     def __iadd__(self, other):
-        # Neither anchor is already connected
-        assert len(self) == 1 and len(other) == 1
+        assert len(self) == 1 and len(other) == 1  # Neither anchor is already connected
+        assert set(self) != set(other)  # The anchors aren't on the same piece of track
 
-        assert set(self) != set(other)
         for track_piece, anchor_name in other.items():
             track_piece.anchors[anchor_name] = self
         self.update(other)
         return self
+
+    def __hash__(self):
+        # All anchors are unique
+        return id(self)
 
     def next(self, piece):
         """Return the piece other than `piece` connected at this anchor"""
@@ -48,7 +64,23 @@ class Anchor(dict):
 
     def bounds(self):
         # An anchor is a point
-        return (0, 0, 0, 0)
+        return Bounds(0, 0, 0, 0)
+
+    def split(self, new_side: Piece):
+        """Breaks an anchor in two if it is connected.
+
+        The new_side piece gets a new anchor created, with new_side removed from the existing anchor. This means that
+        `piece.anchors['out'] = piece.anchors['out'].split(piece)` will disconnect a piece from another through the
+        out anchor. If it's not connected, this statement is a no-op.
+        """
+        if len(self) == 2:
+            anchor_name = self.pop(new_side)
+            return Anchor({new_side: anchor_name})
+        elif len(self) == 1:
+            return self
+        else:
+            raise AssertionError
+
 
 class TrackPiece(WithRegistry):
     registry_type = None

@@ -83,7 +83,7 @@ class Application(Gtk.Application):
         self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/stations.yaml')))
 
         self.last_tick = time.time()
-        GLib.timeout_add(20, self.send_tick)
+        GLib.timeout_add(30, self.send_tick)
 
         self.load_from_settings()
 

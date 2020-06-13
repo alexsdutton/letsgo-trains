@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import functools
 import threading
 import time
 from typing import Union
@@ -17,6 +20,21 @@ from trains.train import Train, TrackPoint, Car
 from . import signals
 
 
+def _changes_layout(func):
+    """Decorator to record that a layout has changed, unless told not to.
+
+    Call with announce=False if you are making lots of changes in batch, and then remember to call
+    layout.changed() at the end.
+    """
+    @functools.wraps(func)
+    def f(self: Layout, *args, announce: bool = True, **kwargs):
+        result = func(self, *args, **kwargs)
+        if announce:
+            self.changed()
+        return result
+    return f
+
+
 class Layout:
     def __init__(self):
         self.pieces = set()
@@ -27,14 +45,20 @@ class Layout:
         self.sensors = {}
         self.by_id = {}
         self.running = threading.Event()
+        self._epoch = 0
 
         self.sensor_magnets_last_seen = {}
 
+    @_changes_layout
     def add_piece(self, piece):
         self.pieces.add(piece)
         signals.piece_added.send(self, piece=piece)
 
-    def remove_piece(self, piece):
+    @_changes_layout
+    def remove_piece(self, piece: Piece):
+        # Disconnect from any other pieces
+        for anchor_name in piece.anchors:
+            piece.anchors[anchor_name] = piece.anchors[anchor_name].split(piece)
         self.pieces.remove(piece)
         signals.piece_removed.send(self, piece=piece)
 
@@ -46,10 +70,12 @@ class Layout:
         del self.trains[train.id]
         signals.train_removed.send(self, train=train)
 
+    @_changes_layout
     def add_station(self, station):
         self.stations[station.id] = station
         signals.station_added.send(self, station=station)
 
+    @_changes_layout
     def remove_station(self, station):
         del self.stations[station.id]
         signals.station_removed.send(self, station=station)
@@ -70,11 +96,13 @@ class Layout:
         del self.controllers[controller.id]
         signals.controller_removed.send(self, controller=controller)
 
+    @_changes_layout
     def add_sensor(self, sensor):
         self.sensors[sensor.id] = sensor
         signals.sensor_added.send(self, sensor=sensor)
         signals.sensor_activity.connect(self.on_sensor_activity, sender=sensor)
 
+    @_changes_layout
     def remove_sensor(self, sensor):
         del self.sensors[sensor.id]
         signals.sensor_removed.send(self, sensor=sensor)
@@ -98,6 +126,18 @@ class Layout:
         self.running.clear()
         for controller in self.controllers.values():
             controller.stop()
+
+    @property
+    def epoch(self):
+        """This changes whenever the layout changes.
+
+        This property can be used to detect changes for e.g. reactive re-rendering.
+        """
+        return self._epoch
+
+    def changed(self, cleared=False):
+        self._epoch += 1
+        signals.layout_changed.send(self, cleared=cleared)
 
     def on_sensor_activity(self, sender: Sensor, activated, when):
         last_train_seen, last_magnet_index_seen, last_time_seen = \
@@ -176,7 +216,7 @@ class Layout:
                                 anchors_by_id[anchor_id] = piece.anchors[anchor_name]
                             anchors_by_id[anchor_id].id = anchor_id
 
-                    self.add_piece(piece)
+                    self.add_piece(piece, announce=False)
 
         for station_object in yaml.get('stations', []):
             platforms = []
@@ -187,7 +227,7 @@ class Layout:
                 platforms.append(Platform(**platform))
             station_object['platforms'] = platforms
             station = Station(**station_object)
-            self.add_station(station)
+            self.add_station(station, announce=False)
 
         for itinerary_object in yaml.get('itineraries', []):
             stops = []
@@ -221,7 +261,9 @@ class Layout:
                                                       position['anchor_name'],
                                                       position.get('offset', 0))
             sensor = Sensor.from_yaml(layout=self, **sensor_object)
-            self.add_sensor(sensor)
+            self.add_sensor(sensor, announce=False)
+
+        self.changed()
 
     def serialize(self):
         return {
@@ -293,14 +335,14 @@ class Layout:
         for train in list(self.trains.values()):
             self.remove_train(train)
         for station in list(self.stations.values()):
-            self.remove_station(station)
+            self.remove_station(station, announce=False)
         for sensor in list(self.sensors.values()):
-            self.remove_sensor(sensor)
+            self.remove_sensor(sensor, announce=False)
         for controller in list(self.controllers.values()):
             self.remove_controller(controller)
         for piece in list(self.pieces):
-            self.remove_piece(piece)
-        signals.layout_cleared.send(self)
+            self.remove_piece(piece, announce=True)
+        self.changed(cleared=True)
 
 if __name__ == '__main__':
     import pkg_resources

@@ -1,5 +1,6 @@
 from typing import Union
 
+import cairo
 import math
 import random
 
@@ -43,16 +44,18 @@ class LayoutDrawer:
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
 
+        signals.piece_removed.connect(self.on_piece_removed, sender=layout)
+
         self.drawing_options = DrawingOptions(
             offset=(0, 0),
-            scale=10,
+            scale=3,
             rail_color=Colors.dark_bluish_gray,
             sleeper_color=Colors.tan,
         )
 
         self.highlight_drawing_options = DrawingOptions(
-            offset=(0, 0),
-            scale=10,
+            offset=self.drawing_options.offset,
+            scale=self.drawing_options.scale,
             rail_color=Colors.red,
             sleeper_color=Colors.red,
         )
@@ -61,8 +64,10 @@ class LayoutDrawer:
         self.offset_orig = None
         self.mouse_down = None
         self.layout = layout
+        self.last_layout_state = None
 
         self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+        self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
 
         self.highlight_pieces = []
 
@@ -86,21 +91,38 @@ class LayoutDrawer:
         x, y = self.xy_to_layout(event.x, event.y)
         self.highlight_pieces = self.pieces_qtree.intersect((x, y, x, y))[:1]
         if self.mouse_down:
-            self.drawing_options.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
-                                           self.offset_orig[1] + event.y - self.mouse_down[1])
+            self.drawing_options = self.drawing_options.replace(
+                offset=(
+                    self.offset_orig[0] + event.x - self.mouse_down[0],
+                    self.offset_orig[1] + event.y - self.mouse_down[1]
+                )
+            )
             self.drawing_area.queue_draw()
 
     def on_drag_motion(self, widget, drag_context, x, y, time):
         print(drag_context)
 
     def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
+        piece_cls = piece_classes[data.get_text()]
         x, y = self.xy_to_layout(x, y)
 
-        print(data.get_text())
-        print(widget, drag_context, x, y, data, info, time)
-        piece_cls = piece_classes[data.get_text()]
-        piece = piece_cls(self.layout, placement=Position(x, y, angle=0))
+        possible_anchors = self.anchors_qtree.intersect((x-8, y-8, x+8, y+8))
+        possible_anchors = [anchor for anchor in possible_anchors if len(anchor) < 2]
+        if possible_anchors:
+            piece = piece_cls(self.layout)
+            possible_anchors[0] += piece.anchors[piece.anchor_names[0]]
+        else:
+            # Snap to an 8x8 grid
+            x = 8 * ((x + 4) // 8)
+            y = 8 * ((y + 4) // 8)
+            piece = piece_cls(self.layout, placement=Position(x, y, angle=0))
+
         self.layout.add_piece(piece)
+
+    def on_piece_removed(self, piece: Piece):
+        for anchor in piece.anchors.values():
+            self.anchors_qtree.remove_item(anchor)
+        self.pieces_qtree.remove_item(piece)
 
     def xy_to_layout(self, x, y):
         x = (x - self.drawing_options.offset[0] - self.drawing_area.get_allocated_width() / 2) / self.drawing_options.scale
@@ -108,24 +130,43 @@ class LayoutDrawer:
         return x, y
 
     def draw(self, widget, cr: Context):
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
 
-        w = widget.get_allocated_width()
-        h = widget.get_allocated_height()
+        layout_state = {
+            'w': width,
+            'h': height,
+            'drawing_options': self.drawing_options,
+            'epoch': self.layout.epoch
+        }
+
+        if layout_state != self.last_layout_state:
+            self.layout_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            layout_cr = cairo.Context(self.layout_surface)
+
+            layout_cr.translate(width / 2 + self.drawing_options.offset[0],
+                         height / 2 + self.drawing_options.offset[1])
+            layout_cr.scale(self.drawing_options.scale, self.drawing_options.scale)
+
+            self.base_ctm = layout_cr.get_matrix()
+            self.base_ctm.invert()
+            self.piece_matrices = {}
+
+            self.draw_grid(layout_cr)
+            self.draw_layout(self.layout, layout_cr)
+            self.draw_points_labels(self.layout, layout_cr)
+            self.draw_sensors(self.layout, layout_cr)
+            self.last_layout_state = layout_state
+
+        cr.set_source_surface(self.layout_surface)
+        cr.rectangle(0, 0, width, height)
+        cr.fill()
 
         # Initial translation and scale
-        cr.translate(w / 2 + self.drawing_options.offset[0],
-                     h / 2 + self.drawing_options.offset[1])
+        cr.translate(width / 2 + self.drawing_options.offset[0],
+                     height / 2 + self.drawing_options.offset[1])
         cr.scale(self.drawing_options.scale, self.drawing_options.scale)
 
-        self.base_ctm = cr.get_matrix()
-        self.base_ctm.invert()
-
-        self.piece_matrices = {}
-
-        self.draw_grid(cr)
-        self.draw_layout(self.layout, cr)
-        self.draw_points_labels(self.layout, cr)
-        self.draw_sensors(self.layout, cr)
         self.draw_trains(self.layout, cr)
 
     def draw_grid(self, cr: Context):
@@ -199,6 +240,9 @@ class LayoutDrawer:
 
             cr.arc(0, 0, 1, 0, math.tau)
             cr.fill()
+
+            anchor_matrix: cairo.Matrix = cr.get_matrix() * self.base_ctm
+            self.anchors_qtree.insert_item(anchor, Position(anchor_matrix.x0, anchor_matrix.y0, 0))
 
             cr.restore()
 
@@ -297,4 +341,3 @@ class LayoutDrawer:
 
                 cr.restore()
                 car_start = rear_bogey_position - (car.length - rear_bogey_offset + 1)
-
