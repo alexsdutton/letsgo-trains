@@ -4,7 +4,7 @@ import math
 
 from trains.drawing_options import DrawingOptions
 from .base import Piece
-from trains.track import Position
+from trains.track import Bounds, Position
 
 
 def _bezier(xy1, xy2, xy3, t):
@@ -78,10 +78,10 @@ class BasePoints(Piece):
     def bounds(self):
         width = self.branch_point[0]  + 4 * math.sin(math.pi / 8)
         height = abs(self.branch_point[1]) + 4 * math.cos(math.pi / 8) + 4
-        return dict(x=0,
-                    y=4 - height if self.direction == 'left' else -4,
-                    width=width,
-                    height=height)
+        return Bounds(x=0,
+                      y=4 - height if self.direction == 'left' else -4,
+                      width=width,
+                      height=height)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
         cr.set_source_rgb(*drawing_options.sleeper_color)

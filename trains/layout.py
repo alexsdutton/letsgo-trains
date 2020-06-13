@@ -1,11 +1,14 @@
 import threading
 import time
+from typing import Union
 
-from trains.track import Position
+import pyqtree
+
+from trains.track import Anchor, Position
 
 from trains import track
 from trains.control import Controller
-from trains.pieces import piece_classes
+from trains.pieces import piece_classes, Piece
 from trains.routeing import Stop, Itinerary
 from trains.sensor import Sensor
 from trains.station import Station, Platform

@@ -1,16 +1,19 @@
+from typing import Union
+
 import math
 import random
 
 import gi
+import pyqtree
 from cairo import Context
-from trains.pieces import piece_classes
+from trains.pieces import Piece, piece_classes
 
 from trains.drawing_options import DrawingOptions
 
 from trains.drawing import Colors, hex_to_rgb
 from trains.layout import Layout
 from trains.sensor import Sensor
-from trains.track import Position, TrackPiece
+from trains.track import Anchor, Position, TrackPiece
 from .. import signals
 
 gi.require_version('Gtk', '3.0')
@@ -34,22 +37,84 @@ class LayoutDrawer:
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
+        self.drawing_area.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.drawing_area.connect('button-press-event', self.mouse_press)
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
 
         self.drawing_options = DrawingOptions(
             offset=(0, 0),
-            scale=3,
+            scale=10,
             rail_color=Colors.dark_bluish_gray,
             sleeper_color=Colors.tan,
         )
+
+        self.highlight_drawing_options = DrawingOptions(
+            offset=(0, 0),
+            scale=10,
+            rail_color=Colors.red,
+            sleeper_color=Colors.red,
+        )
+
 
         self.offset_orig = None
         self.mouse_down = None
         self.layout = layout
 
+        self.qtree_index = pyqtree.Index(x=0, y=0, width=160, height=160)
+        self.qtree_bbox = -80, -80, 80, 80
+        self.qtree_bounds = {}
+
+        self.highlight_pieces = []
+
         signals.tick.connect(self.tick)
+
+    def add_to_qtree(self, item: Union[Anchor, Piece], position: Position):
+        bounds = item.bounds()
+        corners = [
+            (bounds.x, bounds.y),
+            (bounds.x + bounds.width, bounds.y),
+            (bounds.x, bounds.y + bounds.height),
+            (bounds.x + bounds.width, bounds.y + bounds.height),
+        ]
+        corners = [
+            (
+                (math.cos(position.angle) * x + math.sin(position.angle) * y),
+                (math.sin(position.angle) * x + math.cos(position.angle) * y),
+            ) for x, y in corners
+        ]
+        bbox = (
+            position.x + min(x for x, y in corners),
+            position.y + min(y for x, y in corners),
+            position.x + max(x for x, y in corners),
+            position.y + max(y for x, y in corners),
+        )
+
+        previous_bbox = self.qtree_bounds.get(item)
+
+        if bbox == previous_bbox:
+            return
+
+        if previous_bbox:
+            self.qtree_index.remove(item, previous_bbox)
+        self.qtree_bounds[item] = bbox
+
+        if bbox[0] <= self.qtree_bbox[0] or bbox[1] <= self.qtree_bbox[1] or bbox[2] >= self.qtree_bbox[2] or bbox[3] >= self.qtree_bbox[3]:
+            # If it falls outside the quadtree bounds, increase the size of the quadtree to fits
+            minx, miny, maxx, maxy = -80, -80, 80, 80
+            for item_minx, item_miny, item_maxx, item_maxy in self.qtree_bounds.values():
+                minx, miny = min(minx, item_minx), min(miny, item_miny)
+                maxx, maxy = max(maxx, item_maxx), max(maxy, item_maxy)
+            minx, maxx = minx - (maxx - minx) * 0.2, maxx + (maxx - minx) * 0.2
+            miny, maxy = miny - (maxy - miny) * 0.2, maxy + (maxy - miny) * 0.2
+            self.qtree_index = pyqtree.Index(
+                bbox=(minx, miny, maxx, maxy),
+            )
+            self.qtree_bbox = (minx, miny, maxx, maxy)
+            for item, item_bbox in self.qtree_bounds.items():
+                self.qtree_index.insert(item, item_bbox)
+        else:
+            self.qtree_index.insert(item, bbox)
 
     def tick(self, sender, time, time_elapsed):
         alloc = self.drawing_area.get_allocation()
@@ -66,6 +131,8 @@ class LayoutDrawer:
             self.mouse_down = None
 
     def mouse_motion(self, widget, event):
+        x, y = self.xy_to_layout(event.x, event.y)
+        self.highlight_pieces = self.qtree_index.intersect((x, y, x, y))[:1]
         if self.mouse_down:
             self.drawing_options.offset = (self.offset_orig[0] + event.x - self.mouse_down[0],
                                            self.offset_orig[1] + event.y - self.mouse_down[1])
@@ -75,9 +142,7 @@ class LayoutDrawer:
         print(drag_context)
 
     def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
-        # Calculate x and y in layout space
-        x = (x - self.drawing_options.offset[0] - widget.get_allocated_width() / 2) / self.drawing_options.scale
-        y = (y - self.drawing_options.offset[1] - widget.get_allocated_height() / 2) / self.drawing_options.scale
+        x, y = self.xy_to_layout(x, y)
 
         print(data.get_text())
         print(widget, drag_context, x, y, data, info, time)
@@ -85,6 +150,10 @@ class LayoutDrawer:
         piece = piece_cls(self.layout, placement=Position(x, y, angle=0))
         self.layout.add_piece(piece)
 
+    def xy_to_layout(self, x, y):
+        x = (x - self.drawing_options.offset[0] - self.drawing_area.get_allocated_width() / 2) / self.drawing_options.scale
+        y = (y - self.drawing_options.offset[1] - self.drawing_area.get_allocated_height() / 2) / self.drawing_options.scale
+        return x, y
 
     def draw(self, widget, cr: Context):
 
@@ -134,16 +203,22 @@ class LayoutDrawer:
             self.draw_piece(piece, seen_pieces, cr)
             cr.restore()
 
-    def draw_piece(self, piece: TrackPiece, seen_pieces: set, cr: Context):
+    def draw_piece(self, piece: Piece, seen_pieces: set, cr: Context):
         seen_pieces.add(piece)
 
         if piece.placement:
             cr.translate(piece.placement.x, piece.placement.y)
             cr.rotate(piece.placement.angle)
 
-        piece.draw(cr, self.drawing_options)
+        piece.draw(cr, self.highlight_drawing_options if piece in self.highlight_pieces else self.drawing_options)
+
+        cr.set_source_rgb(.7, .7, 1)
+        cr.set_line_width(0.1)
+        cr.rectangle(*piece.bounds())
+        cr.stroke()
 
         self.piece_matrices[piece] = cr.get_matrix() * self.base_ctm
+        self.add_to_qtree(piece, Position.from_matrix(self.piece_matrices[piece]))
 
         relative_positions = piece.relative_positions()
 
@@ -155,6 +230,7 @@ class LayoutDrawer:
                 cr.translate(relative_positions[anchor_name].x, relative_positions[anchor_name].y)
                 cr.rotate(relative_positions[anchor_name].angle)
             else:
+                # The primary ('in') anchor is always along the negative x axis
                 cr.rotate(math.pi)
 
             if next_piece and next_piece not in seen_pieces:

@@ -3,7 +3,7 @@ import math
 
 from .base import Piece
 from ..drawing_options import DrawingOptions
-from ..track import Position
+from ..track import Bounds, Position
 
 
 class BaseStraight(Piece):
@@ -19,7 +19,7 @@ class BaseStraight(Piece):
     # Drawing
 
     def bounds(self):
-        return dict(x=0, y=-4, width=self.length, height=8)
+        return Bounds(x=0, y=-4, width=self.length, height=8)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
         cr.set_source_rgb(*drawing_options.sleeper_color)

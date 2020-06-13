@@ -21,6 +21,7 @@ lego-wireless = "*"
 gobject = "*"
 pygobject = "*"
 dbus-python = "*"
+pyqtree = "*"
 
 [requires]
 python_version = "3.8"

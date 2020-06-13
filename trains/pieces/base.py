@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from trains.layout import Layout
     from trains.drawing_options import DrawingOptions
 
-from trains.track import Anchor, Position
+from trains.track import Anchor, Bounds, Position
 
 
 class Piece:
@@ -44,7 +44,7 @@ class Piece:
             if available:
                 return anchor_name, distance
 
-    def bounds(self) -> typing.Dict:
+    def bounds(self) -> Bounds:
         raise NotImplementedError
 
     def draw(self, cr: Context, drawing_options: DrawingOptions):
@@ -57,12 +57,12 @@ class Piece:
         bounds = self.bounds()
 
         image = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                   math.ceil(drawing_options.scale * bounds['width'] + 10),
-                                   math.ceil(drawing_options.scale * bounds['height'] + 10))
+                                   math.ceil(drawing_options.scale * bounds.width + 10),
+                                   math.ceil(drawing_options.scale * bounds.height + 10))
         cr = cairo.Context(image)
         cr.translate(5, 5)
         cr.scale(drawing_options.scale, drawing_options.scale)
-        cr.translate(-bounds['x'], -bounds['y'])
+        cr.translate(-bounds.x, -bounds.y)
         self.draw(cr, drawing_options)
 
         return image

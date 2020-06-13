@@ -1,4 +1,6 @@
 import collections
+
+import cairo
 import cmath
 import math
 import uuid
@@ -7,7 +9,14 @@ from typing import Dict, Tuple
 
 from trains.registry_meta import WithRegistry
 
-Position = collections.namedtuple('Position', ('x', 'y', 'angle'))
+
+class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
+    @classmethod
+    def from_matrix(cls, matrix: cairo.Matrix):
+        return cls(matrix.x0, matrix.y0, math.atan2(-matrix.xy, matrix.xx))
+
+
+Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
 
 
 class Anchor(dict):
@@ -36,6 +45,10 @@ class Anchor(dict):
                 return other_piece, anchor_name
         else:
             return None, None
+
+    def bounds(self):
+        # An anchor is a point
+        return (0, 0, 0, 0)
 
 class TrackPiece(WithRegistry):
     registry_type = None

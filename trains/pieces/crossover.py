@@ -1,6 +1,6 @@
 import math
 
-from trains.track import Position
+from trains.track import Bounds, Position
 
 from .base import Piece
 
@@ -19,10 +19,10 @@ class BaseCrossover(Piece):
     # Drawing
 
     def bounds(self):
-        return dict(x=0,
-                    y=-self.length/2,
-                    width=self.length,
-                    height=self.length)
+        return Bounds(x=0,
+                      y=-self.length/2,
+                      width=self.length,
+                      height=self.length)
 
     def draw(self, cr, drawing_options):
         cr.set_line_width(8)

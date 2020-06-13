@@ -4,7 +4,7 @@ import math
 
 from .base import Piece
 from ..drawing_options import DrawingOptions
-from ..track import Position
+from ..track import Bounds, Position
 
 
 class BaseCurve(Piece):
@@ -31,9 +31,9 @@ class BaseCurve(Piece):
         return offset + (cmath.rect(r, rotate) - r) * cmath.rect(1, -math.pi/2)
 
     def bounds(self):
-        return dict(x=0, y=-5,
-                    width=self._get_end(-4j, self.radius + 4).real,
-                    height=self._get_end(8j, self.radius - 4).imag)
+        return Bounds(x=0, y=-4,
+                      width=self._get_end(-4j, self.radius + 4).real,
+                      height=self._get_end(8j, self.radius - 4).imag)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
         if self.direction == 'left':

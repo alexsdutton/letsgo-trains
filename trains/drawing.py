@@ -14,6 +14,7 @@ SVG = builder.ElementMaker(namespace='http://www.w3.org/2000/svg',
 class HexColors(enum.Enum):
     dark_bluish_gray = '#5B6770'
     tan = '#aaaaaa'
+    red = '#ffaaaa'
 
 class Colors(enum.Enum):
     pass
