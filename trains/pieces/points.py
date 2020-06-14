@@ -76,7 +76,7 @@ class BasePoints(Piece):
         return -1 if self.direction == 'left' else 1
 
     def bounds(self):
-        width = self.branch_point[0]  + 4 * math.sin(math.pi / 8)
+        width = self.branch_point[0] + 4 * math.sin(math.pi / 8)
         height = abs(self.branch_point[1]) + 4 * math.cos(math.pi / 8) + 4
         return Bounds(x=0,
                       y=4 - height if self.direction == 'left' else -4,
@@ -182,6 +182,7 @@ class BasePoints(Piece):
 
     def relative_positions(self):
         return {
+            **super().relative_positions(),
             'out': Position(32, 0, 0),
             'branch': Position(*self.branch_point,
                                math.tau / 16 * self.flip),

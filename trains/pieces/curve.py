@@ -78,6 +78,7 @@ class BaseCurve(Piece):
         x = ((cmath.rect(self.radius, rotate) - self.radius) * cmath.rect(1, - math.pi/2))
         flip = -1 if self.direction == 'left' else 1
         return {
+            **super().relative_positions(),
             'out': Position(x.real, x.imag * flip, rotate * flip)
         }
 

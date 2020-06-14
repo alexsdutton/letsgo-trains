@@ -14,7 +14,7 @@ from trains.drawing_options import DrawingOptions
 from trains.drawing import Colors, hex_to_rgb
 from trains.layout import Layout
 from trains.sensor import Sensor
-from trains.track import Anchor, Position, TrackPiece
+from trains.track import Anchor, Position
 from .. import signals
 from ..utils.quadtree import ResizingIndex
 
@@ -44,6 +44,8 @@ class LayoutDrawer:
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
 
+        signals.piece_added.connect(self.on_piece_positioned, sender=layout)
+        signals.piece_positioned.connect(self.on_piece_positioned, sender=layout)
         signals.piece_removed.connect(self.on_piece_removed, sender=layout)
 
         self.drawing_options = DrawingOptions(
@@ -119,6 +121,17 @@ class LayoutDrawer:
 
         self.layout.add_piece(piece)
 
+    def on_piece_positioned(self, sender: Layout, piece: Piece):
+        if piece.position:
+            self.pieces_qtree.insert_item(piece, piece.position)
+            relative_positions = piece.relative_positions()
+            for anchor_name, anchor in piece.anchors.items():
+                self.anchors_qtree.insert_item(anchor, piece.position + relative_positions[anchor_name])
+        else:
+            self.pieces_qtree.remove_item(piece)
+            for anchor in piece.anchors.values():
+                self.anchors_qtree.remove_item(anchor)
+
     def on_piece_removed(self, piece: Piece):
         for anchor in piece.anchors.values():
             self.anchors_qtree.remove_item(anchor)
@@ -148,15 +161,12 @@ class LayoutDrawer:
                          height / 2 + self.drawing_options.offset[1])
             layout_cr.scale(self.drawing_options.scale, self.drawing_options.scale)
 
-            self.base_ctm = layout_cr.get_matrix()
-            self.base_ctm.invert()
-            self.piece_matrices = {}
-
             self.draw_grid(layout_cr)
             self.draw_layout(self.layout, layout_cr)
             self.draw_points_labels(self.layout, layout_cr)
             self.draw_sensors(self.layout, layout_cr)
             self.last_layout_state = layout_state
+
 
         cr.set_source_surface(self.layout_surface)
         cr.rectangle(0, 0, width, height)
@@ -167,7 +177,9 @@ class LayoutDrawer:
                      height / 2 + self.drawing_options.offset[1])
         cr.scale(self.drawing_options.scale, self.drawing_options.scale)
 
-        self.draw_trains(self.layout, cr)
+        self.draw_highlight_layer(self.layout, cr)
+
+        # self.draw_trains(self.layout, cr)
 
     def draw_grid(self, cr: Context):
         cr.set_line_width(0.5)
@@ -187,53 +199,35 @@ class LayoutDrawer:
             cr.stroke()
 
     def draw_layout(self, layout: Layout, cr: Context):
-        # cr.set_line_width(9)
-        # cr.set_source_rgb(0.7, 0.2, 0.0)
+        for piece in layout.pieces:
+            self.draw_piece(piece, cr, self.drawing_options)
 
-        seen_pieces = set()
-        for piece in layout.placed_pieces:
-            cr.save()
-            self.draw_piece(piece, seen_pieces, cr)
-            cr.restore()
+    def draw_highlight_layer(self, layout: Layout, cr: Context):
+        for piece in self.highlight_pieces:
+            self.draw_piece(piece, cr, self.highlight_drawing_options)
 
-    def draw_piece(self, piece: Piece, seen_pieces: set, cr: Context):
-        seen_pieces.add(piece)
+    def draw_piece(self, piece: Piece, cr: Context, drawing_options: DrawingOptions):
+        if not piece.position:
+            return
 
-        if piece.placement:
-            cr.translate(piece.placement.x, piece.placement.y)
-            cr.rotate(piece.placement.angle)
+        cr.save()
 
-        piece.draw(cr, self.highlight_drawing_options if piece in self.highlight_pieces else self.drawing_options)
+        cr.translate(piece.position.x, piece.position.y)
+        cr.rotate(piece.position.angle)
 
-        cr.set_source_rgb(.7, .7, 1)
-        cr.set_line_width(0.1)
-        cr.rectangle(*piece.bounds())
-        cr.stroke()
+        piece.draw(cr, drawing_options)
 
-        self.piece_matrices[piece] = cr.get_matrix() * self.base_ctm
-        self.pieces_qtree.insert_item(piece, Position.from_matrix(self.piece_matrices[piece]))
 
         relative_positions = piece.relative_positions()
 
         for anchor_name, anchor in piece.anchors.items():
-            next_piece, next_anchor_name = anchor.next(piece)
+
             cr.save()
 
-            if anchor_name in relative_positions:
-                cr.translate(relative_positions[anchor_name].x, relative_positions[anchor_name].y)
-                cr.rotate(relative_positions[anchor_name].angle)
-            else:
-                # The primary ('in') anchor is always along the negative x axis
-                cr.rotate(math.pi)
+            cr.translate(relative_positions[anchor_name].x, relative_positions[anchor_name].y)
+            cr.rotate(relative_positions[anchor_name].angle)
 
-            if next_piece and next_piece not in seen_pieces:
-                if next_anchor_name != next_piece.anchor_names[0]:
-                    next_position = next_piece.relative_positions()[next_anchor_name]
-                    cr.rotate(-next_position.angle + math.pi)
-                    cr.translate(-next_position.x, -next_position.y)
-                self.draw_piece(next_piece, seen_pieces, cr)
-
-            if next_piece:
+            if len(anchor) == 2:
                 cr.set_source_rgb(1, .5, .5)
             else:
                 cr.set_source_rgb(.5, 1, .5)
@@ -241,16 +235,16 @@ class LayoutDrawer:
             cr.arc(0, 0, 1, 0, math.tau)
             cr.fill()
 
-            anchor_matrix: cairo.Matrix = cr.get_matrix() * self.base_ctm
-            self.anchors_qtree.insert_item(anchor, Position(anchor_matrix.x0, anchor_matrix.y0, 0))
-
             cr.restore()
+        cr.restore()
 
     def draw_points_labels(self, layout: Layout, cr: Context):
-        for i, points in enumerate(layout.points):
+        for i, piece in enumerate(layout.points):
+            if not piece.position:
+                continue
             cr.save()
             cr.set_font_size(4)
-            cr.translate(*self.piece_matrices[points].transform_point(4, -10 if points.direction == 'left' else 10))
+            cr.translate(*piece.position.as_matrix().transform_point(4, -10 if piece.direction == 'left' else 10))
             cr.rectangle(-4, -4, 8, 8)
             cr.set_source_rgb(1, 1, 1)
             cr.fill_preserve()
@@ -269,8 +263,9 @@ class LayoutDrawer:
         piece = sensor.position.piece
         px, py, angle = piece.point_position(sensor.position.anchor_name, sensor.position.offset)
         cr.save()
-        cr.translate(*self.piece_matrices[sensor.position.piece].transform_point(px, py))
-        cr.rotate(math.atan2(*self.piece_matrices[sensor.position.piece].transform_distance(0, 1)) - angle)
+        position_matrix = piece.position.as_matrix()
+        cr.translate(*position_matrix.transform_point(px, py))
+        cr.rotate(math.atan2(*position_matrix.transform_distance(0, 1)) - angle)
 
         cr.set_source_rgb(0.1, 0.1, 0)
         cr.rectangle(-1, 3, 2, 6)

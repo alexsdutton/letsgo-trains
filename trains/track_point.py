@@ -1,5 +1,7 @@
 import enum
 
+from trains.pieces import Piece
+
 from . import track
 
 _sentinel = object()
@@ -12,7 +14,7 @@ class EndOfTheLine(Exception):
 
 class TrackPoint:
     """A single point on a track layout"""
-    def __init__(self, piece: track.TrackPiece, anchor_name, offset=0, branch_decisions=None, train=None):
+    def __init__(self, piece: Piece, anchor_name, offset=0, branch_decisions=None, train=None):
         self.piece, self.anchor_name, self.offset = piece, anchor_name, offset
         self.branch_decisions = branch_decisions or {}
         self.train = train

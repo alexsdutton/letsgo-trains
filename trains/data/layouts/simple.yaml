@@ -1,59 +1,65 @@
 runs:
-  - - piece: curve
+  - - type: curve
       placement:
         x: 0
         y: 0
         angle: 0
-    - piece: straight
-    - piece: straight
-    - piece: points
       anchors:
-        branch: branchAnchor
+        in: start
+    - type: curve
       direction: right
-      state: out
-    - piece: points
+    - type: curve
+      direction: right
+  - - type: left-points
       anchors:
-        branch: branchAnchor
-      direction: left
-      state: branch
-    - piece: curve
-    - piece: curve
-    - piece: curve
-      direction: right
-  - - piece: straight
-      anchors:
-        in: branchAnchor
-    - piece: straight
-    - piece: crossover
-      anchors:
-        right: crossoverRight
-    - piece: straight
-    - piece: straight
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: curve
-      direction: right
-    - piece: straight
-    - piece: straight
-      anchors:
-        out: crossoverRight
+        in: start
+#    - type: straight
+#    - type: right-points
+#      anchors:
+#        branch: branchAnchor
+#      state: out
+#    - type: left-points
+#      anchors:
+#        branch: branchAnchor
+#      state: branch
+#    - type: curve
+#    - type: curve
+#    - type: curve
+#      direction: right
+#  - - type: straight
+#      anchors:
+#        in: branchAnchor
+#    - type: straight
+#    - type: crossover
+#      anchors:
+#        right: crossoverRight
+#    - type: straight
+#    - type: straight
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: curve
+#      direction: right
+#    - type: straight
+#    - type: straight
+#      anchors:
+#        out: crossoverRight

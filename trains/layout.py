@@ -6,6 +6,7 @@ import time
 from typing import Union
 
 import pyqtree
+from trains.pieces.points import BasePoints
 
 from trains.track import Anchor, Position
 
@@ -282,7 +283,7 @@ class Layout:
     @property
     def points(self):
         for piece in self.pieces:
-            if isinstance(piece, track.Points):
+            if isinstance(piece, BasePoints):
                 yield piece
 
     def serialize_runs(self):

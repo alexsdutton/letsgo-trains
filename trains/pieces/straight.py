@@ -49,6 +49,7 @@ class BaseStraight(Piece):
 
     def relative_positions(self):
         return {
+            **super().relative_positions(),
             'out': Position(self.length, 0, 0),
         }
 

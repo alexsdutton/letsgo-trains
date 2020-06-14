@@ -7,6 +7,7 @@ import pkg_resources
 
 import gi
 import yaml
+from trains.pieces.points import BasePoints
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
@@ -17,7 +18,7 @@ from trains.gtk.layout_drawingarea import LayoutDrawer
 from trains.gtk.trains import TrainListBox
 from trains.layout import Layout
 from trains.topham_hatt import TophamHatt
-from trains.track import TrackPiece
+from trains.pieces import Piece
 
 from gi.repository import Gtk, Gio, GObject, GLib, Gdk
 
@@ -112,7 +113,7 @@ class Application(Gtk.Application):
         return True
 
     def on_piece_added(self, sender, piece):
-        if isinstance(piece, track.Points):
+        if isinstance(piece, BasePoints):
             grid = Gtk.Grid()
             drawing_area = Gtk.DrawingArea()
             drawing_area.set_size_request(30, 30)
@@ -127,29 +128,10 @@ class Application(Gtk.Application):
             grid.attach(switch, 1, 1, 1, 1)
             configure = Gtk.Button.new_from_icon_name('preferences-other', Gtk.IconSize.MENU)
             grid.attach(configure, 2, 0, 1, 2)
-            self.control_listbox.add(grid)
+            # self.control_listbox.add(grid)
 
     def on_control_switch_activated(self, switch, gparam, points):
         points.state = 'branch' if switch.get_active() else 'out'
-
-    def get_track_piece_toolgroup(self):
-        toolitemgroup = Gtk.ToolItemGroup(label='Track')
-        # toolitemgroup.add(self.get_track_piece_toolitem('straight'))
-        # toolitemgroup.add(self.get_track_piece_toolitem('curve'))
-        # toolitemgroup.add(self.get_track_piece_toolitem('crossover'))
-        # toolitemgroup.add(self.get_track_piece_toolitem('points'))
-        return toolitemgroup
-
-    def get_track_piece_toolitem(self, name):
-        tool = Gtk.ToggleToolButton.new()
-        tp = TrackPiece.registry[name]()
-
-        image = Gtk.Image.new_from_file(os.path.join(os.path.dirname(__file__), 'data', 'pieces', tp.name + '.png'))
-        tool.set_label(tp.label)
-        tool.get_child().set_always_show_image(True)
-        tool.get_child().set_image(image)
-
-        return tool
 
     def run(self, *args, **kwargs):
         super().run(*args, **kwargs)

@@ -50,6 +50,7 @@ class BaseCrossover(Piece):
 
     def relative_positions(self):
         return {
+            **super().relative_positions(),
             'out': Position(self.length, 0, 0),
             'left': Position(self.length / 2, -self.length / 2, -math.pi / 2),
             'right': Position(self.length / 2, self.length / 2, math.pi / 2),

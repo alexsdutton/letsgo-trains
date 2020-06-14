@@ -6,8 +6,9 @@ This module implements automated train control
 import math
 from numbers import Number
 
+from trains.pieces.points import BasePoints
+
 from trains.layout import Layout
-from trains.track import Points
 from trains.track_point import EndOfTheLine
 
 
@@ -97,7 +98,7 @@ class TophamHatt:
         train.meta['last_speed_limit'] = speed_limit
         # print(speed_limit)
 
-        if isinstance(position.piece, Points):
+        if isinstance(position.piece, BasePoints):
 
             train.meta['annotation'] = f'{can_hide_behind_decision_point} {train.motor_speed}'
             if speed_limit is not None:
