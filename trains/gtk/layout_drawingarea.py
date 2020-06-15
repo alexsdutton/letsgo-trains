@@ -16,6 +16,7 @@ from trains.layout import Layout
 from trains.sensor import Sensor
 from trains.track import Anchor, Position
 from .. import signals
+from ..pieces.curve import CurveDirection
 from ..utils.quadtree import ResizingIndex
 
 gi.require_version('Gtk', '3.0')
@@ -128,7 +129,7 @@ class LayoutDrawer:
         possible_anchors = self.anchors_qtree.intersect((x-8, y-8, x+8, y+8))
         possible_anchors = [anchor for anchor in possible_anchors if len(anchor) < 2]
         if possible_anchors:
-            piece = piece_cls(self.layout)
+            piece = piece_cls(layout=self.layout)
             possible_anchors[0] += piece.anchors[piece.anchor_names[0]]
         else:
             # Snap to an 8x8 grid
@@ -140,7 +141,8 @@ class LayoutDrawer:
 
     def on_key_press(self, widget, event):
         if isinstance(self.selected_item, Curve) and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
-            self.selected_item.direction = 'left' if self.selected_item.direction == 'right' else 'right'
+            print(self.selected_item.direction)
+            self.selected_item.direction = CurveDirection.left if self.selected_item.direction == CurveDirection.right else CurveDirection.right
             self.selected_item.placement_origin.update_connected_subset_positions()
             self.layout.changed()
         if isinstance(self.selected_item, Anchor) and event.keyval in (Gdk.KEY_p, Gdk.KEY_P):

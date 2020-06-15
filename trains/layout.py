@@ -6,6 +6,8 @@ import time
 from typing import Union
 
 import pyqtree
+
+from trains.pieces.curve import CurveDirection
 from trains.pieces.points import BasePoints
 
 from trains.track import Anchor, Position
@@ -59,7 +61,7 @@ class Layout:
     def remove_piece(self, piece: Piece):
         # Disconnect from any other pieces
         for anchor_name in piece.anchor_names:
-            piece.anchors[anchor_name] = piece.anchors[anchor_name].split()
+            piece.anchors[anchor_name].split()
         self.pieces.remove(piece)
         signals.piece_removed.send(self, piece=piece)
 
@@ -195,6 +197,8 @@ class Layout:
                 piece_kwargs = {k: v for k, v in track_object.items() if k not in ('type', 'anchors', 'count')}
                 if piece_kwargs.get('placement'):
                     piece_kwargs['placement'] = Position(**piece_kwargs['placement'])
+                if piece_kwargs.get('direction'):
+                    piece_kwargs['direction'] = CurveDirection(piece_kwargs['direction'])
                 n = track_object.get('count', 1)
                 for i in range(0, n):
                     piece = piece_classes[track_object['type']](layout=self, **piece_kwargs)

@@ -25,8 +25,8 @@ class BasePoints(Piece):
     def __init__(self, state: str='out', **kwargs):
         self.state = state
 
-        self.branch_point = cmath.rect(40, math.tau * 5/16) + 48 - 24j
-        self.branch_point = self.branch_point.real, self.branch_point.imag * self.flip
+        branch_point = cmath.rect(40, math.tau * 5/16) + 48 - 24j
+        self.branch_point = branch_point.real, branch_point.imag * self.flip
 
         # Bezier curve control points for the branch
         self.control_points = [
@@ -38,14 +38,14 @@ class BasePoints(Piece):
         intermediate_branch_point_count = 1000
         intermediate_branch_lengths = []
         branch_length = 0
-        for t in range(1, intermediate_branch_point_count + 1):
-            branch_length += _distance(self.branch_bezier(t / intermediate_branch_point_count),
-                                       self.branch_bezier((t + 1) / intermediate_branch_point_count))
+        for i in range(1, intermediate_branch_point_count + 1):
+            branch_length += _distance(self.branch_bezier(i / intermediate_branch_point_count),
+                                       self.branch_bezier((i + 1) / intermediate_branch_point_count))
             intermediate_branch_lengths.append(branch_length)
 
         self.branch_length = branch_length
 
-        self.intermediate_branch_t = [0]
+        self.intermediate_branch_t = [0.]
         for i in range(1, intermediate_branch_point_count):
             t = i / intermediate_branch_point_count
             x, y = intermediate_branch_lengths[i-1:i+1]
@@ -134,7 +134,11 @@ class BasePoints(Piece):
 
         cr.save()
 
-        mask = cairo.ImageSurface(cairo.FORMAT_ARGB32, 40*drawing_options.scale, 80*drawing_options.scale)
+        mask = cairo.ImageSurface(
+            cairo.FORMAT_ARGB32,
+            math.ceil(40 * drawing_options.scale),
+            math.ceil(80 * drawing_options.scale),
+        )
         mask_cr = cairo.Context(mask)
         mask_cr.scale(drawing_options.scale, drawing_options.scale)
         mask_cr.translate(0, 40)

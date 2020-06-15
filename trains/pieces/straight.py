@@ -34,7 +34,7 @@ class BaseStraight(Piece):
 
         # The sleepers in between
         cr.set_line_width(2)
-        for x in range(4, self.length, 4):
+        for x in range(4, int(self.length), 4):
             cr.move_to(x, -4)
             cr.line_to(x, 4)
         cr.stroke()

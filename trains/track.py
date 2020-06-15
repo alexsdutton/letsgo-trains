@@ -55,7 +55,7 @@ class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
 Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
 
 
-class Anchor(Dict[Piece,str]):
+class Anchor(dict):
     """A connection between two track pieces.
 
     An anchor is a dict of (piece: anchor_name) mappings. i.e. if a Points branch is connected to the right anchor of a
@@ -64,12 +64,12 @@ class Anchor(Dict[Piece,str]):
     An anchor can only connect two pieces of track, and two anchors can be connected together by in-place addition, e.g.
     `anchor_1 += anchor_2`.
     """
-    def __init__(self, *args, id=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, initial: Dict[Piece, str], id=None, **kwargs):
+        super().__init__(initial)
         self.id = id or str(uuid.uuid4())
         self.position: Optional[Position] = None
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Piece, value: str):
         assert key in self or len(self) < 2
         super().__setitem__(key, value)
 
@@ -112,7 +112,7 @@ class Anchor(Dict[Piece,str]):
         # An anchor is a point
         return Bounds(0, 0, 0, 0)
 
-    def split(self):
+    def split(self) -> Optional[Anchor]:
         """Breaks an anchor in two if it is connected.
 
         The new_side piece gets a new anchor created, with new_side removed from the existing anchor. This means that
@@ -121,11 +121,13 @@ class Anchor(Dict[Piece,str]):
         """
         if len(self) == 2:
             other_piece, other_anchor_name = self.popitem()
-            updated_pieces = other_piece.placement_origin.update_connected_subset_positions()
             piece, = self
 
             other_anchor = Anchor({other_piece: other_anchor_name})
+            assert other_anchor
             other_piece.anchors[other_anchor_name] = other_anchor
+
+            updated_pieces = other_piece.placement_origin.update_connected_subset_positions()
 
             if piece not in updated_pieces:
                 piece.placement = piece.position

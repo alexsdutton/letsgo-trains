@@ -1,3 +1,5 @@
+import enum
+
 import cairo
 import cmath
 import math
@@ -5,6 +7,10 @@ import math
 from .base import Piece
 from ..drawing_options import DrawingOptions
 from ..track import Bounds, Position
+
+class CurveDirection(enum.Enum):
+    left = 'left'
+    right = 'right'
 
 
 class BaseCurve(Piece):
@@ -14,8 +20,9 @@ class BaseCurve(Piece):
     radius: float
     per_circle: float
     sleepers: int
+    direction: CurveDirection
 
-    def __init__(self, direction: str='left', **kwargs):
+    def __init__(self, direction: CurveDirection=CurveDirection.left, **kwargs):
         self.direction = direction
         super().__init__(**kwargs)
 
@@ -36,8 +43,7 @@ class BaseCurve(Piece):
                       height=self._get_end(8j, self.radius - 4).imag)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
-        print(self.direction)
-        if self.direction == 'left':
+        if self.direction == CurveDirection.left:
             cy = - self.radius
             angle1, angle2 = math.pi / 2 - math.tau / self.per_circle, math.pi / 2
         else:
@@ -54,7 +60,7 @@ class BaseCurve(Piece):
 
         for i in range(0, self.sleepers + 1):
             angle = (math.tau / self.per_circle) * (i / self.sleepers)
-            if self.direction == 'left':
+            if self.direction == CurveDirection.left:
                 angle = - math.pi / 2 - angle
             else:
                 angle = angle + math.pi / 2
@@ -77,7 +83,7 @@ class BaseCurve(Piece):
     def relative_positions(self):
         rotate = math.tau / self.per_circle
         x = ((cmath.rect(self.radius, rotate) - self.radius) * cmath.rect(1, - math.pi/2))
-        flip = -1 if self.direction == 'left' else 1
+        flip = -1 if self.direction == CurveDirection.left else 1
         return {
             **super().relative_positions(),
             'out': Position(x.real, x.imag * flip, rotate * flip)
@@ -88,7 +94,7 @@ class BaseCurve(Piece):
         if in_anchor == 'out':
             theta = math.tau / self.per_circle - theta
         x = ((cmath.rect(self.radius, theta) - self.radius) * cmath.rect(1, - math.pi/2))
-        flip = -1 if self.direction == 'left' else 1
+        flip = -1 if self.direction == CurveDirection.left else 1
         return x.real, x.imag * flip, theta * flip
 
 

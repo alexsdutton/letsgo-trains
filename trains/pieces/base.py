@@ -8,6 +8,9 @@ from typing import Dict, Iterable, Optional, Tuple, TYPE_CHECKING
 import cairo
 import math
 
+if TYPE_CHECKING:
+    from trains.train import Train
+
 from trains import signals
 
 if TYPE_CHECKING:
@@ -19,12 +22,12 @@ from trains.track import Anchor, Bounds, Position
 
 
 class Piece:
-    anchor_names = ()
+    anchor_names: Tuple[str, ...]
     layout_priority = float('inf')
 
     def __init__(self, layout: Layout = None, placement: Position = None, id: str = None):
         self.layout = None
-        self.anchors = {anchor_name: Anchor({self: anchor_name})
+        self.anchors: Dict[str, Anchor] = {anchor_name: Anchor({self: anchor_name})
                         for anchor_name in self.anchor_names}
 
         # Instance variables related to piece placement and position
@@ -37,7 +40,7 @@ class Piece:
         """The inferred position of this piece"""
 
         self.claimed_by = None
-        self.reservations = {}
+        self.reservations: Dict[Train,Dict] = {}
 
         self.id = id or str(uuid.uuid4())
         self.layout = layout
@@ -54,6 +57,8 @@ class Piece:
 
     @placement.setter
     def placement(self, value: Optional[Position]):
+        assert self.layout
+
         if value == self._placement:
             return
 
