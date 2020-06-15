@@ -58,8 +58,8 @@ class Layout:
     @_changes_layout
     def remove_piece(self, piece: Piece):
         # Disconnect from any other pieces
-        for anchor_name in piece.anchors:
-            piece.anchors[anchor_name] = piece.anchors[anchor_name].split(piece)
+        for anchor_name in piece.anchor_names:
+            piece.anchors[anchor_name] = piece.anchors[anchor_name].split()
         self.pieces.remove(piece)
         signals.piece_removed.send(self, piece=piece)
 

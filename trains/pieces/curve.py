@@ -36,6 +36,7 @@ class BaseCurve(Piece):
                       height=self._get_end(8j, self.radius - 4).imag)
 
     def draw(self, cr: cairo.Context, drawing_options: DrawingOptions):
+        print(self.direction)
         if self.direction == 'left':
             cy = - self.radius
             angle1, angle2 = math.pi / 2 - math.tau / self.per_circle, math.pi / 2

@@ -80,6 +80,11 @@ class ResizingIndex:
             self._index.insert(item, bbox)
 
     def remove_item(self, item):
-        previous_bbox = self._bounds.get(item)
+        previous_bbox = self._bounds.pop(item, None)
         if previous_bbox:
             self._index.remove(item, previous_bbox)
+        else:
+            print('oh no')
+
+    def __len__(self):
+        return len(self._bounds)

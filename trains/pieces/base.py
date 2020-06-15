@@ -23,7 +23,7 @@ class Piece:
     layout_priority = float('inf')
 
     def __init__(self, layout: Layout = None, placement: Position = None, id: str = None):
-
+        self.layout = None
         self.anchors = {anchor_name: Anchor({self: anchor_name})
                         for anchor_name in self.anchor_names}
 
@@ -32,7 +32,8 @@ class Piece:
         """An explicit placement of this piece"""
         self._placement_origin = self if placement else None
         """The piece controlling the placement of this connected subset of the network"""
-        self._position = placement
+        self._position = None
+        self.position = placement
         """The inferred position of this piece"""
 
         self.claimed_by = None
@@ -44,6 +45,8 @@ class Piece:
             if self.layout.by_id.get(self.id) not in (None, self):
                 raise AssertionError("Can't reuse an ID for a new object")
             self.layout.by_id[self.id] = self
+
+        print(self, self.layout)
 
     @property
     def placement(self) -> Optional[Position]:
@@ -66,6 +69,9 @@ class Piece:
     def position(self, value: Optional[Position]):
         if value != self._position:
             self._position = value
+            relative_positions = self.relative_positions()
+            for anchor_name, anchor in self.anchors.items():
+                anchor.position = self.position + relative_positions[anchor_name]
             if self.layout:
                 signals.piece_positioned.send(self.layout, piece=self)
 
@@ -75,12 +81,17 @@ class Piece:
 
     def update_connected_subset_positions(self):
         connected_subset_pieces = set()
+        changed = False
         for piece, position in self.traverse_connected_subset(self._placement):
-            piece.position = position
+            if piece.position != position:
+                piece.position = position
+                changed = True
             piece._placement_origin = self
             if piece != self:
                 piece._placement = None
             connected_subset_pieces.add(piece)
+        if changed and self.layout:
+            self.layout.changed()
         return connected_subset_pieces
 
     def traverse_connected_subset(
@@ -96,10 +107,8 @@ class Piece:
             for anchor_name, relative_position in relative_positions.items():
                 next_piece, next_anchor_name = piece.anchors[anchor_name].next(piece)
                 if next_piece and next_piece not in seen_pieces:
-
                     if next_anchor_name != next_piece.anchor_names[0]:
                         relative_position -= next_piece.relative_positions()[next_anchor_name]
-
                     next_position = position + relative_position
                     stack.append((next_piece, next_position))
                     seen_pieces.add(next_piece)

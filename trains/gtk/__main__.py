@@ -81,7 +81,7 @@ class Application(Gtk.Application):
 
         signals.piece_added.connect(self.on_piece_added, sender=self.layout)
 
-        self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/stations.yaml')))
+        self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/simple.yaml')))
 
         self.last_tick = time.time()
         GLib.timeout_add(30, self.send_tick)

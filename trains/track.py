@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import math
 from numbers import Number
-from typing import Dict, Tuple, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, TYPE_CHECKING
 
 import cairo
 import cmath
@@ -55,7 +55,7 @@ class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
 Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
 
 
-class Anchor(dict):
+class Anchor(Dict[Piece,str]):
     """A connection between two track pieces.
 
     An anchor is a dict of (piece: anchor_name) mappings. i.e. if a Points branch is connected to the right anchor of a
@@ -67,6 +67,7 @@ class Anchor(dict):
     def __init__(self, *args, id=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.id = id or str(uuid.uuid4())
+        self.position: Optional[Position] = None
 
     def __setitem__(self, key, value):
         assert key in self or len(self) < 2
@@ -111,7 +112,7 @@ class Anchor(dict):
         # An anchor is a point
         return Bounds(0, 0, 0, 0)
 
-    def split(self, new_side: Piece):
+    def split(self):
         """Breaks an anchor in two if it is connected.
 
         The new_side piece gets a new anchor created, with new_side removed from the existing anchor. This means that
@@ -119,13 +120,21 @@ class Anchor(dict):
         out anchor. If it's not connected, this statement is a no-op.
         """
         if len(self) == 2:
-            anchor_name = self.pop(new_side)
+            other_piece, other_anchor_name = self.popitem()
+            updated_pieces = other_piece.placement_origin.update_connected_subset_positions()
+            piece, = self
 
-            # TODO: Make sure there's a placement on either side if the connected subset is broken
+            other_anchor = Anchor({other_piece: other_anchor_name})
+            other_piece.anchors[other_anchor_name] = other_anchor
 
-            return Anchor({new_side: anchor_name})
+            if piece not in updated_pieces:
+                piece.placement = piece.position
+            elif other_piece not in updated_pieces:
+                other_piece.placement = other_piece.position
+
+            return other_anchor
         elif len(self) == 1:
-            return self
+            return None
         else:
             raise AssertionError
 

@@ -7,7 +7,7 @@ import random
 import gi
 import pyqtree
 from cairo import Context
-from trains.pieces import Piece, piece_classes
+from trains.pieces import Curve, Piece, piece_classes
 
 from trains.drawing_options import DrawingOptions
 
@@ -27,8 +27,9 @@ SENSOR_ACTIVATED = (0, 1, 0)
 
 
 class LayoutDrawer:
-    def __init__(self, drawing_area, layout):
+    def __init__(self, drawing_area: Gtk.DrawingArea, layout):
         self.drawing_area = drawing_area
+        self.drawing_area.set_can_focus(True)
         self.drawing_area.connect('draw', self.draw)
 
         self.drawing_area.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
@@ -40,9 +41,11 @@ class LayoutDrawer:
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
         self.drawing_area.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
+        self.drawing_area.add_events(Gdk.EventMask.KEY_PRESS_MASK)
         self.drawing_area.connect('button-press-event', self.mouse_press)
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
+        self.drawing_area.connect('key-press-event', self.on_key_press)
 
         signals.piece_added.connect(self.on_piece_positioned, sender=layout)
         signals.piece_positioned.connect(self.on_piece_positioned, sender=layout)
@@ -58,8 +61,8 @@ class LayoutDrawer:
         self.highlight_drawing_options = DrawingOptions(
             offset=self.drawing_options.offset,
             scale=self.drawing_options.scale,
-            rail_color=Colors.red,
-            sleeper_color=Colors.red,
+            rail_color=(.2, .2, 1),
+            sleeper_color=(.2, .2, 1),
         )
 
 
@@ -71,9 +74,20 @@ class LayoutDrawer:
         self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
         self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
 
-        self.highlight_pieces = []
+        self.highlight_item: Union[None, Piece, Anchor] = None
+        self._selected_item: Union[None, Piece, Anchor] = None
 
         signals.tick.connect(self.tick)
+
+
+    @property
+    def selected_item(self):
+        return self._selected_item
+
+    @selected_item.setter
+    def selected_item(self, value):
+        self._selected_item = value
+        self.drawing_area.queue_draw()
 
     def tick(self, sender, time, time_elapsed):
         alloc = self.drawing_area.get_allocation()
@@ -81,8 +95,11 @@ class LayoutDrawer:
 
     def mouse_press(self, widget, event):
         if event.button == Gdk.BUTTON_PRIMARY:
-            self.offset_orig = self.drawing_options.offset
-            self.mouse_down = event.x, event.y
+            self.drawing_area.grab_focus()
+            self.selected_item = self.get_item_under_cursor(event)
+            if not self.selected_item:
+                self.offset_orig = self.drawing_options.offset
+                self.mouse_down = event.x, event.y
 
     def mouse_release(self, widget, event):
         if event.button & Gdk.BUTTON_PRIMARY:
@@ -91,7 +108,7 @@ class LayoutDrawer:
 
     def mouse_motion(self, widget, event):
         x, y = self.xy_to_layout(event.x, event.y)
-        self.highlight_pieces = self.pieces_qtree.intersect((x, y, x, y))[:1]
+        self.highlight_item = self.get_item_under_cursor(event)
         if self.mouse_down:
             self.drawing_options = self.drawing_options.replace(
                 offset=(
@@ -102,7 +119,7 @@ class LayoutDrawer:
             self.drawing_area.queue_draw()
 
     def on_drag_motion(self, widget, drag_context, x, y, time):
-        print(drag_context)
+        pass
 
     def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
         piece_cls = piece_classes[data.get_text()]
@@ -117,30 +134,53 @@ class LayoutDrawer:
             # Snap to an 8x8 grid
             x = 8 * ((x + 4) // 8)
             y = 8 * ((y + 4) // 8)
-            piece = piece_cls(self.layout, placement=Position(x, y, angle=0))
+            piece = piece_cls(layout=self.layout, placement=Position(x, y, angle=0))
 
         self.layout.add_piece(piece)
+
+    def on_key_press(self, widget, event):
+        if isinstance(self.selected_item, Curve) and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+            self.selected_item.direction = 'left' if self.selected_item.direction == 'right' else 'right'
+            self.selected_item.placement_origin.update_connected_subset_positions()
+            self.layout.changed()
+        if isinstance(self.selected_item, Anchor) and event.keyval in (Gdk.KEY_p, Gdk.KEY_P):
+            self.selected_item.split()
+        if isinstance(self.selected_item, Piece) and event.keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
+            self.layout.remove_piece(self.selected_item)
+            if self.highlight_item == self.selected_item:
+                self.highlight_item = None
+            self.selected_item = None
+            self.drawing_area.queue_draw()
 
     def on_piece_positioned(self, sender: Layout, piece: Piece):
         if piece.position:
             self.pieces_qtree.insert_item(piece, piece.position)
-            relative_positions = piece.relative_positions()
             for anchor_name, anchor in piece.anchors.items():
-                self.anchors_qtree.insert_item(anchor, piece.position + relative_positions[anchor_name])
+                self.anchors_qtree.insert_item(anchor, anchor.position)
         else:
             self.pieces_qtree.remove_item(piece)
             for anchor in piece.anchors.values():
                 self.anchors_qtree.remove_item(anchor)
 
-    def on_piece_removed(self, piece: Piece):
+    def on_piece_removed(self, sender: Layout, piece: Piece):
         for anchor in piece.anchors.values():
             self.anchors_qtree.remove_item(anchor)
         self.pieces_qtree.remove_item(piece)
+        # print(len(self.pieces_qtree), len(self.anchors_qtree))
+
+    def get_item_under_cursor(self, event):
+        x, y = self.xy_to_layout(event.x, event.y)
+        anchors = self.anchors_qtree.intersect((x - 2, y - 2, x + 2, y + 2))
+        if anchors:
+            return anchors[0]
+        pieces = self.pieces_qtree.intersect((x, y, x, y))
+        if pieces:
+            return pieces[0]
 
     def xy_to_layout(self, x, y):
-        x = (x - self.drawing_options.offset[0] - self.drawing_area.get_allocated_width() / 2) / self.drawing_options.scale
-        y = (y - self.drawing_options.offset[1] - self.drawing_area.get_allocated_height() / 2) / self.drawing_options.scale
-        return x, y
+            x = (x - self.drawing_options.offset[0] - self.drawing_area.get_allocated_width() / 2) / self.drawing_options.scale
+            y = (y - self.drawing_options.offset[1] - self.drawing_area.get_allocated_height() / 2) / self.drawing_options.scale
+            return x, y
 
     def draw(self, widget, cr: Context):
         width = widget.get_allocated_width()
@@ -203,8 +243,20 @@ class LayoutDrawer:
             self.draw_piece(piece, cr, self.drawing_options)
 
     def draw_highlight_layer(self, layout: Layout, cr: Context):
-        for piece in self.highlight_pieces:
-            self.draw_piece(piece, cr, self.highlight_drawing_options)
+        if isinstance(self.highlight_item, Piece):
+            self.draw_piece(self.highlight_item, cr, self.highlight_drawing_options)
+        if isinstance(self.selected_item, Piece):
+            self.draw_piece(self.selected_item, cr, self.highlight_drawing_options)
+        elif isinstance(self.selected_item, Anchor):
+            cr.arc(
+                self.selected_item.position.x,
+                self.selected_item.position.y,
+                3 if any(piece.placement and anchor_name == piece.anchor_names[0] for piece, anchor_name in self.selected_item.items()) else 1,
+                0,
+                math.tau
+            )
+            cr.set_source_rgb(.2, .2, 1)
+            cr.fill()
 
     def draw_piece(self, piece: Piece, cr: Context, drawing_options: DrawingOptions):
         if not piece.position:
@@ -232,7 +284,15 @@ class LayoutDrawer:
             else:
                 cr.set_source_rgb(.5, 1, .5)
 
-            cr.arc(0, 0, 1, 0, math.tau)
+            next_piece, next_anchor_name = anchor.next(piece)
+
+            cr.arc(
+                0,
+                0,
+                3 if (piece.placement and anchor_name == piece.anchor_names[0]) or (next_piece and next_piece.placement and next_anchor_name == next_piece.anchor_names[0]) else 1,
+                0,
+                math.tau
+            )
             cr.fill()
 
             cr.restore()

@@ -16,7 +16,7 @@ setup(
     author='Alex Dutton',
     author_email='lego-trains@alexdutton.co.uk',
     packages=find_packages(),
-    license='BSD',
+    license='BSD-2-Clause',
     entry_points={
         'trains.piece': [
             'straight = trains.pieces:Straight',

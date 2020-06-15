@@ -6,6 +6,7 @@ runs:
         angle: 0
       anchors:
         in: start
+      direction: left
     - type: curve
       direction: right
     - type: curve

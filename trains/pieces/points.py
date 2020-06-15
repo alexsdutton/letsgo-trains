@@ -24,7 +24,6 @@ class BasePoints(Piece):
 
     def __init__(self, state: str='out', **kwargs):
         self.state = state
-        super().__init__(**kwargs)
 
         self.branch_point = cmath.rect(40, math.tau * 5/16) + 48 - 24j
         self.branch_point = self.branch_point.real, self.branch_point.imag * self.flip
@@ -52,6 +51,8 @@ class BasePoints(Piece):
             x, y = intermediate_branch_lengths[i-1:i+1]
             if intermediate_branch_lengths[i-1] < self.branch_length * len(self.intermediate_branch_t) / 100 <= intermediate_branch_lengths[i]:
                 self.intermediate_branch_t.append(t)
+
+        super().__init__(**kwargs)
 
     def branch_bezier(self, t):
         return _bezier(*self.control_points, self.branch_point, t)
