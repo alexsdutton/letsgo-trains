@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import collections
+import weakref
+
 import math
 from numbers import Number
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Optional, Set, Tuple, TYPE_CHECKING
 
 import cairo
 import cmath
 import uuid
 
+from trains import signals
+
 if TYPE_CHECKING:
+    from trains.layout import Layout
     from trains.pieces import Piece
 
 from trains.registry_meta import WithRegistry
@@ -66,8 +71,12 @@ class Anchor(dict):
     """
     def __init__(self, initial: Dict[Piece, str], id=None, **kwargs):
         super().__init__(initial)
+        # self.layout = layout
         self.id = id or str(uuid.uuid4())
         self.position: Optional[Position] = None
+        self.subsumes = weakref.WeakSet()
+        # if self._position:
+        #     signals.anchor_p
 
     def __setitem__(self, key: Piece, value: str):
         assert key in self or len(self) < 2
@@ -82,9 +91,14 @@ class Anchor(dict):
         other_piece: Piece
         (piece,), (other_piece,) = self, other
 
+        assert piece.layout == other_piece.layout
+
         for track_piece, anchor_name in other.items():
             track_piece.anchors[anchor_name] = self
         self.update(other)
+
+        self.subsumes.add(other)
+        self.subsumes.update(other.subsumes)
 
         if piece.placement_origin != other_piece.placement_origin:
             if other_piece.placement_origin:
@@ -133,6 +147,9 @@ class Anchor(dict):
                 piece.placement = piece.position
             elif other_piece not in updated_pieces:
                 other_piece.placement = other_piece.position
+            if other_piece.position:
+                other_anchor.position = other_piece.position + other_piece.relative_positions()[other_anchor_name]
+            signals.piece_positioned.send(other_piece.layout, piece=other_piece)
 
             return other_anchor
         elif len(self) == 1:

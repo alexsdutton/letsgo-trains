@@ -1,12 +1,16 @@
+import logging
 import os
 import sys
-import threading
 import time
+from typing import Dict, Type
 
 import pkg_resources
 
 import gi
 import yaml
+
+from trains.layout_parser import LayoutParser, get_parser_for_filename, parser_classes
+from trains.layout_serializer import get_serializer_for_filename, serializer_classes
 from trains.pieces.points import BasePoints
 
 gi.require_version('Gtk', '3.0')
@@ -18,12 +22,12 @@ from trains.gtk.layout_drawingarea import LayoutDrawer
 from trains.gtk.trains import TrainListBox
 from trains.layout import Layout
 from trains.topham_hatt import TophamHatt
-from trains.pieces import Piece
 
 from gi.repository import Gtk, Gio, GObject, GLib, Gdk
 
-from .. import signals, track
+from .. import signals
 
+logger = logging.getLogger(__name__)
 
 class Application(Gtk.Application):
     APPLICATION_ID = 'uk.dutton.trains'
@@ -66,6 +70,10 @@ class Application(Gtk.Application):
         self.layout_area = self.builder.get_object('layout')
 
         self.layout = Layout()
+
+        self.current_filename = None
+        self.saved_epoch = self.layout.epoch
+
         signals.tick.connect(self.layout.tick)
         self.topham_hatt = TophamHatt(self.layout)
         signals.tick.connect(self.topham_hatt.tick)
@@ -76,12 +84,16 @@ class Application(Gtk.Application):
         self.configure_dialog = ConfigureDialog(self.layout, self.builder)
         self.builder.get_object('configure-button').connect('clicked', self.on_configure_clicked)
         self.builder.get_object('new-button').connect('clicked', self.on_new_clicked)
+        self.builder.get_object('open-button').connect('clicked', self.on_open_clicked)
+        self.builder.get_object('save-button').connect('clicked', self.on_save_clicked)
+        self.builder.get_object('save-as-button').connect('clicked', self.on_save_as_clicked)
+        self.window.connect('delete-event', self.on_delete_event)
 
         self.layout_drawer = LayoutDrawer(self.layout_area, self.layout)
 
         signals.piece_added.connect(self.on_piece_added, sender=self.layout)
 
-        self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/simple.yaml')))
+        # self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('trains', 'data/layouts/simple.yaml')))
 
         self.last_tick = time.time()
         GLib.timeout_add(30, self.send_tick)
@@ -96,6 +108,45 @@ class Application(Gtk.Application):
 
     def on_new_clicked(self, widget):
         self.layout.clear()
+
+    def on_open_clicked(self, widget):
+        file_chooser = Gtk.FileChooserNative.new(
+            "Open layout",
+            self.window,
+            Gtk.FileChooserAction.OPEN,
+            "_Open",
+            "_Cancel",
+        )
+
+        supported_file_filter = Gtk.FileFilter()
+        supported_file_filter.set_name("All supported files")
+        file_chooser.add_filter(supported_file_filter)
+
+        for parser_cls in parser_classes:
+            file_filter = Gtk.FileFilter()
+            file_filter.set_name(f"{parser_cls.name} layout ({parser_cls.file_extension})")
+            supported_file_filter.add_pattern('*' + parser_cls.file_extension)
+            file_filter.add_pattern('*' + parser_cls.file_extension)
+            file_chooser.add_filter(file_filter)
+
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name("All files")
+        file_filter.add_pattern("*")
+        file_chooser.add_filter(file_filter)
+
+        if file_chooser.run() == Gtk.ResponseType.ACCEPT:
+            filename = file_chooser.get_filename()
+            parser = get_parser_for_filename(filename)
+            if parser:
+                self.layout.clear()
+                with open(filename, 'rb') as f:
+                    parser.parse(f, self.layout)
+                self.current_filename = filename
+                self.saved_epoch = self.layout.epoch
+            else:
+                logger.warning("No parser for file %s", filename)
+
+
 
     def on_configure_clicked(self, widget):
         if self.configure_dialog.get_visible():
@@ -149,6 +200,92 @@ class Application(Gtk.Application):
         self.layout.stop()
         Gtk.Application.do_shutdown(self)
 
+    def on_delete_event(self, widget: Gtk.Window, event: Gdk.Event) -> bool:
+        """Should be called before the current layout is abandoned, either by closing or opening a new layout.
+
+        :return: True if the current action should be cancelled, otherwise False, in line with signal propagation"""
+        if self.layout.epoch == self.saved_epoch:
+            return False
+
+        if self.current_filename:
+            layout_name = f' "{os.path.basename(self.current_filename)}"'
+        else:
+            layout_name = ''
+
+        dialog = Gtk.MessageDialog(
+            parent=self.window,
+            modal=True,
+            destroy_with_parent=True,
+        )
+
+        dialog.set_markup(f'<span weight="bold" size="larger">Save changes to layout{layout_name} before closing?</span>')
+        dialog.format_secondary_text("If you don't save, changes will be permanently lost.")
+
+        close_without_saving_button = dialog.add_button('Close _without Saving', Gtk.ResponseType.NO)
+        dialog.add_button('_Cancel', Gtk.ResponseType.CANCEL)
+        dialog.add_button('_Save' if self.current_filename else '_Save As…', Gtk.ResponseType.YES)
+
+        close_without_saving_button.get_style_context().add_class(Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION)
+
+        dialog.set_default_response(Gtk.ResponseType.YES)
+
+        response = dialog.run()
+        dialog.destroy()
+
+        if response == Gtk.ResponseType.YES:
+            return self.on_save_clicked()
+
+        return response == Gtk.ResponseType.CANCEL
+
+    def on_save_clicked(self, *args, **kwargs):
+        if not self.current_filename:
+            return self.on_save_as_clicked()
+
+        serializer = get_serializer_for_filename(self.current_filename)
+        if not serializer:
+            return self.on_save_as_clicked()
+
+        with open(self.current_filename, 'wb') as fp:
+            serializer.serialize(fp, self.layout)
+            self.saved_epoch = self.layout.epoch
+
+        return False
+
+    def on_save_as_clicked(self, *args, **kwargs):
+        file_chooser = Gtk.FileChooserNative.new(
+            "Save layout",
+            self.window,
+            Gtk.FileChooserAction.SAVE,
+            "_Save",
+            "_Cancel",
+        )
+
+        file_chooser.set_do_overwrite_confirmation(True)
+        if self.current_filename:
+            file_chooser.set_filename(self.current_filename)
+        else:
+            file_chooser.set_current_name('layout.lgl')
+
+        for serializer_cls in serializer_classes:
+            file_filter = Gtk.FileFilter()
+            file_filter.set_name(f"{serializer_cls.name} layout ({serializer_cls.file_extension})")
+            file_filter.add_pattern('*' + serializer_cls.file_extension)
+            file_chooser.add_filter(file_filter)
+
+        if file_chooser.run() == Gtk.ResponseType.ACCEPT:
+            filename = file_chooser.get_filename()
+            serializer = get_serializer_for_filename(filename)
+            if serializer:
+                with open(filename, 'wb') as fp:
+                    serializer.serialize(fp, self.layout)
+                self.current_filename = filename
+                self.saved_epoch = self.layout.epoch
+            else:
+                logger.warning("No parser for file %s", filename)
+
+            return False
+        else:
+            return True
 
 def main():
     app = Application()

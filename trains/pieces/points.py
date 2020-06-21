@@ -19,7 +19,7 @@ def _distance(xy1, xy2):
 
 
 class BasePoints(Piece):
-    anchor_names = ('in', 'branch', 'out')
+    anchor_names = ('in', 'out', 'branch')
     layout_priority = 30
 
     def __init__(self, state: str='out', **kwargs):

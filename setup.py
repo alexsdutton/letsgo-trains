@@ -8,7 +8,7 @@ with open(os.path.join("trains", "version.py")) as fp:
 version = g['__version__']
 
 setup(
-    name='lego-train-automation',
+    name='letsgo-trains',
     version=version,
     description='GTK application for controlling Lego trains',
     long_description=open('README.md').read(),
@@ -35,7 +35,22 @@ setup(
             'right-points = trains.pieces:RightPoints',
             'crossover = trains.pieces:Crossover',
             'short-crossover = trains.pieces:ShortCrossover',
-        ]
+        ],
+        'trains.layout_parser': [
+            'letsgo = trains.layout_parser:LetsGoLayoutParser',
+            'ncontrol = trains.layout_parser:NControlLayoutParser',
+        ],
+        'trains.layout_serializer': [
+            'letsgo = trains.layout_serializer:LetsGoLayoutSerializer',
+            'ncontrol = trains.layout_serializer:NControlLayoutSerializer',
+        ],
+        'trains.controller': [
+            'maestro = trains.control.MaestroController',
+            'powered-up = trains.control.PoweredUpController',
+        ],
+        'trains.sensor': [
+            'hall-effect = trains.sensor.HallEffectSensor',
+        ],
     }
 
 )

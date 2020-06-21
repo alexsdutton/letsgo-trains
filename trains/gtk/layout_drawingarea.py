@@ -7,7 +7,9 @@ import random
 import gi
 import pyqtree
 from cairo import Context
-from trains.pieces import Curve, Piece, piece_classes
+from trains import pieces
+
+from trains.pieces import Curve, Piece, Straight, piece_classes
 
 from trains.drawing_options import DrawingOptions
 
@@ -28,6 +30,14 @@ SENSOR_ACTIVATED = (0, 1, 0)
 
 
 class LayoutDrawer:
+    keyboard_piece_placement = {
+        Gdk.KEY_q: pieces.Curve,
+        Gdk.KEY_w: pieces.Straight,
+        Gdk.KEY_e: lambda *args, **kwargs: pieces.Curve(*args, direction=CurveDirection.right, **kwargs),
+        Gdk.KEY_a: pieces.LeftPoints,
+        Gdk.KEY_s: pieces.Crossover,
+        Gdk.KEY_d: pieces.RightPoints,
+    }
     def __init__(self, drawing_area: Gtk.DrawingArea, layout):
         self.drawing_area = drawing_area
         self.drawing_area.set_can_focus(True)
@@ -74,6 +84,8 @@ class LayoutDrawer:
 
         self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
         self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+
+        self.anchors_for_piece = {}
 
         self.highlight_item: Union[None, Piece, Anchor] = None
         self._selected_item: Union[None, Piece, Anchor] = None
@@ -140,35 +152,78 @@ class LayoutDrawer:
         self.layout.add_piece(piece)
 
     def on_key_press(self, widget, event):
+        print(event.keyval, event.string, event.get_keycode())
         if isinstance(self.selected_item, Curve) and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
-            print(self.selected_item.direction)
             self.selected_item.direction = CurveDirection.left if self.selected_item.direction == CurveDirection.right else CurveDirection.right
             self.selected_item.placement_origin.update_connected_subset_positions()
             self.layout.changed()
         if isinstance(self.selected_item, Anchor) and event.keyval in (Gdk.KEY_p, Gdk.KEY_P):
             self.selected_item.split()
         if isinstance(self.selected_item, Piece) and event.keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
+            full_anchors = [a for a in self.selected_item.anchors.values() if len(a) == 2]
+            if len(full_anchors) == 1:
+                next_selected_item = full_anchors[0].next(self.selected_item)[0]
+            else:
+                next_selected_item = None
+
             self.layout.remove_piece(self.selected_item)
             if self.highlight_item == self.selected_item:
                 self.highlight_item = None
-            self.selected_item = None
+            self.selected_item = next_selected_item
             self.drawing_area.queue_draw()
+        if isinstance(self.selected_item, Piece) and event.keyval in self.keyboard_piece_placement:
+            partial_anchors = {n: a for n, a in self.selected_item.anchors.items() if len(a) == 1}
+            for anchor_name in self.selected_item.anchor_names[1:] + self.selected_item.anchor_names[:1]:
+                if anchor_name in partial_anchors:
+                    new_piece = self.keyboard_piece_placement[event.keyval](layout=self.layout)
+                    self.layout.add_piece(new_piece)
+                    self.selected_item.anchors[anchor_name] += new_piece.anchors[new_piece.anchor_names[0]]
+                    self.selected_item = new_piece
+                    break
+
+        if isinstance(self.selected_item, Anchor) and len(self.selected_item) == 1 and event.keyval in self.keyboard_piece_placement:
+            new_piece = self.keyboard_piece_placement[event.keyval](layout=self.layout)
+            self.layout.add_piece(new_piece)
+            new_piece.anchors[new_piece.anchor_names[0]] += self.selected_item
+            if len(new_piece.anchor_names) > 1:
+                self.selected_item = new_piece.anchors[new_piece.anchor_names[1]]
+            else:
+                self.selected_item = new_piece
 
     def on_piece_positioned(self, sender: Layout, piece: Piece):
         if piece.position:
             self.pieces_qtree.insert_item(piece, piece.position)
             for anchor_name, anchor in piece.anchors.items():
                 self.anchors_qtree.insert_item(anchor, anchor.position)
+                for subsumed_anchor in anchor.subsumes:
+                    self.anchors_qtree.remove_item(subsumed_anchor)
         else:
             self.pieces_qtree.remove_item(piece)
             for anchor in piece.anchors.values():
                 self.anchors_qtree.remove_item(anchor)
+            for subsumed_anchor in anchor.subsumes:
+                self.anchors_qtree.remove_item(subsumed_anchor)
+        # self.remove_old_anchors(piece)
 
     def on_piece_removed(self, sender: Layout, piece: Piece):
         for anchor in piece.anchors.values():
             self.anchors_qtree.remove_item(anchor)
+            for subsumed_anchor in anchor.subsumes:
+                self.anchors_qtree.remove_item(subsumed_anchor)
+        # self.remove_old_anchors(piece)
         self.pieces_qtree.remove_item(piece)
-        # print(len(self.pieces_qtree), len(self.anchors_qtree))
+
+    def remove_old_anchors(self, piece: Piece):
+        # A slightly messy part of bookkeeping, to make sure we forget about anchors that are no longer
+        # connected to pieces
+        old_anchors = self.anchors_for_piece.get(piece, set())
+        current_anchors = set(piece.anchors.values())
+        for anchor in old_anchors - current_anchors:
+            self.anchors_qtree.remove_item(anchor)
+        if piece.layout:
+            self.anchors_for_piece[piece] = current_anchors
+        else:
+            self.anchors_for_piece.pop(piece, None)
 
     def get_item_under_cursor(self, event):
         x, y = self.xy_to_layout(event.x, event.y)

@@ -63,6 +63,7 @@ class Layout:
         for anchor_name in piece.anchor_names:
             piece.anchors[anchor_name].split()
         self.pieces.remove(piece)
+        piece.layout = None
         signals.piece_removed.send(self, piece=piece)
 
     def add_train(self, train):
@@ -347,6 +348,7 @@ class Layout:
             self.remove_controller(controller)
         for piece in list(self.pieces):
             self.remove_piece(piece, announce=True)
+        self.by_id = {}
         self.changed(cleared=True)
 
 if __name__ == '__main__':

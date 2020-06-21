@@ -49,7 +49,7 @@ class Piece:
                 raise AssertionError("Can't reuse an ID for a new object")
             self.layout.by_id[self.id] = self
 
-        print(self, self.layout)
+        # print(self, self.layout)
 
     @property
     def placement(self) -> Optional[Position]:
@@ -72,13 +72,14 @@ class Piece:
 
     @position.setter
     def position(self, value: Optional[Position]):
-        if value != self._position:
-            self._position = value
-            relative_positions = self.relative_positions()
-            for anchor_name, anchor in self.anchors.items():
-                anchor.position = self.position + relative_positions[anchor_name]
-            if self.layout:
-                signals.piece_positioned.send(self.layout, piece=self)
+        old_value = self._position
+        self._position = value
+        relative_positions = self.relative_positions()
+        for anchor_name, anchor in self.anchors.items():
+            anchor.position = self.position + relative_positions[anchor_name]
+
+        if value != old_value and self.layout:
+            signals.piece_positioned.send(self.layout, piece=self)
 
     @property
     def placement_origin(self) -> Optional[Piece]:
