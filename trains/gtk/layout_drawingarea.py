@@ -53,10 +53,13 @@ class LayoutDrawer:
         self.drawing_area.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
         self.drawing_area.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.drawing_area.add_events(Gdk.EventMask.KEY_PRESS_MASK)
+        self.drawing_area.add_events(Gdk.EventMask.SCROLL_MASK)
+        self.drawing_area.add_events(Gdk.EventMask.SMOOTH_SCROLL_MASK)
         self.drawing_area.connect('button-press-event', self.mouse_press)
         self.drawing_area.connect('button-release-event', self.mouse_release)
         self.drawing_area.connect('motion-notify-event', self.mouse_motion)
         self.drawing_area.connect('key-press-event', self.on_key_press)
+        self.drawing_area.connect('scroll-event', self.on_scroll)
 
         signals.piece_added.connect(self.on_piece_positioned, sender=layout)
         signals.piece_positioned.connect(self.on_piece_positioned, sender=layout)
@@ -190,6 +193,36 @@ class LayoutDrawer:
             else:
                 self.selected_item = new_piece
 
+    def on_scroll(self, widget, event):
+        # TODO: Handle smooth scrolling
+        if event.state & Gdk.ModifierType.SHIFT_MASK:
+            if event.direction == Gdk.ScrollDirection.UP:
+                self.drawing_options = self.drawing_options.replace(scale=self.drawing_options.scale * 0.8)
+            elif event.direction == Gdk.ScrollDirection.DOWN:
+                self.drawing_options = self.drawing_options.replace(scale=self.drawing_options.scale / 0.8)
+            # elif event.direction == Gdk.ScrollDirection.SMOOTH:
+            #     self.drawing_options = self.drawing_options.replace(scale=self.drawing_options.scale / 0.8)
+            #     dx, dy = - 20 * event.delta_x / self.drawing_options.scale, - 20 * event.delta_y / self.drawing_options.scale
+            else:
+                return
+        else:
+            if event.direction == Gdk.ScrollDirection.UP:
+                dx, dy = 0, 64 / self.drawing_options.scale
+            elif event.direction == Gdk.ScrollDirection.DOWN:
+                dx, dy = 0, - 64 / self.drawing_options.scale
+            elif event.direction == Gdk.ScrollDirection.LEFT:
+                dx, dy = 64 / self.drawing_options.scale, 0
+            elif event.direction == Gdk.ScrollDirection.RIGHT:
+                dx, dy = -64 / self.drawing_options.scale, 0
+            elif event.direction == Gdk.ScrollDirection.SMOOTH:
+                dx, dy = - 20 * event.delta_x / self.drawing_options.scale, - 20 * event.delta_y / self.drawing_options.scale
+            else:
+                return
+            self.drawing_options = self.drawing_options.replace(offset=(self.drawing_options.offset[0] + dx,
+                                                                        self.drawing_options.offset[1] + dy))
+
+        self.drawing_area.queue_draw()
+
     def on_piece_positioned(self, sender: Layout, piece: Piece):
         if piece.position:
             self.pieces_qtree.insert_item(piece, piece.position)
@@ -279,7 +312,7 @@ class LayoutDrawer:
         # self.draw_trains(self.layout, cr)
 
     def draw_grid(self, cr: Context):
-        cr.set_line_width(0.5)
+        cr.set_line_width(1 / self.drawing_options.scale)
 
         for x in range(-10, 10):
             v = 0.7 if (x % 3) == 0 else 0.8
