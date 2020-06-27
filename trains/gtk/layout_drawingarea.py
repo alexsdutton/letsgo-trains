@@ -9,7 +9,7 @@ import pyqtree
 from cairo import Context
 from trains import pieces
 
-from trains.pieces import Curve, Piece, Straight, piece_classes
+from trains.pieces import Piece, Straight, piece_classes
 
 from trains.drawing_options import DrawingOptions
 
@@ -18,7 +18,7 @@ from trains.layout import Layout
 from trains.sensor import Sensor
 from trains.track import Anchor, Position
 from .. import signals
-from ..pieces.curve import CurveDirection
+from ..pieces.curve import BaseCurve, CurveDirection
 from ..utils.quadtree import ResizingIndex
 
 gi.require_version('Gtk', '3.0')
@@ -154,7 +154,7 @@ class LayoutDrawer:
 
     def on_key_press(self, widget, event):
         print(event.keyval, event.string, event.get_keycode())
-        if isinstance(self.selected_item, Curve) and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+        if isinstance(self.selected_item, BaseCurve) and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
             self.selected_item.direction = CurveDirection.left if self.selected_item.direction == CurveDirection.right else CurveDirection.right
             self.selected_item.placement_origin.update_connected_subset_positions()
             self.layout.changed()
