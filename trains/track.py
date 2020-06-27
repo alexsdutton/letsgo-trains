@@ -105,8 +105,8 @@ class Anchor(dict):
             track_piece.anchors[anchor_name] = self
         self.update(other)
 
-        self.subsumes.add(other)
-        self.subsumes.update(other.subsumes)
+        other.position = None
+        other_piece.layout.anchor_positioned(other)
 
         if piece.placement_origin != other_piece.placement_origin:
             if other_piece.placement_origin:
@@ -158,7 +158,7 @@ class Anchor(dict):
                 other_piece.placement = other_piece.position
             if other_piece.position:
                 other_anchor.position = other_piece.position + other_piece.relative_positions()[other_anchor_name]
-            signals.piece_positioned.send(other_piece.layout, piece=other_piece)
+            other_piece.layout.anchor_positioned(other_anchor)
 
             return other_anchor
         elif len(self) == 1:

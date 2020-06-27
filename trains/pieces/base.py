@@ -75,7 +75,7 @@ class Piece(WithRegistry):
             anchor.position = self.position + relative_positions[anchor_name]
 
         if value != old_value and self.layout:
-            signals.piece_positioned.send(self.layout, piece=self)
+            self.layout.piece_positioned(self)
 
     @property
     def placement_origin(self) -> Optional[Piece]:

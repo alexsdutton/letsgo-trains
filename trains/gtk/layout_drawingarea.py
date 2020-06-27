@@ -61,10 +61,6 @@ class LayoutDrawer:
         self.drawing_area.connect('key-press-event', self.on_key_press)
         self.drawing_area.connect('scroll-event', self.on_scroll)
 
-        signals.piece_added.connect(self.on_piece_positioned, sender=layout)
-        signals.piece_positioned.connect(self.on_piece_positioned, sender=layout)
-        signals.piece_removed.connect(self.on_piece_removed, sender=layout)
-
         self.drawing_options = DrawingOptions(
             offset=(0, 0),
             scale=3,
@@ -84,9 +80,6 @@ class LayoutDrawer:
         self.mouse_down = None
         self.layout = layout
         self.last_layout_state = None
-
-        self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
-        self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
 
         self.highlight_item: Union[None, Piece, Anchor] = None
         self._selected_item: Union[None, Piece, Anchor] = None
@@ -139,7 +132,7 @@ class LayoutDrawer:
         piece_cls = piece_classes[data.get_text()]
         x, y = self.xy_to_layout(x, y)
 
-        possible_anchors = self.anchors_qtree.intersect((x-8, y-8, x+8, y+8))
+        possible_anchors = self.layout.anchors_qtree.intersect((x-8, y-8, x+8, y+8))
         possible_anchors = [anchor for anchor in possible_anchors if len(anchor) < 2]
         if possible_anchors:
             piece = piece_cls(layout=self.layout)
@@ -152,7 +145,7 @@ class LayoutDrawer:
 
         for anchor in piece.anchors.values():
             epsilon = 0.0001
-            for other_anchor in self.anchors_qtree.intersect((anchor.position.x - epsilon, anchor.position.y - epsilon, anchor.position.x + epsilon, anchor.position.y + epsilon)):
+            for other_anchor in self.layout.anchors_qtree.intersect((anchor.position.x - epsilon, anchor.position.y - epsilon, anchor.position.x + epsilon, anchor.position.y + epsilon)):
                 if anchor != other_anchor and len(anchor) == 1 and len(other_anchor) == 1:
                     other_anchor += anchor
                     break
@@ -228,35 +221,12 @@ class LayoutDrawer:
 
         self.drawing_area.queue_draw()
 
-    def on_piece_positioned(self, sender: Layout, piece: Piece):
-        if piece.position:
-            self.pieces_qtree.insert_item(piece, piece.position)
-            for anchor_name, anchor in piece.anchors.items():
-                self.anchors_qtree.insert_item(anchor, anchor.position)
-                for subsumed_anchor in anchor.subsumes:
-                    self.anchors_qtree.remove_item(subsumed_anchor)
-        else:
-            self.pieces_qtree.remove_item(piece)
-            for anchor in piece.anchors.values():
-                self.anchors_qtree.remove_item(anchor)
-            for subsumed_anchor in anchor.subsumes:
-                self.anchors_qtree.remove_item(subsumed_anchor)
-        # self.remove_old_anchors(piece)
-
-    def on_piece_removed(self, sender: Layout, piece: Piece):
-        for anchor in piece.anchors.values():
-            self.anchors_qtree.remove_item(anchor)
-            for subsumed_anchor in anchor.subsumes:
-                self.anchors_qtree.remove_item(subsumed_anchor)
-        # self.remove_old_anchors(piece)
-        self.pieces_qtree.remove_item(piece)
-
     def get_item_under_cursor(self, event):
         x, y = self.xy_to_layout(event.x, event.y)
-        anchors = self.anchors_qtree.intersect((x - 2, y - 2, x + 2, y + 2))
+        anchors = self.layout.anchors_qtree.intersect((x - 2, y - 2, x + 2, y + 2))
         if anchors:
             return anchors[0]
-        pieces = self.pieces_qtree.intersect((x, y, x, y))
+        pieces = self.layout.pieces_qtree.intersect((x, y, x, y))
         if pieces:
             return pieces[0]
 

@@ -6,6 +6,7 @@ import time
 from typing import Dict, Union
 
 import pyqtree
+from trains.utils.quadtree import ResizingIndex
 
 from trains.pieces.curve import CurveDirection
 from trains.pieces.points import BasePoints
@@ -49,6 +50,9 @@ class Layout:
 
         self.anchors: Dict[str, Anchor] = {}
 
+        self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+        self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+
         self.running = threading.Event()
         self._epoch = 0
         self.meta = {}
@@ -74,6 +78,8 @@ class Layout:
                 self.anchors[anchor.id] += anchor
             else:
                 self.anchors[anchor.id] = anchor
+
+        self.piece_positioned(piece)
         signals.piece_added.send(self, piece=piece)
 
     @_changes_layout
@@ -81,8 +87,10 @@ class Layout:
         # Disconnect from any other pieces
         for anchor_name in piece.anchor_names:
             piece.anchors[anchor_name].split()
+            self.anchors_qtree.remove_item(piece.anchors[anchor_name])
             del self.anchors[piece.anchors[anchor_name].id]
         del self.pieces[piece.id]
+        self.pieces_qtree.remove_item(piece)
         signals.piece_removed.send(self, piece=piece)
 
     def add_train(self, train):
@@ -130,6 +138,23 @@ class Layout:
         del self.sensors[sensor.id]
         signals.sensor_removed.send(self, sensor=sensor)
         signals.sensor_activity.disconnect(self.on_sensor_activity, sender=sensor)
+
+    def piece_positioned(self, piece):
+        if piece.position:
+            self.pieces_qtree.insert_item(piece, piece.position)
+        else:
+            self.pieces_qtree.remove_item(piece)
+        for anchor in piece.anchors.values():
+            self.anchor_positioned(anchor)
+        self.changed()
+
+    def anchor_positioned(self, anchor):
+        if anchor.position:
+            self.anchors_qtree.insert_item(anchor, anchor.position)
+        else:
+            self.anchors_qtree.remove_item(anchor)
+        while anchor.subsumes:
+            self.anchors_qtree.remove_item(anchor.subsumes.pop())
 
     def tick(self, sender, time, time_elapsed):
         for train in self.trains.values():
