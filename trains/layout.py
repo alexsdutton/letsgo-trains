@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import threading
 import time
-from typing import Union
+from typing import Dict, Union
 
 import pyqtree
 
@@ -40,21 +40,40 @@ def _changes_layout(func):
 
 class Layout:
     def __init__(self):
-        self.pieces = set()
-        self.trains = {}
-        self.stations = {}
-        self.itineraries = {}
-        self.controllers = {}
-        self.sensors = {}
-        self.by_id = {}
+        self.pieces: Dict[str, Piece] = {}
+        self.trains: Dict[str, Train] = {}
+        self.stations: Dict[str, Station] = {}
+        self.itineraries: Dict[str, Itinerary] = {}
+        self.controllers: Dict[str, Controller] = {}
+        self.sensors: Dict[str, Sensor] = {}
+
+        self.anchors: Dict[str, Anchor] = {}
+
         self.running = threading.Event()
         self._epoch = 0
+        self.meta = {}
 
         self.sensor_magnets_last_seen = {}
 
+    @property
+    def collections(self):
+        return {
+            Piece: self.pieces,
+            Train: self.trains,
+            Station: self.stations,
+            Itinerary: self.itineraries,
+            Controller: self.controllers,
+            Sensor: self.sensors,
+        }
+
     @_changes_layout
     def add_piece(self, piece):
-        self.pieces.add(piece)
+        self.pieces[piece.id] = piece
+        for anchor in piece.anchors.values():
+            if anchor.id in self.anchors:
+                self.anchors[anchor.id] += anchor
+            else:
+                self.anchors[anchor.id] = anchor
         signals.piece_added.send(self, piece=piece)
 
     @_changes_layout
@@ -62,8 +81,8 @@ class Layout:
         # Disconnect from any other pieces
         for anchor_name in piece.anchor_names:
             piece.anchors[anchor_name].split()
-        self.pieces.remove(piece)
-        piece.layout = None
+            del self.anchors[piece.anchors[anchor_name].id]
+        del self.pieces[piece.id]
         signals.piece_removed.send(self, piece=piece)
 
     def add_train(self, train):
@@ -281,60 +300,15 @@ class Layout:
 
     @property
     def placed_pieces(self):
-        for piece in self.pieces:
+        for piece in self.pieces.values():
             if piece.placement:
                 yield piece
 
     @property
     def points(self):
-        for piece in self.pieces:
+        for piece in self.pieces.values():
             if isinstance(piece, BasePoints):
                 yield piece
-
-    def serialize_runs(self):
-        remaining_pieces = set(self.pieces)
-
-        runs = []
-        piece, run = remaining_pieces.pop(), []
-
-        while True:
-            out_anchor_name = piece.anchor_names[-1]
-            piece_item = {'piece': piece.registry_type, 'anchors': {}}
-            if not run:
-                piece_item['anchors'][piece.anchor_names[0]] = piece.anchors[piece.anchor_names[0]].id
-            run.append(piece_item)
-            next_piece, next_in_anchor = piece.anchors[piece.anchor_names[-1]].next(piece)
-
-            for anchor_name in piece.anchor_names[1:-1]:
-                piece_item['anchors'][anchor_name] = piece.anchors[anchor_name].id
-
-            if not next_piece or next_piece not in remaining_pieces or next_in_anchor != next_piece.anchor_names[0]:
-                piece_item['anchors'][piece.anchor_names[-1]] = piece.anchors[piece.anchor_names[-1]].id
-                runs.append(run)
-                run = []
-                try:
-                    piece = remaining_pieces.pop()
-                except KeyError:
-                    break
-            else:
-                remaining_pieces.remove(next_piece)
-                piece = next_piece
-
-        run_ins, run_outs = {}, {}
-
-        for run in runs:
-            for piece_item in run:
-                if not piece_item['anchors']:
-                    del piece_item['anchors']
-            run_ins[run[0]['anchors']['in']] = run
-            run_outs[run[-1]['anchors']['out']] = run
-
-        for anchor_id in set(run_ins) & set(run_outs):
-            if run_ins[anchor_id] != run_outs[anchor_id]:
-                run_outs[anchor_id] += run_ins[anchor_id]
-                runs.remove(run_ins[anchor_id])
-
-        return runs
 
     def clear(self):
         # Could do `while self.trains: self.remove_train(self.trains.popvalue())` or some such, but never mind
@@ -346,9 +320,8 @@ class Layout:
             self.remove_sensor(sensor, announce=False)
         for controller in list(self.controllers.values()):
             self.remove_controller(controller)
-        for piece in list(self.pieces):
+        for piece in list(self.pieces.values()):
             self.remove_piece(piece, announce=True)
-        self.by_id = {}
         self.changed(cleared=True)
 
 if __name__ == '__main__':
@@ -358,7 +331,7 @@ if __name__ == '__main__':
     data = yaml.safe_load(pkg_resources.resource_stream('trains', 'data/layouts/simple.yaml'))
     layout = Layout()
     layout.load_from_yaml(data)
-    for piece in layout.pieces:
+    for piece in layout.pieces.values():
         print(piece, piece.anchors)
 
     print(yaml.dump(layout.to_yaml()))

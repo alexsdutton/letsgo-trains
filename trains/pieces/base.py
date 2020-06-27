@@ -7,6 +7,7 @@ from typing import Dict, Iterable, Optional, Tuple, TYPE_CHECKING
 
 import cairo
 import math
+from trains.registry_meta import WithRegistry
 
 if TYPE_CHECKING:
     from trains.train import Train
@@ -21,13 +22,17 @@ if TYPE_CHECKING:
 from trains.track import Anchor, Bounds, Position
 
 
-class Piece:
+class Piece(WithRegistry):
+    entrypoint_group = 'trains.piece'
+
     anchor_names: Tuple[str, ...]
     layout_priority = float('inf')
 
-    def __init__(self, layout: Layout = None, placement: Position = None, id: str = None):
-        self.layout = None
-        self.anchors: Dict[str, Anchor] = {anchor_name: Anchor({self: anchor_name})
+    def __init__(self, placement: Position = None, anchors: Dict[str, str] = None, **kwargs):
+        super().__init__(**kwargs)
+        anchors = anchors or {}
+
+        self.anchors: Dict[str, Anchor] = {anchor_name: Anchor({self: anchor_name}, id=anchors.get(anchor_name))
                         for anchor_name in self.anchor_names}
 
         # Instance variables related to piece placement and position
@@ -41,15 +46,6 @@ class Piece:
 
         self.claimed_by = None
         self.reservations: Dict[Train,Dict] = {}
-
-        self.id = id or str(uuid.uuid4())
-        self.layout = layout
-        if self.layout:
-            if self.layout.by_id.get(self.id) not in (None, self):
-                raise AssertionError("Can't reuse an ID for a new object")
-            self.layout.by_id[self.id] = self
-
-        # print(self, self.layout)
 
     @property
     def placement(self) -> Optional[Position]:
@@ -138,7 +134,7 @@ class Piece:
 
     @classmethod
     def get_icon_surface(cls, drawing_options: DrawingOptions):
-        self = cls()
+        self = cls(layout=None)
 
         bounds = self.bounds()
 
@@ -152,3 +148,28 @@ class Piece:
         self.draw(cr, drawing_options)
 
         return image
+
+    # @classmethod
+    # def from_yaml(self, layout, data) -> Piece:
+    #     anchors = data.pop('anchors')
+    #     piece = super().from_yaml(layout, data)
+
+    # @classmethod
+    # def cast_yaml_data(cls, layout, data):
+    #     return {
+    #         'placement': Position(**data.pop('placement')) if 'placement' in data else None,
+    #         **super().cast_yaml_data(layout, data),
+    #     }
+
+    def to_yaml(self) -> dict:
+        data = {
+            **super().to_yaml(),
+            'anchors': {
+                anchor_name: anchor.id
+                for anchor_name, anchor in self.anchors.items()
+                if len(anchor) == 2
+            },
+        }
+        if self.placement:
+            data['placement'] = self.placement.to_yaml()
+        return data

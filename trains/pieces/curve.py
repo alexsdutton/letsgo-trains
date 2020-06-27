@@ -97,6 +97,12 @@ class BaseCurve(Piece):
         flip = -1 if self.direction == CurveDirection.left else 1
         return x.real, x.imag * flip, theta * flip
 
+    # @classmethod
+    # def cast_yaml_data(cls, layout, data):
+    #     return {
+    #         'direction': CurveDirection(data.pop('direction', 'left')),
+    #         **super().cast_yaml_data(layout, data),
+    #     }
 
 # Standard radius curves
 

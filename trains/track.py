@@ -57,6 +57,14 @@ class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
             angle,
         )
 
+    def to_yaml(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'angle': self.angle,
+        }
+
+
 Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
 
 
@@ -138,8 +146,9 @@ class Anchor(dict):
             piece, = self
 
             other_anchor = Anchor({other_piece: other_anchor_name})
-            assert other_anchor
             other_piece.anchors[other_anchor_name] = other_anchor
+
+            piece.layout.anchors[other_anchor.id] = other_anchor
 
             updated_pieces = other_piece.placement_origin.update_connected_subset_positions()
 

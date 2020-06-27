@@ -329,7 +329,7 @@ class LayoutDrawer:
             cr.stroke()
 
     def draw_layout(self, layout: Layout, cr: Context):
-        for piece in layout.pieces:
+        for piece in layout.pieces.values():
             self.draw_piece(piece, cr, self.drawing_options)
 
     def draw_highlight_layer(self, layout: Layout, cr: Context):
