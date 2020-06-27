@@ -70,7 +70,7 @@ class Layout:
     def add_piece(self, piece):
         self.pieces[piece.id] = piece
         for anchor in piece.anchors.values():
-            if anchor.id in self.anchors:
+            if anchor.id in self.anchors and anchor != self.anchors[anchor.id]:
                 self.anchors[anchor.id] += anchor
             else:
                 self.anchors[anchor.id] = anchor

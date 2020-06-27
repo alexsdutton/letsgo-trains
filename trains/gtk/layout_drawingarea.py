@@ -152,6 +152,13 @@ class LayoutDrawer:
             y = 8 * ((y + 4) // 8)
             piece = piece_cls(layout=self.layout, placement=Position(x, y, angle=0))
 
+        for anchor in piece.anchors.values():
+            epsilon = 0.0001
+            for other_anchor in self.anchors_qtree.intersect((anchor.position.x - epsilon, anchor.position.y - epsilon, anchor.position.x + epsilon, anchor.position.y + epsilon)):
+                if anchor != other_anchor and len(anchor) == 1 and len(other_anchor) == 1:
+                    other_anchor += anchor
+                    break
+
         self.layout.add_piece(piece)
 
     def on_key_press(self, widget, event):
