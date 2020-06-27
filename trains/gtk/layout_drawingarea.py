@@ -88,8 +88,6 @@ class LayoutDrawer:
         self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
         self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
 
-        self.anchors_for_piece = {}
-
         self.highlight_item: Union[None, Piece, Anchor] = None
         self._selected_item: Union[None, Piece, Anchor] = None
 
@@ -252,18 +250,6 @@ class LayoutDrawer:
                 self.anchors_qtree.remove_item(subsumed_anchor)
         # self.remove_old_anchors(piece)
         self.pieces_qtree.remove_item(piece)
-
-    def remove_old_anchors(self, piece: Piece):
-        # A slightly messy part of bookkeeping, to make sure we forget about anchors that are no longer
-        # connected to pieces
-        old_anchors = self.anchors_for_piece.get(piece, set())
-        current_anchors = set(piece.anchors.values())
-        for anchor in old_anchors - current_anchors:
-            self.anchors_qtree.remove_item(anchor)
-        if piece.layout:
-            self.anchors_for_piece[piece] = current_anchors
-        else:
-            self.anchors_for_piece.pop(piece, None)
 
     def get_item_under_cursor(self, event):
         x, y = self.xy_to_layout(event.x, event.y)
