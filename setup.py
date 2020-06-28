@@ -16,9 +16,22 @@ setup(
     author='Alex Dutton',
     author_email='letsgo-trains@alexdutton.co.uk',
     packages=find_packages(),
+    package_data={
+        'letsgo': [
+            'data/letsgo.glade',
+            'data/gschemas.compiled',
+        ]
+    },
     license='BSD-2-Clause',
     zip_safe=False,  # due to use of Gio.SettingsSchemaSource.new_from_directory in letsgo.gtk.__main__
+    data_files=[
+        ('share/applications', ['data/uk.dutton.letsgo-trains.desktop']),
+        ('share/icons/hicolor/scalable', ['data/letsgo-trains.svg']),
+    ],
     entry_points={
+        'console_scripts': [
+            'letsgo-trains-gtk = letsgo.gtk.__main__:main',
+        ],
         'letsgo.piece': [
             'straight = letsgo.pieces:Straight',
             'half-straight = letsgo.pieces:HalfStraight',

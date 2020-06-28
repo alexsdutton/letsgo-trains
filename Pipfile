@@ -24,7 +24,6 @@ gobject = "*"
 pygobject = "*"
 dbus-python = "*"
 pyqtree = "*"
-unittest = "*"
 
 [requires]
 python_version = "3.8"

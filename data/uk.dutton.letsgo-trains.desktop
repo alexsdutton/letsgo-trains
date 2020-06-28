@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Let's Go! Trains
+Icon=letsgo-trains
+Exec=letsgo-trains-gtk
+Comment=Design and control Lego train layouts
+Categories=Games;
+Terminal=false
+StartupWMClass=uk.dutton.letsgo-trains

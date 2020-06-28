@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="letsgo-trains.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 128 128"
+   height="128mm"
+   width="128mm">
+  <defs
+     id="defs2">
+    <linearGradient
+       id="linearGradient839"
+       inkscape:collect="always">
+      <stop
+         id="stop835"
+         offset="0"
+         style="stop-color:#520000;stop-opacity:1" />
+      <stop
+         id="stop837"
+         offset="1"
+         style="stop-color:#000000;stop-opacity:0.14693877" />
+    </linearGradient>
+    <linearGradient
+       gradientTransform="translate(0.38996191,-0.41195297)"
+       gradientUnits="userSpaceOnUse"
+       y2="-6.949007"
+       x2="14.296916"
+       y1="109.84778"
+       x1="81.652855"
+       id="linearGradient841"
+       xlink:href="#linearGradient839"
+       inkscape:collect="always" />
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective88" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="27"
+     inkscape:window-x="0"
+     inkscape:window-height="1016"
+     inkscape:window-width="1920"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="223.83929"
+     inkscape:cx="124.94488"
+     inkscape:zoom="1.4"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <circle
+       r="60"
+       cy="64"
+       cx="64.000114"
+       id="path833"
+       style="fill:url(#linearGradient841);fill-opacity:1;stroke-width:1.05833" />
+    <path
+       d="m 33.850261,27.07774 c -1.416127,-0.01918 -2.766253,0.172601 -4.461743,0.172601 H 16.571729 A 59.999998,59.999998 0 0 0 3.9998868,64.000034 59.999998,59.999998 0 0 0 24.135608,108.84225 l 5.25291,0.19276 h 56.393971 c 8.285356,0 17.105501,-24.85606 -15.501379,-55.324786 C 44.806985,29.906533 38.907851,27.146254 33.850261,27.07774 Z"
+       style="fill:#008080;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path843" />
+    <g
+       transform="matrix(0.49973398,0,0,0.49973398,59.237315,36.100782)"
+       id="g909">
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.64583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m -38.486812,106.11339 c -6.908316,1e-5 -12.619818,5.05403 -13.688052,11.66234 H -65.31308 l 11.112499,-10.50479 h -7.408333 l -13.572296,12.81989 13.572296,12.81989 h 7.408333 L -65.31308,122.40593 h 13.167153 c 1.147136,6.51407 6.817744,11.4887 13.659115,11.48871 6.9025,1e-5 12.612869,-5.06221 13.688054,-11.66234 h 13.138213 l -11.112497,10.50478 h 7.408333 L -1.7924168,119.9172 -15.364709,107.09731 h -7.408333 l 11.112497,10.50478 h -13.167156 c -1.138965,-6.52397 -6.810711,-11.48871 -13.659111,-11.4887 z m 0,5.55625 c 4.600559,0 8.334372,3.7338 8.334372,8.33437 -1.3e-5,4.60058 -3.733798,8.33438 -8.334372,8.33438 -4.600594,0 -8.334375,-3.7338 -8.334375,-8.33438 -1.9e-5,-4.60057 3.7338,-8.33437 8.334375,-8.33437 z"
+         id="path2248"
+         inkscape:export-filename="/home/vag/LEGO/Vector_Shapes/train/train.png"
+         inkscape:export-xdpi="52.499996"
+         inkscape:export-ydpi="52.499996" />
+      <circle
+         r="2.5466144"
+         cy="120.00397"
+         cx="-38.486813"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:11.4088;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path2259"
+         inkscape:export-filename="/home/vag/LEGO/Vector_Shapes/train/train.png"
+         inkscape:export-xdpi="52.499996"
+         inkscape:export-ydpi="52.499996" />
+    </g>
+  </g>
+</svg>
