@@ -26,7 +26,25 @@ setup(
     zip_safe=False,  # due to use of Gio.SettingsSchemaSource.new_from_directory in letsgo.gtk.__main__
     data_files=[
         ('share/applications', ['data/uk.dutton.letsgo-trains.desktop']),
-        ('share/icons/hicolor/scalable', ['data/letsgo-trains.svg']),
+        ('share/icons/hicolor/scalable/apps', ['data/letsgo-trains.svg']),
+    ],
+    install_requires=[
+        "blinker",
+        "pyyaml",
+        "cached-property",
+        "lxml",
+        "click",
+        "cairosvg",
+        "numpy",
+        "ipython",
+        "pyusb",
+        "sklearn",
+        "maestro-servo",
+        "lego-wireless",
+        "gobject",
+        "pygobject",
+        "dbus-python",
+        "pyqtree",
     ],
     entry_points={
         'console_scripts': [
