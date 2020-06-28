@@ -36,11 +36,10 @@ class LayoutListBox(Gtk.IconView):
 
         self.set_text_column(PieceColumn.label)
         self.set_pixbuf_column(PieceColumn.pixbuf)
-        self.set_columns(1)
+        self.set_columns(2)
 
         model = Gtk.ListStore(str, str, GdkPixbuf.Pixbuf)
         self.set_model(model)
-        print(self.get_model(), model)
 
         self.populate()
 

@@ -32,6 +32,7 @@
           <object class="GtkStack" id="mode-controls">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="width_request">400</property>
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
