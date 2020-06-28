@@ -2,14 +2,12 @@ from typing import Union
 
 import cairo
 import math
-import random
 
 import gi
-import pyqtree
 from cairo import Context
 from trains import pieces
 
-from trains.pieces import Piece, Straight, piece_classes
+from trains.pieces import Piece, piece_classes
 
 from trains.drawing_options import DrawingOptions
 
@@ -19,7 +17,6 @@ from trains.sensor import Sensor
 from trains.track import Anchor, Position
 from .. import signals
 from ..pieces.curve import BaseCurve, CurveDirection
-from ..utils.quadtree import ResizingIndex
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
