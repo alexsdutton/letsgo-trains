@@ -157,11 +157,6 @@ class BasePoints(Piece):
         mask_cr.translate(0, 40)
         mask_cr.set_source_rgb(0, 1, 0)
 
-        # mask_cr.rectangle(0, 0, 100, 100)
-
-        i = 0
-        mask.write_to_png(f"/home/alex/mask-{i:03d}.png")
-
         for anchor_name in rail_draw_order:
             self.draw_rails_path(mask_cr, anchor_name)
 
