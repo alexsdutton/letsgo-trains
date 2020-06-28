@@ -3,54 +3,54 @@ import os
 from setuptools import find_packages, setup
 
 g = {}
-with open(os.path.join("trains", "version.py")) as fp:
+with open(os.path.join("letsgo", "version.py")) as fp:
     exec(fp.read(), g)
 version = g['__version__']
 
 setup(
     name='letsgo-trains',
     version=version,
-    description='GTK application for controlling Lego trains',
+    description='GTK application for designing and controlling Lego train layouts',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     author='Alex Dutton',
-    author_email='lego-trains@alexdutton.co.uk',
+    author_email='letsgo-trains@alexdutton.co.uk',
     packages=find_packages(),
     license='BSD-2-Clause',
+    zip_safe=False,  # due to use of Gio.SettingsSchemaSource.new_from_directory in letsgo.gtk.__main__
     entry_points={
-        'trains.piece': [
-            'straight = trains.pieces:Straight',
-            'half-straight = trains.pieces:HalfStraight',
-            'quarter-straight = trains.pieces:QuarterStraight',
-            'curve = trains.pieces:Curve',
-            'half-curve = trains.pieces:HalfCurve',
-            'r24-curve = trains.pieces:R24Curve',
-            'r32-curve = trains.pieces:R32Curve',
-            'r56-curve = trains.pieces:R56Curve',
-            'r72-curve = trains.pieces:R72Curve',
-            'r88-curve = trains.pieces:R88Curve',
-            'r104-curve = trains.pieces:R104Curve',
-            'r120-curve = trains.pieces:R120Curve',
-            'left-points = trains.pieces:LeftPoints',
-            'right-points = trains.pieces:RightPoints',
-            'crossover = trains.pieces:Crossover',
-            'short-crossover = trains.pieces:ShortCrossover',
+        'letsgo.piece': [
+            'straight = letsgo.pieces:Straight',
+            'half-straight = letsgo.pieces:HalfStraight',
+            'quarter-straight = letsgo.pieces:QuarterStraight',
+            'curve = letsgo.pieces:Curve',
+            'half-curve = letsgo.pieces:HalfCurve',
+            'r24-curve = letsgo.pieces:R24Curve',
+            'r32-curve = letsgo.pieces:R32Curve',
+            'r56-curve = letsgo.pieces:R56Curve',
+            'r72-curve = letsgo.pieces:R72Curve',
+            'r88-curve = letsgo.pieces:R88Curve',
+            'r104-curve = letsgo.pieces:R104Curve',
+            'r120-curve = letsgo.pieces:R120Curve',
+            'left-points = letsgo.pieces:LeftPoints',
+            'right-points = letsgo.pieces:RightPoints',
+            'crossover = letsgo.pieces:Crossover',
+            'short-crossover = letsgo.pieces:ShortCrossover',
         ],
-        'trains.layout_parser': [
-            'letsgo = trains.layout_parser:LetsGoLayoutParser',
-            'ncontrol = trains.layout_parser:NControlLayoutParser',
+        'letsgo.layout_parser': [
+            'letsgo = letsgo.layout_parser:LetsGoLayoutParser',
+            'ncontrol = letsgo.layout_parser:NControlLayoutParser',
         ],
-        'trains.layout_serializer': [
-            'letsgo = trains.layout_serializer:LetsGoLayoutSerializer',
-            'ncontrol = trains.layout_serializer:NControlLayoutSerializer',
+        'letsgo.layout_serializer': [
+            'letsgo = letsgo.layout_serializer:LetsGoLayoutSerializer',
+            'ncontrol = letsgo.layout_serializer:NControlLayoutSerializer',
         ],
-        'trains.controller': [
-            'maestro = trains.control.MaestroController',
-            'powered-up = trains.control.PoweredUpController',
+        'letsgo.controller': [
+            'maestro = letsgo.control.MaestroController',
+            'powered-up = letsgo.control.PoweredUpController',
         ],
-        'trains.sensor': [
-            'hall-effect = trains.sensor.HallEffectSensor',
+        'letsgo.sensor': [
+            'hall-effect = letsgo.sensor.HallEffectSensor',
         ],
     }
-
 )

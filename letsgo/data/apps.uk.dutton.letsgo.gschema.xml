@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="uk.dutton.letsgo-trains" path="/uk/dutton/letsgo-trains/">
+    <key type="i" name="window-state">
+        <default>4</default>
+      <summary>Window state</summary>
+      <description>This is an example of a boolean setting.</description>
+    </key>
+  </schema>
+</schemalist>
