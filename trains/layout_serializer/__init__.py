@@ -9,11 +9,11 @@ from .letsgo import LetsGoLayoutSerializer
 from .ncontrol import NControlLayoutSerializer
 
 __all__ = [
-    'LayoutSerializer',
-    'LetsGoLayoutSerializer',
-    'NControlLayoutSerializer',
-    'serializer_classes',
-    'get_serializer_for_filename',
+    "LayoutSerializer",
+    "LetsGoLayoutSerializer",
+    "NControlLayoutSerializer",
+    "serializer_classes",
+    "get_serializer_for_filename",
 ]
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def _get_serializer_classes() -> Iterable[Type[LayoutSerializer]]:
     serializer_classes = []
-    for ep in pkg_resources.iter_entry_points('trains.layout_serializer'):
+    for ep in pkg_resources.iter_entry_points("trains.layout_serializer"):
         try:
             serializer_cls: Type[LayoutSerializer] = ep.load()
             assert issubclass(serializer_cls, LayoutSerializer)

@@ -29,7 +29,7 @@ class LayoutElement(Gtk.Grid):
 
 class LayoutListBox(Gtk.IconView):
     def __new__(cls, layout, builder):
-        self = builder.get_object('piece-iconview')
+        self = builder.get_object("piece-iconview")
         self.__class__ = cls
         self.layout = layout
         self.builder = builder
@@ -44,12 +44,13 @@ class LayoutListBox(Gtk.IconView):
 
         self.populate()
 
-        self.enable_model_drag_source(Gdk.ModifierType.BUTTON1_MASK, [], Gdk.DragAction.COPY)
+        self.enable_model_drag_source(
+            Gdk.ModifierType.BUTTON1_MASK, [], Gdk.DragAction.COPY
+        )
         self.connect("drag-data-get", self.on_drag_data_get)
         self.drag_source_add_text_targets()
 
         return self
-
 
     def on_drag_data_get(self, widget, drag_context, data, info, time):
         selected_path = self.get_selected_items()[0]
@@ -66,11 +67,13 @@ class LayoutListBox(Gtk.IconView):
             sleeper_color=Colors.tan,
         )
 
-        for piece_id, piece_cls in sorted(piece_classes.items(), key=lambda id_cls: id_cls[1].layout_priority):
-                piece = piece_cls(layout=None)
-                # pixbuf = Gtk.IconTheme.get_default().load_icon('help-about', 16, 0)
-                image = piece.get_icon_surface(drawing_options)
-                pixbuf = Gdk.pixbuf_get_from_surface(image, 0, 0,
-                                                     image.get_width(),
-                                                     image.get_height())
-                self.get_model().append([piece_id, piece.label, pixbuf])
+        for piece_id, piece_cls in sorted(
+            piece_classes.items(), key=lambda id_cls: id_cls[1].layout_priority
+        ):
+            piece = piece_cls(layout=None)
+            # pixbuf = Gtk.IconTheme.get_default().load_icon('help-about', 16, 0)
+            image = piece.get_icon_surface(drawing_options)
+            pixbuf = Gdk.pixbuf_get_from_surface(
+                image, 0, 0, image.get_width(), image.get_height()
+            )
+            self.get_model().append([piece_id, piece.label, pixbuf])

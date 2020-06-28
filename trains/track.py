@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 from trains.registry_meta import WithRegistry
 
 
-class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
+class Position(collections.namedtuple("Position", ("x", "y", "angle"))):
     @classmethod
     def from_matrix(cls, matrix: cairo.Matrix):
         return cls(matrix.x0, matrix.y0, math.atan2(-matrix.xy, matrix.xx))
@@ -59,13 +59,13 @@ class Position(collections.namedtuple('Position', ('x', 'y', 'angle'))):
 
     def to_yaml(self):
         return {
-            'x': self.x,
-            'y': self.y,
-            'angle': self.angle,
+            "x": self.x,
+            "y": self.y,
+            "angle": self.angle,
         }
 
 
-Bounds = collections.namedtuple('Bounds', ('x', 'y', 'width', 'height'))
+Bounds = collections.namedtuple("Bounds", ("x", "y", "width", "height"))
 
 
 class Anchor(dict):
@@ -77,6 +77,7 @@ class Anchor(dict):
     An anchor can only connect two pieces of track, and two anchors can be connected together by in-place addition, e.g.
     `anchor_1 += anchor_2`.
     """
+
     def __init__(self, initial: Dict[Piece, str], id=None, **kwargs):
         super().__init__(initial)
         # self.layout = layout
@@ -143,21 +144,26 @@ class Anchor(dict):
         """
         if len(self) == 2:
             other_piece, other_anchor_name = self.popitem()
-            piece, = self
+            (piece,) = self
 
             other_anchor = Anchor({other_piece: other_anchor_name})
             other_piece.anchors[other_anchor_name] = other_anchor
 
             piece.layout.anchors[other_anchor.id] = other_anchor
 
-            updated_pieces = other_piece.placement_origin.update_connected_subset_positions()
+            updated_pieces = (
+                other_piece.placement_origin.update_connected_subset_positions()
+            )
 
             if piece not in updated_pieces:
                 piece.placement = piece.position
             elif other_piece not in updated_pieces:
                 other_piece.placement = other_piece.position
             if other_piece.position:
-                other_anchor.position = other_piece.position + other_piece.relative_positions()[other_anchor_name]
+                other_anchor.position = (
+                    other_piece.position
+                    + other_piece.relative_positions()[other_anchor_name]
+                )
             other_piece.layout.anchor_positioned(other_anchor)
 
             return other_anchor
@@ -165,4 +171,3 @@ class Anchor(dict):
             return None
         else:
             raise AssertionError
-

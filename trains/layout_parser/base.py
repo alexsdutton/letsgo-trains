@@ -8,5 +8,6 @@ class LayoutParser:
     def parse(self, fp, layout: Layout):
         raise NotImplementedError
 
+
 class LayoutFileParseException(Exception):
     pass

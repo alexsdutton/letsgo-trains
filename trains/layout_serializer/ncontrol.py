@@ -15,18 +15,18 @@ from trains.layout import Layout
 
 
 class NControlLayoutSerializer(LayoutSerializer):
-    name = 'nControl'
-    file_extension = '.ncp'
+    name = "nControl"
+    file_extension = ".ncp"
 
     piece_mapping = {
-        'TS_STRAIGHT': Straight,
-        'TS_LEFTSWITCH': LeftPoints,
-        'TS_RIGHTSWITCH': RightPoints,
-        'TS_CURVE': Curve,
+        "TS_STRAIGHT": Straight,
+        "TS_LEFTSWITCH": LeftPoints,
+        "TS_RIGHTSWITCH": RightPoints,
+        "TS_CURVE": Curve,
     }
 
     piece_params = {
-        'TS_CURVE': {'direction': CurveDirection.right},
+        "TS_CURVE": {"direction": CurveDirection.right},
     }
 
     # anchor_name_mapping = {

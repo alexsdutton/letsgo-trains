@@ -21,7 +21,7 @@ class SpeedLimits(dict):
 
     @property
     def limit(self):
-        return min(self.values(), default=float('inf'))
+        return min(self.values(), default=float("inf"))
 
     def __setitem__(self, key, value):
         if value is None or value > 1:
@@ -37,11 +37,14 @@ class SpeedLimits(dict):
 
 
 class Car:
-    def __init__(self, length: Number,
-                 bogey_offsets: List[Number],
-                 nose='vestibule',
-                 tail='vestibule',
-                 magnet_offset: Number=None):
+    def __init__(
+        self,
+        length: Number,
+        bogey_offsets: List[Number],
+        nose="vestibule",
+        tail="vestibule",
+        magnet_offset: Number = None,
+    ):
         self.length = length
         self.bogey_offsets = bogey_offsets
         self.nose, self.tail = nose, tail
@@ -49,24 +52,27 @@ class Car:
 
     def serialize(self):
         return {
-            'length': self.length,
-            'bogey_offsets': self.bogey_offsets,
-            'nose': self.nose,
-            'tail': self.tail,
+            "length": self.length,
+            "bogey_offsets": self.bogey_offsets,
+            "nose": self.nose,
+            "tail": self.tail,
         }
 
+
 class Train(WithRegistry):
-    def __init__(self,
-                 cars: List[Car],
-                 position: TrackPoint=None,
-                 meta: dict=None,
-                 id: str=None,
-                 name: str=None,
-                 itinerary: Itinerary = None,
-                 itinerary_index: int = None,
-                 controller: Controller=None,
-                 controller_parameters: dict=None,
-                 **kwargs):
+    def __init__(
+        self,
+        cars: List[Car],
+        position: TrackPoint = None,
+        meta: dict = None,
+        id: str = None,
+        name: str = None,
+        itinerary: Itinerary = None,
+        itinerary_index: int = None,
+        controller: Controller = None,
+        controller_parameters: dict = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.cars = cars
         self.length = sum(car.length for car in cars) + 2 * (len(cars) - 1)
@@ -98,14 +104,16 @@ class Train(WithRegistry):
     def serialize(self):
         data = {
             **super().serialize(),
-            'position': self.position.serialize(),
-            'cars': [car.serialize() for car in self.cars],
+            "position": self.position.serialize(),
+            "cars": [car.serialize() for car in self.cars],
         }
         if self.controller:
-            data.update({
-                'controller_id': self.controller.id,
-                'controller_parameters': self.controller_parameters,
-            })
+            data.update(
+                {
+                    "controller_id": self.controller.id,
+                    "controller_parameters": self.controller_parameters,
+                }
+            )
         return data
 
     @property

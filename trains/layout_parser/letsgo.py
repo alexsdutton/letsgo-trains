@@ -10,17 +10,17 @@ from trains.track import Position
 
 class LetsGoLayoutParser(LayoutParser):
     name = "Let's Go!"
-    file_extension = '.lgl'
+    file_extension = ".lgl"
 
     def parse(self, fp, layout: Layout):
         doc = yaml.safe_load(fp)
 
         anchors_by_id, pieces_by_id = {}, {}
-        for piece_data in doc.get('pieces', []):
+        for piece_data in doc.get("pieces", []):
             piece = Piece.from_yaml(layout, **piece_data)
             layout.add_piece(piece, announce=False)
 
-        for controller_data in doc.get('controllers', ()):
+        for controller_data in doc.get("controllers", ()):
             controller = Controller.from_yaml(layout=self, **controller_data)
             self.add_controller(controller)
 

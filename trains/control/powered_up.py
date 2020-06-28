@@ -8,10 +8,10 @@ from .. import signals
 
 
 class PoweredUpController(Controller):
-    registry_type = 'powered_up'
+    registry_type = "powered_up"
     controller_for = {Train}
 
-    def __init__(self, adapter_name='hci0', **kwargs):
+    def __init__(self, adapter_name="hci0", **kwargs):
         super().__init__(**kwargs)
         self.hub_manager = lego_wireless.HubManager(adapter_name)
         self.hub_manager_thread = threading.Thread(target=self.hub_manager.run)
@@ -56,7 +56,7 @@ class PoweredUpController(Controller):
         elif self.pair_with:
             train = self.pair_with.pop(0)
             train.controller = self
-            train.controller_parameters = {'mac_address': hub.mac_address.lower()}
+            train.controller_parameters = {"mac_address": hub.mac_address.lower()}
         if train:
             self.trains[hub.mac_address.lower()] = train
             self.train_hubs[train] = hub
@@ -64,10 +64,14 @@ class PoweredUpController(Controller):
 
     def hub_connected(self, sender, hub):
         self.trains[hub.mac_address.lower()].connected = True
-        lego_wireless.signals.hub_battery_level.connect(self.on_hub_battery_level, sender=hub)
+        lego_wireless.signals.hub_battery_level.connect(
+            self.on_hub_battery_level, sender=hub
+        )
 
     def hub_disconnected(self, sender, hub):
-        lego_wireless.signals.hub_battery_level.disconnect(self.on_hub_battery_level, sender=hub)
+        lego_wireless.signals.hub_battery_level.disconnect(
+            self.on_hub_battery_level, sender=hub
+        )
         self.trains[hub.mac_address.lower()].connected = False
 
     def on_hub_battery_level(self, sender, battery_level):

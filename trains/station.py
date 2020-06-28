@@ -6,14 +6,16 @@ from .track_point import TrackPoint
 
 
 class Platform:
-    def __init__(self, position: TrackPoint, id: str=None, length: Optional[Number] = None):
+    def __init__(
+        self, position: TrackPoint, id: str = None, length: Optional[Number] = None
+    ):
         self.position = position
         self.id = id or str(uuid.uuid4())
         self.length = length
 
 
 class Station:
-    def __init__(self, id: str=None, name=None, platforms=()):
+    def __init__(self, id: str = None, name=None, platforms=()):
         self.name = name
         self.id = id or str(uuid.uuid4())
         self.platforms = []

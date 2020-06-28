@@ -36,8 +36,11 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
     if not type_hint:
         return obj
 
-    if getattr(type_hint, '__origin__', None) == typing.Union and len(type_hint.__args__) == 2 and type_hint.__args__[1] is type(
-            None):
+    if (
+        getattr(type_hint, "__origin__", None) == typing.Union
+        and len(type_hint.__args__) == 2
+        and type_hint.__args__[1] is type(None)
+    ):
         if obj is None:
             return None
         type_hint = type_hint.__args__[0]
@@ -45,19 +48,19 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
     if isinstance(type_hint, type) and isinstance(obj, type_hint):
         return obj
 
-    if getattr(type_hint, '__origin__', None) == typing.Dict:
+    if getattr(type_hint, "__origin__", None) == typing.Dict:
         key_type_hint, value_type_hint = type_hint.__args__
         assert isinstance(obj, dict)
         for key, value in obj.items():
             key = cast_to_type_hint(layout, key, key_type_hint)
-            if isinstance(key, str) and key.endswith('_id'):
+            if isinstance(key, str) and key.endswith("_id"):
                 obj[key[:-3]] = layout.collections[type_hint][value]
                 del obj[key]
             else:
                 obj[key] = cast_to_type_hint(layout, value, value_type_hint)
-    elif getattr(type_hint, '__origin__', None) == typing.List:
+    elif getattr(type_hint, "__origin__", None) == typing.List:
         raise NotImplementedError
-    elif getattr(type_hint, '__origin__', None) == typing.Tuple:
+    elif getattr(type_hint, "__origin__", None) == typing.Tuple:
         raise NotImplementedError
     elif isinstance(type_hint, type) and isinstance(obj, dict):
         cls = type_hint
@@ -69,10 +72,10 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
                 # 'typing': typing,
                 # **typing.__dict__,
                 **mod.__dict__,
-                'Layout': Layout,
-                'Position': Position,
-                'Anchor': Anchor,
-                'TrackPoint': TrackPoint,
+                "Layout": Layout,
+                "Position": Position,
+                "Anchor": Anchor,
+                "TrackPoint": TrackPoint,
             }
 
             type_hints.update(get_type_hints(supercls.__init__, mod_globals))
@@ -80,17 +83,17 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
         for key, value in obj.items():
             if key not in type_hints:
                 continue
-            if isinstance(key, str) and key.endswith('_id'):
+            if isinstance(key, str) and key.endswith("_id"):
                 obj[key[:-3]] = layout.collections[type_hints[key]][value]
                 del obj[key]
             else:
                 obj[key] = cast_to_type_hint(layout, value, type_hints[key])
 
-        constructor = getattr(type_hint, 'from_yaml', type_hint)
+        constructor = getattr(type_hint, "from_yaml", type_hint)
         argspec = inspect.getfullargspec(constructor)
-        if 'layout' in argspec.args:
+        if "layout" in argspec.args:
             constructor = functools.partial(constructor, layout)
-        elif 'layout' in argspec.kwonlyargs:
+        elif "layout" in argspec.kwonlyargs:
             constructor = functools.partial(constructor, layout=layout)
 
         if isinstance(obj, dict):
@@ -105,14 +108,14 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
 
 
 class WithRegistry(metaclass=WithRegistryMeta):
-    def __init__(self, *, id: str=None, layout: Layout):
+    def __init__(self, *, id: str = None, layout: Layout):
         self.id = id or str(uuid.uuid4())
         self.layout = layout
 
     def to_yaml(self) -> dict:
         data = {
-            'id': self.id,
-            'type': type(self).entrypoint_name,
+            "id": self.id,
+            "type": type(self).entrypoint_name,
         }
         return data
 
@@ -130,10 +133,10 @@ class WithRegistry(metaclass=WithRegistryMeta):
                 # 'typing': typing,
                 # **typing.__dict__,
                 **supercls.__init__.__globals__,
-                'Layout': Layout,
-                'Position': Position,
-                'Anchor': Anchor,
-                'TrackPoint': TrackPoint,
+                "Layout": Layout,
+                "Position": Position,
+                "Anchor": Anchor,
+                "TrackPoint": TrackPoint,
             }
 
             type_hints.update(get_type_hints(supercls.__init__, mod_globals))
@@ -141,7 +144,7 @@ class WithRegistry(metaclass=WithRegistryMeta):
         for key, value in obj.items():
             if key not in type_hints:
                 continue
-            if isinstance(key, str) and key.endswith('_id'):
+            if isinstance(key, str) and key.endswith("_id"):
                 obj[key[:-3]] = layout.collections[type_hints[key]][value]
                 del obj[key]
             else:
@@ -151,7 +154,9 @@ class WithRegistry(metaclass=WithRegistryMeta):
 
     @classmethod
     def from_yaml(cls, layout, /, **data):
-        entrypoint_name = data.pop('type')
-        actual_cls = next(pkg_resources.iter_entry_points(cls.entrypoint_group, entrypoint_name)).load()
+        entrypoint_name = data.pop("type")
+        actual_cls = next(
+            pkg_resources.iter_entry_points(cls.entrypoint_group, entrypoint_name)
+        ).load()
         print(actual_cls.cast_yaml_data)
         return actual_cls(layout=layout, **actual_cls.cast_yaml_data(layout, **data))

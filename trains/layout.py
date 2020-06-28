@@ -30,12 +30,14 @@ def _changes_layout(func):
     Call with announce=False if you are making lots of changes in batch, and then remember to call
     layout.changed() at the end.
     """
+
     @functools.wraps(func)
     def f(self: Layout, *args, announce: bool = True, **kwargs):
         result = func(self, *args, **kwargs)
         if announce:
             self.changed()
         return result
+
     return f
 
 
@@ -188,8 +190,11 @@ class Layout:
         signals.layout_changed.send(self, cleared=cleared)
 
     def on_sensor_activity(self, sender: Sensor, activated, when):
-        last_train_seen, last_magnet_index_seen, last_time_seen = \
-            self.sensor_magnets_last_seen.get(sender, (None, None, None))
+        (
+            last_train_seen,
+            last_magnet_index_seen,
+            last_time_seen,
+        ) = self.sensor_magnets_last_seen.get(sender, (None, None, None))
 
         if not activated:
             return
@@ -209,19 +214,35 @@ class Layout:
                 if car.magnet_offset is None:
                     continue
                 # Discount any magnets we've seen in the last two seconds
-                if train == last_train_seen and i == last_magnet_index_seen and when < last_time_seen + 2:
+                if (
+                    train == last_train_seen
+                    and i == last_magnet_index_seen
+                    and when < last_time_seen + 2
+                ):
                     continue
 
                 train_offset = car_offset + car.magnet_offset
                 expected_magnet_position = train.position - train_offset
 
-                distance_forward = expected_magnet_position.distance_to(sender.position, maximum_distance)
+                distance_forward = expected_magnet_position.distance_to(
+                    sender.position, maximum_distance
+                )
                 if distance_forward:
-                    train_seen, train_seen_offset, magnet_index_seen = train, train_offset, i
+                    train_seen, train_seen_offset, magnet_index_seen = (
+                        train,
+                        train_offset,
+                        i,
+                    )
                     maximum_distance = min(distance_forward, maximum_distance)
-                distance_backward = sender.position.distance_to(expected_magnet_position, maximum_distance)
+                distance_backward = sender.position.distance_to(
+                    expected_magnet_position, maximum_distance
+                )
                 if distance_backward:
-                    train_seen, train_seen_offset, magnet_index_seen = train, train_offset, i
+                    train_seen, train_seen_offset, magnet_index_seen = (
+                        train,
+                        train_offset,
+                        i,
+                    )
                     maximum_distance = min(distance_backward, maximum_distance)
 
                 # The 1 is the gap between cars
@@ -232,7 +253,9 @@ class Layout:
             branch_decisions = train_seen.position.branch_decisions
             train_seen.position = sender.position + train_seen_offset
             train_seen.position.branch_decisions = branch_decisions
-            signals.train_spotted.send(train_seen, sensor=sender, position=train_seen.position, when=when)
+            signals.train_spotted.send(
+                train_seen, sensor=sender, position=train_seen.position, when=when
+            )
 
     @property
     def placed_pieces(self):
@@ -260,11 +283,14 @@ class Layout:
             self.remove_piece(piece, announce=True)
         self.changed(cleared=True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import pkg_resources
     import yaml
 
-    data = yaml.safe_load(pkg_resources.resource_stream('trains', 'data/layouts/simple.yaml'))
+    data = yaml.safe_load(
+        pkg_resources.resource_stream("trains", "data/layouts/simple.yaml")
+    )
     layout = Layout()
     layout.load_from_yaml(data)
     for piece in layout.pieces.values():

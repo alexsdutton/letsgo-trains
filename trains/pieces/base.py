@@ -23,17 +23,21 @@ from trains.track import Anchor, Bounds, Position
 
 
 class Piece(WithRegistry):
-    entrypoint_group = 'trains.piece'
+    entrypoint_group = "trains.piece"
 
     anchor_names: Tuple[str, ...]
-    layout_priority = float('inf')
+    layout_priority = float("inf")
 
-    def __init__(self, placement: Position = None, anchors: Dict[str, str] = None, **kwargs):
+    def __init__(
+        self, placement: Position = None, anchors: Dict[str, str] = None, **kwargs
+    ):
         super().__init__(**kwargs)
         anchors = anchors or {}
 
-        self.anchors: Dict[str, Anchor] = {anchor_name: Anchor({self: anchor_name}, id=anchors.get(anchor_name))
-                        for anchor_name in self.anchor_names}
+        self.anchors: Dict[str, Anchor] = {
+            anchor_name: Anchor({self: anchor_name}, id=anchors.get(anchor_name))
+            for anchor_name in self.anchor_names
+        }
 
         # Instance variables related to piece placement and position
         self._placement = placement
@@ -45,7 +49,7 @@ class Piece(WithRegistry):
         """The inferred position of this piece"""
 
         self.claimed_by = None
-        self.reservations: Dict[Train,Dict] = {}
+        self.reservations: Dict[Train, Dict] = {}
 
     @property
     def placement(self) -> Optional[Position]:
@@ -97,8 +101,7 @@ class Piece(WithRegistry):
         return connected_subset_pieces
 
     def traverse_connected_subset(
-        self,
-        starting_position: Position = None
+        self, starting_position: Position = None
     ) -> Iterable[Tuple[Piece, Optional[Position]]]:
         seen_pieces = {self}
         stack = [(self, starting_position)]
@@ -110,7 +113,9 @@ class Piece(WithRegistry):
                 next_piece, next_anchor_name = piece.anchors[anchor_name].next(piece)
                 if next_piece and next_piece not in seen_pieces:
                     if next_anchor_name != next_piece.anchor_names[0]:
-                        relative_position -= next_piece.relative_positions()[next_anchor_name]
+                        relative_position -= next_piece.relative_positions()[
+                            next_anchor_name
+                        ]
                     next_position = position + relative_position
                     stack.append((next_piece, next_position))
                     seen_pieces.add(next_piece)
@@ -138,9 +143,11 @@ class Piece(WithRegistry):
 
         bounds = self.bounds()
 
-        image = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                   math.ceil(drawing_options.scale * bounds.width + 10),
-                                   math.ceil(drawing_options.scale * bounds.height + 10))
+        image = cairo.ImageSurface(
+            cairo.FORMAT_ARGB32,
+            math.ceil(drawing_options.scale * bounds.width + 10),
+            math.ceil(drawing_options.scale * bounds.height + 10),
+        )
         cr = cairo.Context(image)
         cr.translate(5, 5)
         cr.scale(drawing_options.scale, drawing_options.scale)
@@ -164,12 +171,12 @@ class Piece(WithRegistry):
     def to_yaml(self) -> dict:
         data = {
             **super().to_yaml(),
-            'anchors': {
+            "anchors": {
                 anchor_name: anchor.id
                 for anchor_name, anchor in self.anchors.items()
                 if len(anchor) == 2
             },
         }
         if self.placement:
-            data['placement'] = self.placement.to_yaml()
+            data["placement"] = self.placement.to_yaml()
         return data

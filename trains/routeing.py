@@ -8,13 +8,14 @@ from trains.track_point import TrackPoint
 
 
 class Stop:
-    def __init__(self,
-                 station: Station,
-                 dwell: Optional[Number] = None,
-                 dwell_min: Optional[Number] = None,
-                 dwell_max: Optional[Number] = None,
-                 no_stopping: bool = False,
-                 ):
+    def __init__(
+        self,
+        station: Station,
+        dwell: Optional[Number] = None,
+        dwell_min: Optional[Number] = None,
+        dwell_max: Optional[Number] = None,
+        no_stopping: bool = False,
+    ):
         self.station = station
         self.dwell_min = dwell or dwell_min
         self.dwell_max = dwell or dwell_max
@@ -24,10 +25,7 @@ class Stop:
 class Itinerary:
     """A list of stations to travel through"""
 
-    def __init__(self,
-                 id: str = None,
-                 stops: List[Stop] = (),
-                 repeat: bool = True):
+    def __init__(self, id: str = None, stops: List[Stop] = (), repeat: bool = True):
         self.id = id or str(uuid.uuid4())
         self.stops = stops
         self.repeat = repeat
@@ -36,6 +34,7 @@ class Itinerary:
 class Route:
     pass
 
+
 class Router:
     """Routes trains"""
 
@@ -43,21 +42,32 @@ class Router:
         routes = collections.defaultdict(set)
         track_points = [(0, from_trackpoint, ())]
         while track_points:
-            distance, track_point, choices = track_points.pop(0)  # type: Number, TrackPoint, tuple
+            distance, track_point, choices = track_points.pop(
+                0
+            )  # type: Number, TrackPoint, tuple
             traversals = track_point.piece.traversals(track_point.anchor_name)
             for anchor_to, (anchor_distance, _) in traversals.items():
                 anchor_distance -= track_point.offset
-                next_piece, next_anchor = track_point.piece.anchors[anchor_to].next(track_point.piece)
+                next_piece, next_anchor = track_point.piece.anchors[anchor_to].next(
+                    track_point.piece
+                )
                 anchor_choices = choices
                 if len(traversals) > 1:
                     anchor_choices += ((track_point.piece, anchor_to),)
-                if next_piece == to_trackpoint.piece and next_anchor == to_trackpoint.anchor_name:
+                if (
+                    next_piece == to_trackpoint.piece
+                    and next_anchor == to_trackpoint.anchor_name
+                ):
                     for choice_piece, choice_anchor in anchor_choices:
                         routes[choice_piece].add(choice_anchor)
                 elif next_piece:
-                    track_points.append((distance + anchor_distance,
-                                         TrackPoint(next_piece, next_anchor, 0),
-                                         anchor_choices))
+                    track_points.append(
+                        (
+                            distance + anchor_distance,
+                            TrackPoint(next_piece, next_anchor, 0),
+                            anchor_choices,
+                        )
+                    )
 
             track_points.sort()
         return routes

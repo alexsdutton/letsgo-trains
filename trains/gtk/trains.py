@@ -21,42 +21,49 @@ class TrainControls(Gtk.Grid):
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.set_size_request(30, 30)
         self.attach(self.drawing_area, 0, 0, 1, 3)
-        self.label = Gtk.Label(train.meta.get('label', train.name or 'Train'))
-        signals.train_name_changed.connect(lambda sender, name: self.label.set_label(name or 'Train'), sender=train,
-                                           weak=False)
+        self.label = Gtk.Label(train.meta.get("label", train.name or "Train"))
+        signals.train_name_changed.connect(
+            lambda sender, name: self.label.set_label(name or "Train"),
+            sender=train,
+            weak=False,
+        )
         self.label.set_halign(Gtk.Align.START)
         self.attach(self.label, 1, 0, 1, 1)
-        self.configure = Gtk.Button.new_from_icon_name('gtk-properties', Gtk.IconSize.MENU)
-        self.configure.connect('clicked', self.on_popover_show)
+        self.configure = Gtk.Button.new_from_icon_name(
+            "gtk-properties", Gtk.IconSize.MENU
+        )
+        self.configure.connect("clicked", self.on_popover_show)
         self.attach(self.configure, 3, 0, 1, 2)
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         Gtk.StyleContext.add_class(box.get_style_context(), "linked")
 
-        stop = Gtk.ToggleButton(label='\N{Back With Leftwards Arrow Above}')
-        stop.connect('toggled', self.on_backwards_toggled)
+        stop = Gtk.ToggleButton(label="\N{Back With Leftwards Arrow Above}")
+        stop.connect("toggled", self.on_backwards_toggled)
         box.add(stop)
-        stop = Gtk.Button(label='\N{Large Red Circle}')
-        stop.connect('clicked', self.on_speed_button, lambda s: 0)
+        stop = Gtk.Button(label="\N{Large Red Circle}")
+        stop.connect("clicked", self.on_speed_button, lambda s: 0)
         box.add(stop)
-        decrease_speed = Gtk.Button(label='\N{Heavy Minus Sign}')
-        decrease_speed.connect('clicked', self.on_speed_button, lambda s: s - 0.1)
+        decrease_speed = Gtk.Button(label="\N{Heavy Minus Sign}")
+        decrease_speed.connect("clicked", self.on_speed_button, lambda s: s - 0.1)
         box.add(decrease_speed)
-        increase_speed = Gtk.Button(label='\N{Heavy Plus Sign}')
-        increase_speed.connect('clicked', self.on_speed_button, lambda s: s + 0.1)
+        increase_speed = Gtk.Button(label="\N{Heavy Plus Sign}")
+        increase_speed.connect("clicked", self.on_speed_button, lambda s: s + 0.1)
         box.add(increase_speed)
 
         self.attach(box, 1, 1, 1, 1)
 
-        lights_button = Gtk.ToggleButton(label='\N{Electric Light Bulb}')
+        lights_button = Gtk.ToggleButton(label="\N{Electric Light Bulb}")
         lights_button.set_active(train.lights_on)
-        lights_button.connect('toggled', self.on_lights_toggled)
+        lights_button.connect("toggled", self.on_lights_toggled)
         self.attach(lights_button, 2, 1, 1, 1)
 
         self.battery_level = Gtk.Label()
         self.attach(self.battery_level, 0, 2, 1, 2)
 
         signals.connected_changed.connect(self.on_connected_changed, sender=self.train)
-        signals.battery_level_changed.connect(self.on_battery_level_changed, sender=self.train)
+        signals.battery_level_changed.connect(
+            self.on_battery_level_changed, sender=self.train
+        )
 
     def on_speed_button(self, widget, func):
         self.train.maximum_motor_speed = func(self.train.maximum_motor_speed)
@@ -79,19 +86,22 @@ class TrainControls(Gtk.Grid):
         pass
 
     def on_battery_level_changed(self, sender, battery_level):
-        self.battery_level.set_label(f'{battery_level}%' if battery_level is not None else '')
+        self.battery_level.set_label(
+            f"{battery_level}%" if battery_level is not None else ""
+        )
+
 
 class TrainPopover(Gtk.Popover):
     def __new__(cls, builder: Gtk.Builder):
-        self = builder.get_object('train-popover')
+        self = builder.get_object("train-popover")
         self.__class__ = cls
         self._train: Train = None
-        self.pair_button: Gtk.Button = builder.get_object('train-powered-up-pair')
-        self.pair_status: Gtk.Label = builder.get_object('train-powered-up-status')
-        self.name_entry: Gtk.Entry = builder.get_object('train-name-entry')
-        self.pair_button.connect('clicked', self.on_pair_clicked)
-        self.name_entry.connect('changed', self.on_name_changed)
-        self.connect('closed', self.on_closed)
+        self.pair_button: Gtk.Button = builder.get_object("train-powered-up-pair")
+        self.pair_status: Gtk.Label = builder.get_object("train-powered-up-status")
+        self.name_entry: Gtk.Entry = builder.get_object("train-name-entry")
+        self.pair_button.connect("clicked", self.on_pair_clicked)
+        self.name_entry.connect("changed", self.on_name_changed)
+        self.connect("closed", self.on_closed)
         return self
 
     @property
@@ -102,39 +112,43 @@ class TrainPopover(Gtk.Popover):
     def train(self, train):
         self._train = train
         if train:
-            self.name_entry.set_text(train.name or '')
-            self.pair_button.set_label('Unpair' if train.controller else 'Pair')
+            self.name_entry.set_text(train.name or "")
+            self.pair_button.set_label("Unpair" if train.controller else "Pair")
 
     def on_pair_clicked(self, widget):
         train_controller = get_train_controller(self.train.layout)
         if self.train.controller:
-            widget.set_label('Pair')
+            widget.set_label("Pair")
             self.train.controller = None
             self.train.controller_parameters = {}
         else:
             train_controller.pair_with.append(self.train)
-            self.pair_status.set_label('Searching…')
-            signals.controller_changed.connect(self.on_controller_changed, sender=self.train)
+            self.pair_status.set_label("Searching…")
+            signals.controller_changed.connect(
+                self.on_controller_changed, sender=self.train
+            )
             GObject.timeout_add(10000, self.stop_pairing, self.train)
 
     def on_controller_changed(self, sender, controller):
         if controller:
-            self.pair_status.set_label('Connected')
-            self.pair_button.set_label('Disconnect')
+            self.pair_status.set_label("Connected")
+            self.pair_button.set_label("Disconnect")
         else:
-            self.pair_status.set_label('')
-            self.pair_button.set_label('Pair')
+            self.pair_status.set_label("")
+            self.pair_button.set_label("Pair")
 
     def stop_pairing(self, train):
-        signals.controller_changed.disconnect(self.on_controller_changed, sender=self.train)
+        signals.controller_changed.disconnect(
+            self.on_controller_changed, sender=self.train
+        )
         train_controller = get_train_controller(train.layout)
         try:
             train_controller.pair_with.remove(train)
         except ValueError:
             pass
 
-        if self.pair_status.get_label() == 'Searching…':
-            self.pair_status.set_label('')
+        if self.pair_status.get_label() == "Searching…":
+            self.pair_status.set_label("")
 
     def on_name_changed(self, widget):
         self.train.name = widget.get_text()
@@ -145,7 +159,7 @@ class TrainPopover(Gtk.Popover):
 
 class TrainListBox(Gtk.ListBox):
     def __new__(cls, layout, builder):
-        self = builder.get_object('train-listbox')
+        self = builder.get_object("train-listbox")
         self.__class__ = cls
         self.layout = layout
         self.builder = builder

@@ -6,7 +6,7 @@ import usb.util
 from maestro import Maestro
 from maestro.enums import USCParameter
 
-dev = usb.core.find(idVendor=0x1ffb, idProduct=0x008a)
+dev = usb.core.find(idVendor=0x1FFB, idProduct=0x008A)
 
 maestro = Maestro.for_device(dev)
 # print(maestro)

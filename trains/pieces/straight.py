@@ -7,14 +7,14 @@ from ..track import Bounds, Position
 
 
 class BaseStraight(Piece):
-    anchor_names = ('in', 'out')
+    anchor_names = ("in", "out")
     layout_priority = 10
 
     label: str
     length: float
 
     def traversals(self, anchor_from):
-        return {'out' if anchor_from == 'in' else 'in': (self.length, True)}
+        return {"out" if anchor_from == "in" else "in": (self.length, True)}
 
     # Drawing
 
@@ -50,26 +50,26 @@ class BaseStraight(Piece):
     def relative_positions(self):
         return {
             **super().relative_positions(),
-            'out': Position(self.length, 0, 0),
+            "out": Position(self.length, 0, 0),
         }
 
     def point_position(self, in_anchor, offset):
-        if in_anchor == 'in':
+        if in_anchor == "in":
             return offset, 0, 0
-        elif in_anchor == 'out':
+        elif in_anchor == "out":
             return self.length - offset, 0, math.pi
 
 
 class Straight(BaseStraight):
-    label = 'straight'
+    label = "straight"
     length = 16
 
 
 class HalfStraight(BaseStraight):
-    label = 'half-straight'
+    label = "half-straight"
     length = 8
 
 
 class QuarterStraight(BaseStraight):
-    label = 'quarter-straight'
+    label = "quarter-straight"
     length = 4

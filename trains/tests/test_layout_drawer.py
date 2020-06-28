@@ -26,9 +26,9 @@ class LayoutDrawerTestCase(unittest.TestCase):
 
         # Connect them explicitly not out->in, out->in, and check how many are positioned in the layout as we go
         self.assertEqual(2, len(layout_drawer.anchors_qtree))
-        piece_1.anchors['out'] += piece_2.anchors['in']
+        piece_1.anchors["out"] += piece_2.anchors["in"]
         self.assertEqual(3, len(layout_drawer.anchors_qtree))
-        piece_3.anchors['in'] += piece_2.anchors['out']
+        piece_3.anchors["in"] += piece_2.anchors["out"]
         # for anchor, bbox in layout_drawer.anchors_qtree._bounds.items():
         #     print(f'  {bbox} - {anchor}')
         self.assertEqual(4, len(layout_drawer.anchors_qtree))

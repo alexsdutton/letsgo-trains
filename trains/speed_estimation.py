@@ -32,63 +32,103 @@ class SpeedEstimation:
 
     def update_profile(self, when):
         if self.last_profile_update:
-            self.current_profile.append({'duration': when - self.last_profile_update,
-                                         'motor_speed': self.train.motor_speed,
-                                         'battery_level': self.train.battery_level or 0,
-                                         'battery_level_available': int(self.train.battery_level is not None),
-                                         'lights_on': int(self.train.lights_on)})
+            self.current_profile.append(
+                {
+                    "duration": when - self.last_profile_update,
+                    "motor_speed": self.train.motor_speed,
+                    "battery_level": self.train.battery_level or 0,
+                    "battery_level_available": int(
+                        self.train.battery_level is not None
+                    ),
+                    "lights_on": int(self.train.lights_on),
+                }
+            )
         self.last_profile_update = when
 
     def on_train_spotted(self, sender, sensor, position, when):
         if self.last_position:
             self.update_profile(when)
             distance = self._get_distance_travelled(self.last_position, position)
-            duration = sum(state['duration'] for state in self.current_profile)
-            self.data.append({
-                'distance': distance,
-                'profile': self.current_profile,
-                'duration': duration,
-                'motor_speed': sum(state['motor_speed'] * state['duration'] for state in self.current_profile) / duration,
-                'battery_level': sum(state['battery_level'] * state['duration'] for state in self.current_profile) / duration,
-                'battery_level_available': sum(state['battery_level_available'] * state['duration'] for state in self.current_profile) / duration,
-                'lights_on': sum(state['lights_on'] * state['duration'] for state in self.current_profile) / duration,
-                'speed': distance / duration,
-            })
+            duration = sum(state["duration"] for state in self.current_profile)
+            self.data.append(
+                {
+                    "distance": distance,
+                    "profile": self.current_profile,
+                    "duration": duration,
+                    "motor_speed": sum(
+                        state["motor_speed"] * state["duration"]
+                        for state in self.current_profile
+                    )
+                    / duration,
+                    "battery_level": sum(
+                        state["battery_level"] * state["duration"]
+                        for state in self.current_profile
+                    )
+                    / duration,
+                    "battery_level_available": sum(
+                        state["battery_level_available"] * state["duration"]
+                        for state in self.current_profile
+                    )
+                    / duration,
+                    "lights_on": sum(
+                        state["lights_on"] * state["duration"]
+                        for state in self.current_profile
+                    )
+                    / duration,
+                    "speed": distance / duration,
+                }
+            )
             self.update_model()
 
-        self.last_time, self.last_position, self.last_profile_update = when, position, when
+        self.last_time, self.last_position, self.last_profile_update = (
+            when,
+            position,
+            when,
+        )
 
         self.current_profile = []
         self.update_profile(when)
 
     def get_constant_speed_profiles(self):
-        return [[d['speed'], d['motor_speed'], d['battery_level'], d['battery_level_available'], d['lights_on']]
-                for d in self.data
-                if len(set(state['motor_speed'] for state in d['profile'])) == 1]
+        return [
+            [
+                d["speed"],
+                d["motor_speed"],
+                d["battery_level"],
+                d["battery_level_available"],
+                d["lights_on"],
+            ]
+            for d in self.data
+            if len(set(state["motor_speed"] for state in d["profile"])) == 1
+        ]
 
     def update_model(self):
         constant_speed_profiles = self.get_constant_speed_profiles()
         # We know trains can't go anywhere if their motor isn't running
-        constant_speed_profiles.extend([
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1],
-            [0, 0, 100, 1, 0],
-            [0, 0, 50, 1, 0],
-            [0, 0, 100, 1, 1],
-            [0, 0, 50, 1, 1],
-        ])
+        constant_speed_profiles.extend(
+            [
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1],
+                [0, 0, 100, 1, 0],
+                [0, 0, 50, 1, 0],
+                [0, 0, 100, 1, 1],
+                [0, 0, 50, 1, 1],
+            ]
+        )
         constant_speed_profiles = np.array(constant_speed_profiles)
-        X = constant_speed_profiles[:,1:]
+        X = constant_speed_profiles[:, 1:]
         X = PolynomialFeatures(3).fit_transform(X)
-        y = constant_speed_profiles[:,0]
+        y = constant_speed_profiles[:, 0]
         self.regression = LinearRegression().fit(X, y)
 
     def predict(self, **kwargs):
         X = [
-            kwargs.get('motor_speed', self.train.motor_speed),
-            kwargs.get('battery_level', self.train.battery_level or 0),
-            kwargs.get('battery_level_available', int(self.train.battery_level is not None)),
-            float(kwargs.get('lights_on', int(self.train.lights_on))),
+            kwargs.get("motor_speed", self.train.motor_speed),
+            kwargs.get("battery_level", self.train.battery_level or 0),
+            kwargs.get(
+                "battery_level_available", int(self.train.battery_level is not None)
+            ),
+            float(kwargs.get("lights_on", int(self.train.lights_on))),
         ]
 
         if X[0] == 0:

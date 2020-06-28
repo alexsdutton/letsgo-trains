@@ -13,6 +13,7 @@ class WithBounds(typing.Protocol):
 
 class ResizingIndex:
     """A pyqtree.Index-compatible class that works with item bounds and resizes automatically."""
+
     def __init__(self, *args, **kwargs):
         self._index = pyqtree.Index(*args, **kwargs)
         self._bbox = (
@@ -44,7 +45,8 @@ class ResizingIndex:
             (
                 (math.cos(position.angle) * x + math.sin(position.angle) * y),
                 (math.sin(position.angle) * x + math.cos(position.angle) * y),
-            ) for x, y in corners
+            )
+            for x, y in corners
         ]
         bbox = (
             position.x + min(x for x, y in corners),
@@ -62,7 +64,12 @@ class ResizingIndex:
             self._index.remove(item, previous_bbox)
         self._bounds[item] = bbox
 
-        if bbox[0] <= self._bbox[0] or bbox[1] <= self._bbox[1] or bbox[2] >= self._bbox[2] or bbox[3] >= self._bbox[3]:
+        if (
+            bbox[0] <= self._bbox[0]
+            or bbox[1] <= self._bbox[1]
+            or bbox[2] >= self._bbox[2]
+            or bbox[3] >= self._bbox[3]
+        ):
             # If it falls outside the quadtree bounds, increase the size of the quadtree to fits
             minx, miny, maxx, maxy = -80, -80, 80, 80
             for item_minx, item_miny, item_maxx, item_maxy in self._bounds.values():
@@ -70,9 +77,7 @@ class ResizingIndex:
                 maxx, maxy = max(maxx, item_maxx), max(maxy, item_maxy)
             minx, maxx = minx - (maxx - minx) * 0.2, maxx + (maxx - minx) * 0.2
             miny, maxy = miny - (maxy - miny) * 0.2, maxy + (maxy - miny) * 0.2
-            self._index = pyqtree.Index(
-                bbox=(minx, miny, maxx, maxy),
-            )
+            self._index = pyqtree.Index(bbox=(minx, miny, maxx, maxy),)
             self._bbox = (minx, miny, maxx, maxy)
             for item, item_bbox in self._bounds.items():
                 self._index.insert(item, item_bbox)

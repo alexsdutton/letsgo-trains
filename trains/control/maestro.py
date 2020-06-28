@@ -7,11 +7,11 @@ from trains.sensor import Sensor
 
 from .base import Controller
 
-__all__ = ['MaestroController']
+__all__ = ["MaestroController"]
 
 
 class MaestroController(Controller):
-    registry_type = 'maestro'
+    registry_type = "maestro"
     controller_for = {Sensor}
 
     def __init__(self, **kwargs):
@@ -46,5 +46,5 @@ class MaestroController(Controller):
                 if channel.mode != ChannelMode.Input:
                     continue
                 is_high = channel.value > 0.5
-                sensor.activated = params.get('normally_high', True) != is_high
+                sensor.activated = params.get("normally_high", True) != is_high
             time.sleep(0.02)
