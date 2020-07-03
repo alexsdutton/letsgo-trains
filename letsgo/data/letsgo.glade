@@ -101,8 +101,9 @@
     <property name="can_focus">False</property>
     <property name="icon_name">open-menu-symbolic</property>
   </object>
-  <object class="GtkApplicationWindow" id="main-window">
+  <object class="GtkApplicationWindow" id="layout-window">
     <property name="can_focus">False</property>
+    <property name="title">Let's Go! Trains</property>
     <property name="default_width">500</property>
     <property name="default_height">500</property>
     <child>
@@ -158,7 +159,6 @@
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Disconnect pieces at an anchor (p)</property>
-                        <property name="image">edit-cut</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -168,14 +168,13 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkModelButton" id="design-rotate-right-button">
+                      <object class="GtkButton" id="design-rotate-right-button">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">True</property>
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Rotate piece clockwise by 22.5° (m)</property>
-                        <property name="image">object-rotate-right</property>
                         <property name="action_name">win.rotate-piece(1)</property>
                       </object>
                       <packing>
@@ -186,14 +185,13 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkModelButton" id="design-rotate-left-button">
+                      <object class="GtkButton" id="design-rotate-left-button">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">True</property>
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Rotate piece counter-clockwise by 22.5° (n)</property>
-                        <property name="image">object-rotate-left</property>
                         <property name="action_name">win.rotate-piece(-1)</property>
                       </object>
                       <packing>
@@ -204,14 +202,13 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkModelButton" id="design-flip-button">
+                      <object class="GtkButton" id="design-flip-button">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">True</property>
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Flip piece (f)</property>
-                        <property name="image">object-flip-vertical</property>
                         <property name="action_name">win.flip-piece</property>
                       </object>
                       <packing>
@@ -356,13 +353,14 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkButton" id="open-button">
+              <object class="GtkButton">
                 <property name="label">gtk-open</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
+                <property name="action_name">win.layout-open</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -371,13 +369,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="new-button">
-                <property name="label">gtk-new</property>
+              <object class="GtkModelButton">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <property name="always_show_image">True</property>
+                <property name="action_name">win.layout-new</property>
+                <property name="text" translatable="yes">New</property>
+                <property name="iconic">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -392,13 +390,14 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkButton" id="save-button">
+              <object class="GtkButton">
                 <property name="label">gtk-save</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
+                <property name="action_name">win.layout-save</property>
                 <style>
                   <class name="linked"/>
                 </style>
@@ -443,7 +442,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="sensitive">True</property>
                 <property name="image">open-menu-symbolic</property>
               </object>
               <packing>
@@ -465,7 +463,7 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Configure layout</property>
     <property name="type_hint">dialog</property>
-    <property name="transient_for">main-window</property>
+    <property name="transient_for">layout-window</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -580,12 +578,10 @@
                 </child>
                 <child>
                   <object class="GtkButton">
-                    <property name="label">gtk-new</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_stock">True</property>
-                    <property name="always_show_image">True</property>
+                    <property name="action_name">win.layout-new</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
