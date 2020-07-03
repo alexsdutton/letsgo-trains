@@ -39,3 +39,5 @@ controller_changed = signal("controller-changed")
 
 connected_changed = signal("connected-changed")
 battery_level_changed = signal("battery-level-changed")
+
+selection_changed = signal("selection-changed")

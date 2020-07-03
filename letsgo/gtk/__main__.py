@@ -89,15 +89,39 @@ class Application(Gtk.Application):
         self.train_listbox = TrainListBox(self.layout, self.builder)
         self.layout_listbox = LayoutListBox(self.layout, self.builder)
         self.configure_dialog = ConfigureDialog(self.layout, self.builder)
-        self.builder.get_object("configure-button").connect(
-            "clicked", self.on_configure_clicked
-        )
         self.builder.get_object("new-button").connect("clicked", self.on_new_clicked)
         self.builder.get_object("open-button").connect("clicked", self.on_open_clicked)
         self.builder.get_object("save-button").connect("clicked", self.on_save_clicked)
-        self.builder.get_object("save-as-button").connect(
-            "clicked", self.on_save_as_clicked
+
+        self.menu = Gio.Menu()
+        self.menu.append('Layout details', 'win.layout-details')
+        self.menu.append('Save _as…', 'win.save-as')
+        self.menu.append('About', 'app.about')
+
+        about_action = Gio.SimpleAction.new('about', None)
+        about_action.connect('activate', lambda action, parameter: self.builder.get_object('about-dialog').run())
+        self.builder.get_object('about-dialog').connect('delete-event', self.hide_about_dialog)
+        self.builder.get_object('about-dialog').connect('response', self.hide_about_dialog)
+        self.add_action(about_action)
+
+        layout_details_action = Gio.SimpleAction.new('layout-details', None)
+        self.window.add_action(layout_details_action)
+        layout_details_action.connect(
+            "activate", self.on_configure_clicked
         )
+
+
+        save_as_action = Gio.SimpleAction.new('save-as', None)
+        self.window.add_action(save_as_action)
+
+        save_as_action.connect(
+            "activate", self.on_save_as_clicked
+        )
+
+        self.builder.get_object('menu-button').set_menu_model(self.menu)
+
+
+
         self.window.connect("delete-event", self.on_delete_event)
 
         self.layout_drawer = LayoutDrawer(self.layout_area, self.layout)
@@ -154,11 +178,9 @@ class Application(Gtk.Application):
             else:
                 logger.warning("No parser for file %s", filename)
 
-    def on_configure_clicked(self, widget):
-        if self.configure_dialog.get_visible():
-            self.configure_dialog.hide()
-        else:
-            self.configure_dialog.show_all()
+    def on_configure_clicked(self, action, parameter):
+        if not self.configure_dialog.get_visible():
+            self.configure_dialog.show()
 
     def on_window_state_event(self, widget, event):
         self.settings.set_int(
@@ -304,6 +326,10 @@ class Application(Gtk.Application):
             return False
         else:
             return True
+
+    def hide_about_dialog(self, dialog, *args):
+        dialog.hide()
+        return True
 
 
 def main():

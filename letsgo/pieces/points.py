@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+from typing import Type
+
 import cairo
 import cmath
 import math
 
 from letsgo.drawing_options import DrawingOptions
-from .base import Piece
+from .base import FlippablePiece, Piece
 from letsgo.track import Bounds, Position
 
 
@@ -20,7 +24,7 @@ def _distance(xy1, xy2):
     return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
-class BasePoints(Piece):
+class BasePoints(FlippablePiece):
     anchor_names = ("in", "out", "branch")
     layout_priority = 30
 
@@ -28,14 +32,14 @@ class BasePoints(Piece):
         self.state = state
 
         branch_point = cmath.rect(40, math.tau * 5 / 16) + 48 - 24j
-        self.branch_point = branch_point.real, branch_point.imag * self.flip
+        self.branch_point = branch_point.real, branch_point.imag * self.coordinate_sign
 
         # Bezier curve control points for the branch
         self.control_points = [
             (16, 0),
             (
                 self.branch_point[0] - math.sin(math.tau * 5 / 16) * 16,
-                self.branch_point[1] + (math.cos(math.tau * 5 / 16) * 16) * self.flip,
+                self.branch_point[1] + (math.cos(math.tau * 5 / 16) * 16) * self.coordinate_sign,
             ),
         ]
 
@@ -79,10 +83,34 @@ class BasePoints(Piece):
         elif anchor_from == "branch":
             return {"in": (self.branch_length, True)}
 
+    @property
+    def flip_replace(self) -> Type[BasePoints]:
+        raise NotImplementedError
+
+    def flip(self: BasePoints) -> BasePoints:
+        layout, placement_origin = self.layout, self.placement_origin
+        placement_origin_position = self.placement_origin.position
+        anchors = {}
+        for anchor_name, anchor in self.anchors.items():
+            if len(anchor) > 1:
+                new_anchor = anchor.split()
+                anchors[anchor_name] = anchor if self not in anchor else new_anchor
+        self.layout.remove_piece(self)
+        new_points = self.flip_replace(layout=layout, id=self.id, state=self.state, placement=self.placement)
+        for anchor_name, anchor in anchors.items():
+            new_points.anchors[anchor_name] += anchor
+        self.layout.add_piece(new_points)
+        if placement_origin == self:
+            placement_origin = new_points
+        placement_origin.placement = placement_origin_position
+        placement_origin.update_connected_subset_positions()
+        return new_points
+
+
     # Drawing
 
     @property
-    def flip(self):
+    def coordinate_sign(self):
         return -1 if self.direction == "left" else 1
 
     def bounds(self):
@@ -102,10 +130,10 @@ class BasePoints(Piece):
         # Main sleepers
         cr.save()
         cr.move_to(0, 0)
-        cr.line_to(25, 4 * self.flip)
-        cr.line_to(32, 4 * self.flip)
-        cr.line_to(32, -4 * self.flip)
-        cr.line_to(0, -4 * self.flip)
+        cr.line_to(25, 4 * self.coordinate_sign)
+        cr.line_to(32, 4 * self.coordinate_sign)
+        cr.line_to(32, -4 * self.coordinate_sign)
+        cr.line_to(0, -4 * self.coordinate_sign)
         cr.close_path()
         cr.clip()
 
@@ -118,11 +146,11 @@ class BasePoints(Piece):
         # Branch sleepers
         cr.save()
         cr.move_to(0, 0)
-        cr.line_to(25, 4 * self.flip)
-        cr.line_to(32, 4 * self.flip)
-        cr.line_to(40, 4 * self.flip)
-        cr.line_to(40, 32 * self.flip)
-        cr.line_to(0, 32 * self.flip)
+        cr.line_to(25, 4 * self.coordinate_sign)
+        cr.line_to(32, 4 * self.coordinate_sign)
+        cr.line_to(40, 4 * self.coordinate_sign)
+        cr.line_to(40, 32 * self.coordinate_sign)
+        cr.line_to(0, 32 * self.coordinate_sign)
         cr.close_path()
         cr.clip()
         # cr.stroke()
@@ -197,7 +225,7 @@ class BasePoints(Piece):
         return {
             **super().relative_positions(),
             "out": Position(32, 0, 0),
-            "branch": Position(*self.branch_point, math.tau / 16 * self.flip),
+            "branch": Position(*self.branch_point, math.tau / 16 * self.coordinate_sign),
         }
 
     def point_position(self, in_anchor, offset, out_anchor=None):
@@ -235,7 +263,14 @@ class LeftPoints(BasePoints):
     direction = "left"
     label = "points (left)"
 
+    @property
+    def flip_replace(self):
+        return RightPoints
+
 
 class RightPoints(BasePoints):
     direction = "right"
     label = "points (right)"
+    @property
+    def flip_replace(self):
+        return LeftPoints

@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import enum
 
 import cairo
 import cmath
 import math
 
-from .base import Piece
+from .base import FlippablePiece, Piece
 from ..drawing_options import DrawingOptions
 from ..track import Bounds, Position
 
@@ -14,7 +16,7 @@ class CurveDirection(enum.Enum):
     right = "right"
 
 
-class BaseCurve(Piece):
+class BaseCurve(FlippablePiece):
     anchor_names = ("in", "out")
     layout_priority = 20
 
@@ -34,7 +36,10 @@ class BaseCurve(Piece):
             else "in": (math.tau * self.radius / self.per_circle, True)
         }
 
-    layout_priority = 20
+    def flip(self: BaseCurve) -> BaseCurve:
+        self.direction = CurveDirection.left if self.direction == CurveDirection.right else CurveDirection.right
+        self.placement_origin.update_connected_subset_positions()
+        return self
 
     # Drawing
 

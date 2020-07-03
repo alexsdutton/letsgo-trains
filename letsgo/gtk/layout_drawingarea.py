@@ -7,7 +7,7 @@ import gi
 from cairo import Context
 from letsgo import pieces
 
-from letsgo.pieces import Piece, piece_classes
+from letsgo.pieces import FlippablePiece, Piece, piece_classes
 
 from letsgo.drawing_options import DrawingOptions
 
@@ -92,6 +92,7 @@ class LayoutDrawer:
     @selected_item.setter
     def selected_item(self, value):
         self._selected_item = value
+        signals.selection_changed.send(self.layout, selection=value)
         self.drawing_area.queue_draw()
 
     def tick(self, sender, time, time_elapsed):
@@ -164,17 +165,11 @@ class LayoutDrawer:
         self.layout.add_piece(piece)
 
     def on_key_press(self, widget, event):
-        print(event.keyval, event.string, event.get_keycode())
-        if isinstance(self.selected_item, BaseCurve) and event.keyval in (
+        if isinstance(self.selected_item, FlippablePiece) and event.keyval in (
             Gdk.KEY_f,
             Gdk.KEY_F,
         ):
-            self.selected_item.direction = (
-                CurveDirection.left
-                if self.selected_item.direction == CurveDirection.right
-                else CurveDirection.right
-            )
-            self.selected_item.placement_origin.update_connected_subset_positions()
+            self.selected_item = self.selected_item.flip()
             self.layout.changed()
         if isinstance(self.selected_item, Anchor) and event.keyval in (
             Gdk.KEY_p,
@@ -394,6 +389,10 @@ class LayoutDrawer:
         relative_positions = piece.relative_positions()
 
         for anchor_name, anchor in piece.anchors.items():
+            # if anchor.position != piece.position + relative_positions[anchor_name] + Position(0, 0, math.pi):
+            #     cr.move_to(0, 0)
+            #     cr.line_to(anchor.position.x, anchor.position.y)
+            #     cr.stroke()
 
             cr.save()
 
@@ -406,6 +405,8 @@ class LayoutDrawer:
                 cr.set_source_rgb(1, 0.5, 0.5)
             else:
                 cr.set_source_rgb(0.5, 1, 0.5)
+
+
 
             next_piece, next_anchor_name = anchor.next(piece)
 

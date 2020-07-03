@@ -180,3 +180,8 @@ class Piece(WithRegistry):
         if self.placement:
             data["placement"] = self.placement.to_yaml()
         return data
+
+
+class FlippablePiece(Piece):
+    def flip(self: Piece) -> Piece:
+        raise NotImplementedError

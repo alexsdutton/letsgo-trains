@@ -11,7 +11,7 @@ __all__ = ["MaestroController"]
 
 
 class MaestroController(Controller):
-    registry_type = "maestro"
+    label = 'Maestro servo controller'
     controller_for = {Sensor}
 
     def __init__(self, **kwargs):

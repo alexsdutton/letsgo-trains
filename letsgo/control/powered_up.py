@@ -8,7 +8,7 @@ from .. import signals
 
 
 class PoweredUpController(Controller):
-    registry_type = "powered_up"
+    label = 'Powered UP'
     controller_for = {Train}
 
     def __init__(self, adapter_name="hci0", **kwargs):

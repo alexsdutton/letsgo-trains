@@ -1,7 +1,7 @@
 from typing import Dict, Type
 from pkg_resources import iter_entry_points
 
-from .base import Piece
+from .base import Piece, FlippablePiece
 from .straight import Straight, HalfStraight, QuarterStraight
 from .curve import (
     Curve,
