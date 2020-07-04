@@ -164,22 +164,17 @@ class LayoutDrawer:
 
         self.layout.add_piece(piece)
 
-    def on_key_press(self, widget, event):
-        if isinstance(self.selected_item, FlippablePiece) and event.keyval in (
-            Gdk.KEY_f,
-            Gdk.KEY_F,
-        ):
+    def flip_selection(self):
+        if isinstance(self.selected_item, FlippablePiece):
             self.selected_item = self.selected_item.flip()
             self.layout.changed()
-        if isinstance(self.selected_item, Anchor) and event.keyval in (
-            Gdk.KEY_p,
-            Gdk.KEY_P,
-        ):
+
+    def split_selection(self):
+        if isinstance(self.selected_item, Anchor):
             self.selected_item.split()
-        if isinstance(self.selected_item, Piece) and event.keyval in (
-            Gdk.KEY_Delete,
-            Gdk.KEY_BackSpace,
-        ):
+
+    def delete_selection(self):
+        if isinstance(self.selected_item, Piece):
             full_anchors = [
                 a for a in self.selected_item.anchors.values() if len(a) == 2
             ]
@@ -193,6 +188,15 @@ class LayoutDrawer:
                 self.highlight_item = None
             self.selected_item = next_selected_item
             self.drawing_area.queue_draw()
+
+
+    def on_key_press(self, widget, event):
+        if event.keyval in (Gdk.KEY_f, Gdk.KEY_F,):
+            self.flip_selection()
+        if event.keyval in (Gdk.KEY_p, Gdk.KEY_P,):
+            self.split_selection()
+        if event.keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
+            self.delete_selection()
         if (
             isinstance(self.selected_item, Piece)
             and event.keyval in self.keyboard_piece_placement
@@ -405,8 +409,6 @@ class LayoutDrawer:
                 cr.set_source_rgb(1, 0.5, 0.5)
             else:
                 cr.set_source_rgb(0.5, 1, 0.5)
-
-
 
             next_piece, next_anchor_name = anchor.next(piece)
 

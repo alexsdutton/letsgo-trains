@@ -3,6 +3,8 @@ import os
 import time
 
 from gi.repository import Gio, Gtk, GLib, Gdk
+from letsgo.track import Anchor
+
 from letsgo.layout_parser import get_parser_for_filename, parser_classes
 
 from letsgo.layout_serializer import get_serializer_for_filename, serializer_classes
@@ -19,6 +21,7 @@ from letsgo import signals
 from letsgo.layout import Layout
 
 from letsgo.gtk.utils import get_builder
+from letsgo.pieces import FlippablePiece, Piece
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +43,9 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
         self.create_actions()
         self.connect_signals()
+
+        # Force disable all actions
+        self.on_selection_changed(self.layout, None)
 
         self.current_filename = None
         self.saved_epoch = self.layout.epoch
@@ -84,6 +90,12 @@ class LayoutWindow(Gtk.ApplicationWindow):
             'piece-flip': Gio.SimpleAction.new('piece-flip', None),
             'piece-rotate': Gio.SimpleAction.new('piece-rotate', GLib.VariantType.new('i')),
 
+            # Anchor actions
+            'anchor-split': Gio.SimpleAction.new('anchor-split', None),
+
+            # Selection actions
+            'selection-delete': Gio.SimpleAction.new('selection-delete', None),
+
             'about': Gio.SimpleAction.new('about', None),
         }
         for action in self.actions.values():
@@ -102,6 +114,16 @@ class LayoutWindow(Gtk.ApplicationWindow):
         self.actions['layout-save-as'].connect(
             "activate", self.on_layout_save_as
         )
+        self.actions['piece-flip'].connect(
+            "activate", self.on_piece_flip
+        )
+        self.actions['anchor-split'].connect(
+            "activate", self.on_anchor_split
+        )
+        self.actions['selection-delete'].connect(
+            "activate", self.on_selection_delete
+        )
+        signals.selection_changed.connect(self.on_selection_changed)
 
 
 
@@ -125,6 +147,12 @@ class LayoutWindow(Gtk.ApplicationWindow):
     def hide_about_dialog(self, dialog, *args):
         dialog.hide()
         return True
+
+    def on_selection_changed(self, sender, selection):
+        self.actions['piece-flip'].set_enabled(isinstance(selection, FlippablePiece))
+        self.actions['piece-rotate'].set_enabled(isinstance(selection, Piece))
+        self.actions['anchor-split'].set_enabled(isinstance(selection, Anchor))
+        self.actions['selection-delete'].set_enabled(isinstance(selection, Piece) or (isinstance(selection, Anchor) and len(selection == 1)))
 
     def on_configure_clicked(self, action, parameter):
         if not self.configure_dialog.get_visible():
@@ -290,6 +318,14 @@ class LayoutWindow(Gtk.ApplicationWindow):
     def on_control_switch_activated(self, switch, gparam, points):
         points.state = "branch" if switch.get_active() else "out"
 
+    def on_piece_flip(self, action, parameter):
+        self.layout_drawer.flip_selection()
+
+    def on_anchor_split(self, action, parameter):
+        self.layout_drawer.split_selection()
+
+    def on_selection_delete(self, action, parameter):
+        self.layout_drawer.delete_selection()
 
     def send_tick(self):
         this_tick = time.time()

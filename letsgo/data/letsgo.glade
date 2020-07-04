@@ -60,6 +60,11 @@
     <property name="can_focus">False</property>
     <property name="icon_name">edit-cut</property>
   </object>
+  <object class="GtkImage" id="edit-delete">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">edit-delete</property>
+  </object>
   <object class="GtkImage" id="image1">
     <property name="name">automate-button</property>
     <property name="visible">True</property>
@@ -82,6 +87,11 @@
     <property name="can_focus">False</property>
   </object>
   <object class="GtkImage" id="object-flip-vertical">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">object-flip-vertical</property>
+  </object>
+  <object class="GtkImage" id="object-flip-vertical1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">object-flip-vertical</property>
@@ -152,13 +162,33 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkModelButton" id="design-split-anchor-button">
+                      <object class="GtkButton" id="design-delete-selection">
+                        <property name="visible">True</property>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">True</property>
+                        <property name="focus_on_click">False</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Delete piece (delete or backspace)</property>
+                        <property name="action_name">win.selection-delete</property>
+                        <property name="image">edit-delete</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="pack_type">end</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="design-split-anchor-button">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">True</property>
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Disconnect pieces at an anchor (p)</property>
+                        <property name="action_name">win.anchor-split</property>
+                        <property name="image">edit-cut</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -175,7 +205,8 @@
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Rotate piece clockwise by 22.5° (m)</property>
-                        <property name="action_name">win.rotate-piece(1)</property>
+                        <property name="action_name">win.piece-rotate</property>
+                        <property name="image">object-rotate-right</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -192,7 +223,8 @@
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Rotate piece counter-clockwise by 22.5° (n)</property>
-                        <property name="action_name">win.rotate-piece(-1)</property>
+                        <property name="action_name">win.piece-rotate</property>
+                        <property name="image">object-rotate-left</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -209,7 +241,8 @@
                         <property name="focus_on_click">False</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Flip piece (f)</property>
-                        <property name="action_name">win.flip-piece</property>
+                        <property name="action_name">win.piece-flip</property>
+                        <property name="image">object-flip-vertical</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -358,9 +391,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="action_name">win.layout-open</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
-                <property name="action_name">win.layout-open</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -395,9 +428,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="action_name">win.layout-save</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
-                <property name="action_name">win.layout-save</property>
                 <style>
                   <class name="linked"/>
                 </style>
