@@ -27,6 +27,7 @@ setup(
     data_files=[
         ('share/applications', ['data/uk.dutton.letsgo-trains.desktop']),
         ('share/icons/hicolor/scalable/apps', ['data/letsgo-trains.svg']),
+        ('share/mime/packages', ['data/text-letsgo+yaml.xml']),
     ],
     install_requires=[
         "blinker",
