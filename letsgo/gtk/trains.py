@@ -78,7 +78,7 @@ class TrainControls(Gtk.Grid):
 
     def on_popover_show(self, widget):
         self.popover.set_relative_to(widget)
-        self.popover.train = self.train
+        self.popover.hub = self.train
         self.popover.show_all()
         self.popover.popup()
 

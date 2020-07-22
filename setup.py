@@ -78,11 +78,15 @@ setup(
             'ncontrol = letsgo.layout_serializer:NControlLayoutSerializer',
         ],
         'letsgo.controller': [
-            'maestro = letsgo.control.MaestroController',
-            'powered-up = letsgo.control.PoweredUpController',
+            'maestro = letsgo.control:MaestroController',
+            'powered-up = letsgo.control:PoweredUpController',
+        ],
+        'letsgo.gtk.controller': [
+            'powered-up = letsgo.gtk.control:GtkPoweredUpController',
+            'maestro = letsgo.gtk.control:GtkMaestroController',
         ],
         'letsgo.sensor': [
-            'hall-effect = letsgo.sensor.HallEffectSensor',
+            'hall-effect = letsgo.sensor:HallEffectSensor',
         ],
     }
 )

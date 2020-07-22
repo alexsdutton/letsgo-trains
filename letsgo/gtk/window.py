@@ -3,6 +3,9 @@ import os
 import time
 
 from gi.repository import Gio, Gtk, GLib, Gdk
+
+from letsgo.control import Controller, controller_classes
+from letsgo.gtk.control import gtk_controller_classes
 from letsgo.track import Anchor
 
 from letsgo.layout_parser import get_parser_for_filename, parser_classes
@@ -54,7 +57,12 @@ class LayoutWindow(Gtk.ApplicationWindow):
         # self.topham_hatt = TophamHatt(self.layout)
         # signals.tick.connect(self.topham_hatt.tick)
 
-        self.control_listbox = self.builder.get_object("control-listbox")
+        self.controller_add_menu = Gio.Menu()
+        for name, controller_cls in sorted(controller_classes.items(), key=lambda pair: pair[1].label):
+            self.controller_add_menu.append(controller_cls.label, f'win.controller-add::{name}')
+        self.builder.get_object('controller-add-button').set_menu_model(self.controller_add_menu)
+
+        self.controller_box = self.builder.get_object("controller-box")
         self.train_listbox = TrainListBox(self.layout, self.builder)
         self.layout_listbox = LayoutListBox(self.layout, self.builder)
         self.configure_dialog = ConfigureDialog(self.layout, self.builder)
@@ -70,12 +78,9 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
         self.layout_drawer = LayoutDrawer(self.layout_area, self.layout)
 
-        # signals.piece_added.connect(self.on_piece_added, sender=self.layout)
-
-        # self.layout.load_from_yaml(yaml.safe_load(pkg_resources.resource_string('letsgo', 'data/layouts/simple.yaml')))
-
-        self.last_tick = time.time()
-        GLib.timeout_add(30, self.send_tick)
+        self.layout.start()
+        # self.last_tick = time.time()
+        # GLib.timeout_add(30, self.send_tick)
 
     def create_actions(self):
         self.actions = {
@@ -96,8 +101,13 @@ class LayoutWindow(Gtk.ApplicationWindow):
             # Selection actions
             'selection-delete': Gio.SimpleAction.new('selection-delete', None),
 
+            # Controller actions
+            'controller-add': Gio.SimpleAction.new('controller-add', GLib.VariantType.new('s')),
+            'controller-remove': Gio.SimpleAction.new('controller-remove', GLib.VariantType.new('s')),
+
             'about': Gio.SimpleAction.new('about', None),
         }
+        self.actions['controller-remove'].set_enabled(True)
         for action in self.actions.values():
             self.add_action(action)
 
@@ -123,9 +133,38 @@ class LayoutWindow(Gtk.ApplicationWindow):
         self.actions['selection-delete'].connect(
             "activate", self.on_selection_delete
         )
+        self.actions['controller-add'].connect(
+            "activate", self.on_controller_add
+        )
+        self.actions['controller-remove'].connect(
+            "activate", self.on_controller_remove
+        )
         signals.selection_changed.connect(self.on_selection_changed)
+        signals.controller_added.connect(self.on_controller_added)
+        signals.controller_removed.connect(self.on_controller_removed)
+        self.connect('destroy-event', self.on_destroy)
 
+    def on_controller_add(self, action, parameter):
+        controller = controller_classes[parameter.get_string()](layout=self.layout)
+        self.layout.add_controller(controller)
 
+    def on_controller_remove(self, action, parameter):
+        self.layout.remove_controller(self.layout.controllers[parameter.get_string()])
+
+    def on_controller_added(self, sender, controller: Controller):
+        gtk_controller_cls = gtk_controller_classes[type(controller).entrypoint_name]
+        gtk_controller = gtk_controller_cls(controller)
+        self.controller_box.pack_start(gtk_controller, False, False, 0)
+        # self.controller_box.pack_start(Gtk.Separator(), False, False, 0)
+        self.controller_box.show_all()
+
+    def on_controller_removed(self, sender, controller: Controller):
+        for gtk_controller in self.controller_box.get_children():
+            if gtk_controller.controller == controller:
+                gtk_controller.destroy()
+
+    def on_destroy(self, *args):
+        self.layout.stop()
 
     def create_menu(self):
         menu = Gio.Menu()
@@ -171,7 +210,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
             layout_name = ""
 
         dialog = Gtk.MessageDialog(
-            parent=self.window, modal=True, destroy_with_parent=True,
+            parent=self, modal=True, destroy_with_parent=True,
         )
 
         dialog.set_markup(

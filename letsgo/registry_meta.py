@@ -158,5 +158,4 @@ class WithRegistry(metaclass=WithRegistryMeta):
         actual_cls = next(
             pkg_resources.iter_entry_points(cls.entrypoint_group, entrypoint_name)
         ).load()
-        print(actual_cls.cast_yaml_data)
         return actual_cls(layout=layout, **actual_cls.cast_yaml_data(layout, **data))

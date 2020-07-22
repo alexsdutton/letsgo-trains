@@ -6,7 +6,7 @@ __all__ = ["Controller"]
 
 
 class Controller(WithRegistry):
-    entrypoint_name = "letsgo.controller"
+    entrypoint_group = "letsgo.controller"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

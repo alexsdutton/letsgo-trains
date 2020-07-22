@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 import threading
 import time
 from typing import Dict, Union
@@ -22,6 +23,8 @@ from letsgo.station import Station, Platform
 from letsgo.train import Train, TrackPoint, Car
 
 from . import signals
+
+logger = logging.getLogger(__name__)
 
 
 def _changes_layout(func):
@@ -121,11 +124,15 @@ class Layout:
         del self.itineraries[itinerary.id]
         signals.itinerary_removed.send(self, itinerary=itinerary)
 
-    def add_controller(self, controller):
+    def add_controller(self, controller: Controller):
         self.controllers[controller.id] = controller
         signals.controller_added.send(self, controller=controller)
+        if self.running.is_set():
+            controller.start()
 
     def remove_controller(self, controller):
+        if self.running.is_set():
+            controller.stop()
         del self.controllers[controller.id]
         signals.controller_removed.send(self, controller=controller)
 
@@ -170,9 +177,9 @@ class Layout:
             controller.start()
 
     def stop(self):
-        return
         if not self.running.is_set():
-            raise AssertionError
+            logger.warning("Layout.stop called when layout isn't running")
+            return
         self.running.clear()
         for controller in self.controllers.values():
             controller.stop()
