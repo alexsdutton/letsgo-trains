@@ -190,9 +190,9 @@ class LayoutDrawer:
             self.drawing_area.queue_draw()
 
     def on_key_press(self, widget, event):
-        if event.keyval in (Gdk.KEY_f, Gdk.KEY_F,):
+        if event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
             self.flip_selection()
-        if event.keyval in (Gdk.KEY_p, Gdk.KEY_P,):
+        if event.keyval in (Gdk.KEY_p, Gdk.KEY_P):
             self.split_selection()
         if event.keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
             self.delete_selection()

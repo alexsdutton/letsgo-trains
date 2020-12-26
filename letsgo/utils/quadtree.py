@@ -77,7 +77,7 @@ class ResizingIndex:
                 maxx, maxy = max(maxx, item_maxx), max(maxy, item_maxy)
             minx, maxx = minx - (maxx - minx) * 0.2, maxx + (maxx - minx) * 0.2
             miny, maxy = miny - (maxy - miny) * 0.2, maxy + (maxy - miny) * 0.2
-            self._index = pyqtree.Index(bbox=(minx, miny, maxx, maxy),)
+            self._index = pyqtree.Index(bbox=(minx, miny, maxx, maxy))
             self._bbox = (minx, miny, maxx, maxy)
             for item, item_bbox in self._bounds.items():
                 self._index.insert(item, item_bbox)

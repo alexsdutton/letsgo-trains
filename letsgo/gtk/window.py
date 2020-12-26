@@ -209,7 +209,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
         else:
             layout_name = ""
 
-        dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True,)
+        dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True)
 
         dialog.set_markup(
             f'<span weight="bold" size="larger">Save changes to layout{layout_name} before closing?</span>'
@@ -244,7 +244,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
     def on_layout_open(self, action, parameter):
         file_chooser = Gtk.FileChooserNative.new(
-            "Open layout", self, Gtk.FileChooserAction.OPEN, "_Open", "_Cancel",
+            "Open layout", self, Gtk.FileChooserAction.OPEN, "_Open", "_Cancel"
         )
 
         supported_file_filter = Gtk.FileFilter()
@@ -295,7 +295,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
     def on_layout_save_as(self, *args, **kwargs):
         file_chooser = Gtk.FileChooserNative.new(
-            "Save layout", self, Gtk.FileChooserAction.SAVE, "_Save", "_Cancel",
+            "Save layout", self, Gtk.FileChooserAction.SAVE, "_Save", "_Cancel"
         )
 
         file_chooser.set_do_overwrite_confirmation(True)
