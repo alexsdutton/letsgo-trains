@@ -1,3 +1,5 @@
+from typing import Dict
+
 import yaml
 from letsgo.control import Controller
 
@@ -5,7 +7,7 @@ from letsgo.layout import Layout
 from letsgo.layout_parser import LayoutParser
 from letsgo.pieces import Piece, piece_classes
 from letsgo.pieces.curve import CurveDirection
-from letsgo.track import Position
+from letsgo.track import Anchor, Position
 
 
 class LetsGoLayoutParser(LayoutParser):
@@ -15,7 +17,9 @@ class LetsGoLayoutParser(LayoutParser):
     def parse(self, fp, layout: Layout):
         doc = yaml.safe_load(fp)
 
-        anchors_by_id, pieces_by_id = {}, {}
+        anchors_by_id: Dict[str, Anchor] = {}
+        pieces_by_id: Dict[str, Piece] = {}
+
         for piece_data in doc.get("pieces", []):
             piece = Piece.from_yaml(layout, **piece_data)
             layout.add_piece(piece, announce=False)

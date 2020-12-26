@@ -39,11 +39,11 @@ class SpeedLimits(dict):
 class Car:
     def __init__(
         self,
-        length: Number,
-        bogey_offsets: List[Number],
+        length: float,
+        bogey_offsets: List[float],
         nose="vestibule",
         tail="vestibule",
-        magnet_offset: Number = None,
+        magnet_offset: float = None,
     ):
         self.length = length
         self.bogey_offsets = bogey_offsets

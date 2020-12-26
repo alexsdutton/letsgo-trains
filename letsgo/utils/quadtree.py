@@ -71,7 +71,7 @@ class ResizingIndex:
             or bbox[3] >= self._bbox[3]
         ):
             # If it falls outside the quadtree bounds, increase the size of the quadtree to fits
-            minx, miny, maxx, maxy = -80, -80, 80, 80
+            minx, miny, maxx, maxy = -80.0, -80.0, 80.0, 80.0
             for item_minx, item_miny, item_maxx, item_maxy in self._bounds.values():
                 minx, miny = min(minx, item_minx), min(miny, item_miny)
                 maxx, maxy = max(maxx, item_maxx), max(maxy, item_maxy)

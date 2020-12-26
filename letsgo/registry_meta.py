@@ -23,8 +23,11 @@ class WithRegistryMeta(type):
         except AttributeError:
             for ep in pkg_resources.iter_entry_points(cls.entrypoint_group):
                 if ep.load() is cls:
-                    cls._entrypoint_name = ep.name
+                    cls._entrypoint_name: str = ep.name
                     return cls._entrypoint_name
+        raise AttributeError(
+            f"Entrypoint not found for class {cls} in group {cls.entrypoint_group}"
+        )
 
 
 def cast_to_type_hint(layout: Layout, obj, type_hint):
@@ -78,7 +81,9 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
                 "TrackPoint": TrackPoint,
             }
 
-            type_hints.update(get_type_hints(supercls.__init__, mod_globals))
+            type_hints.update(
+                get_type_hints(supercls.__init__, mod_globals)  # type: ignore
+            )
 
         for key, value in obj.items():
             if key not in type_hints:

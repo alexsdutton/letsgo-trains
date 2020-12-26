@@ -1,5 +1,5 @@
 class TrainController:
-    name = None
+    name: str
 
 
 class PoweredUpTrainController(TrainController):

@@ -20,7 +20,12 @@ if TYPE_CHECKING:
 from letsgo.registry_meta import WithRegistry
 
 
-class Position(collections.namedtuple("Position", ("x", "y", "angle"))):
+class Position:
+    def __init__(self, x: float, y: float, angle: float):
+        self.x = x
+        self.y = y
+        self.angle = angle
+
     @classmethod
     def from_matrix(cls, matrix: cairo.Matrix):
         return cls(matrix.x0, matrix.y0, math.atan2(-matrix.xy, matrix.xx))
@@ -83,7 +88,7 @@ class Anchor(dict):
         # self.layout = layout
         self.id = id or str(uuid.uuid4())
         self.position: Optional[Position] = None
-        self.subsumes = weakref.WeakSet()
+        self.subsumes: Set[Anchor] = weakref.WeakSet()
         # if self._position:
         #     signals.anchor_p
 
