@@ -1,0 +1,96 @@
+[tool.poetry]
+name = "letsgo-trains"
+version = "0.1"
+description = "Lego train layout design and automation."
+license = "BSD-2-Clause"
+authors = [
+    "Alex Dutton <trains@alexdutton.co.uk>",
+]
+readme = "README.md"
+homepage = "https://letsgo.shinypebble.uk/"
+documentation = "https://letsgo.shinypebble.uk/docs/"
+repository = "https://github.com/alexsdutton/letsgo-trains"
+keywords = [
+    "LEGO",
+    "trains",
+    "Powered Up",
+    "automation",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Games/Entertainment :: Simulation",
+]
+packages = [
+    {include = "letsgo"},
+]
+
+
+[tool.poetry.dependencies]
+python = ">=3.7,<3.10"
+
+blinker = "*"
+pyyaml = "*"
+cached-property = "*"
+lxml = "*"
+click = "*"
+cairosvg = "*"
+numpy = "*"
+ipython = "*"
+pyusb = "*"
+sklearn = "*"
+maestro-servo = "*"
+lego-wireless = "*"
+gobject = "*"
+pygobject = "*"
+dbus-python = "*"
+pyqtree = "*"
+
+[tool.poetry.scripts]
+letsgo-trains-gtk = "trains.gtk.__main__:main"
+
+[tool.poetry.plugins."letsgo.piece"]
+straight = "letsgo.pieces:Straight"
+half-straight = "letsgo.pieces:HalfStraight"
+quarter-straight = "letsgo.pieces:QuarterStraight"
+curve = "letsgo.pieces:Curve"
+half-curve = "letsgo.pieces:HalfCurve"
+r24-curve = "letsgo.pieces:R24Curve"
+r32-curve = "letsgo.pieces:R32Curve"
+r56-curve = "letsgo.pieces:R56Curve"
+r72-curve = "letsgo.pieces:R72Curve"
+r88-curve = "letsgo.pieces:R88Curve"
+r104-curve = "letsgo.pieces:R104Curve"
+r120-curve = "letsgo.pieces:R120Curve"
+left-points = "letsgo.pieces:LeftPoints"
+right-points = "letsgo.pieces:RightPoints"
+crossover = "letsgo.pieces:Crossover"
+short-crossover = "letsgo.pieces:ShortCrossover"
+
+[tool.poetry.plugins."letsgo.layout_parser"]
+letsgo = "letsgo.layout_parser:LetsGoLayoutParser"
+ncontrol = "letsgo.layout_parser:NControlLayoutParser"
+
+[tool.poetry.plugins."letsgo.letsgo.layout_serializer"]
+letsgo = "letsgo.layout_serializer:LetsGoLayoutSerializer"
+ncontrol = "letsgo.layout_serializer:NControlLayoutSerializer"
+
+[tool.poetry.plugins."letsgo.controller"]
+maestro = "letsgo.control:MaestroController"
+powered-up = "letsgo.control:PoweredUpController"
+
+[tool.poetry.plugins."letsgo.gtk.controller"]
+powered-up = "letsgo.gtk.control:GtkPoweredUpController"
+maestro = "letsgo.gtk.control:GtkMaestroController"
+
+[tool.poetry.plugins."letsgo.sensor"]
+hall-effect = "letsgo.sensor:HallEffectSensor"
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
