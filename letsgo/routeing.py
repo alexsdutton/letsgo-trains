@@ -1,4 +1,5 @@
 import collections
+import typing
 import uuid
 from typing import Any, Optional, List, Sequence, Tuple
 
@@ -37,6 +38,7 @@ class Route:
 class Router:
     """Routes trains"""
 
+    @typing.no_type_check
     def route(self, train, from_trackpoint: TrackPoint, to_trackpoint: TrackPoint):
         routes = collections.defaultdict(set)
         track_points: List[Tuple[float, TrackPoint, Tuple[Any, ...]]] = [
