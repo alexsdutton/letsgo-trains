@@ -52,6 +52,9 @@ pygobject = "*"
 dbus-python = "*"
 pyqtree = "*"
 
+[tool.poetry.dev-dependencies]
+coverage = "^5.3.1"
+
 [tool.poetry.scripts]
 letsgo-trains-gtk = "trains.gtk.__main__:main"
 
