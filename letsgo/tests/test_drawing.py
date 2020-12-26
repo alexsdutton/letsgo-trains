@@ -12,7 +12,7 @@ class DrawingTestCase(TestCase):
             offset=(0, 0), scale=3, rail_color=(1, 0, 0), sleeper_color=(0, 1, 0)
         )
         for piece_cls in piece_classes.values():
-            piece = piece_cls()
+            piece = piece_cls(layout=None)
             surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 100, 100)
             ctx = cairo.Context(surface)
             piece.draw(ctx, drawing_options)

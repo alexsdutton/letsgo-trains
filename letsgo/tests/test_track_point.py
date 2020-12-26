@@ -1,6 +1,7 @@
 import unittest
 
 from letsgo.track_point import EndOfTheLine
+from ..layout import Layout
 from ..train import TrackPoint
 from .. import pieces
 
@@ -32,7 +33,8 @@ class TrackPointTestCase(unittest.TestCase):
         self.assertEqual("out", cm.exception.final_anchor_name)
 
     def test_forward_across_one_piece(self):
-        piece, next_piece = pieces.Straight(layout=None), pieces.Curve(layout=None)
+        layout = Layout()
+        piece, next_piece = pieces.Straight(layout=layout), pieces.Curve(layout=layout)
         piece.anchors["out"] += next_piece.anchors["in"]
         track_point = TrackPoint(piece, "in", 3)
         track_point += 20
