@@ -18,7 +18,8 @@ from .. import signals
 
 class HubConfig:
     def __init__(
-        self, *,
+        self,
+        *,
         hub: Hub = None,
         active: bool = False,
         color: ColorNo = None,
@@ -50,8 +51,12 @@ class HubConfig:
                 self._hub.async_disconnect()
         self._hub = hub
         if self._hub:
-            lego_wireless.signals.hub_connected.connect(self.on_hub_connected, sender=self._hub)
-            lego_wireless.signals.hub_disconnected.connect(self.on_hub_disconnected, sender=self._hub)
+            lego_wireless.signals.hub_connected.connect(
+                self.on_hub_connected, sender=self._hub
+            )
+            lego_wireless.signals.hub_disconnected.connect(
+                self.on_hub_disconnected, sender=self._hub
+            )
             if self._active and not hub.connected:
                 hub.async_connect()
         self.updated.send(self)
@@ -80,7 +85,12 @@ class HubConfig:
         if color == self._color:
             return
         self._color = color
-        if color is not None and self._hub and self._hub.connected and self._hub.rgb_light:
+        if (
+            color is not None
+            and self._hub
+            and self._hub.connected
+            and self._hub.rgb_light
+        ):
             self._hub.rgb_light.set_rgb_color_no(color)
         self.updated.send()
 
@@ -101,7 +111,9 @@ class HubConfig:
         self._train = train
 
     def on_hub_connected(self, hub):
-        lego_wireless.signals.hub_battery_level.connect(self.on_hub_battery_level, sender=hub)
+        lego_wireless.signals.hub_battery_level.connect(
+            self.on_hub_battery_level, sender=hub
+        )
         if self.color is not None and hub.rgb_light:
             print("Resetting color")
             hub.rgb_light.set_rgb_color_no(self.color)
@@ -119,10 +131,12 @@ class HubConfig:
 
 
 class PoweredUpController(Controller):
-    label = 'Powered UP'
+    label = "Powered UP"
     controller_for = {Train}
 
-    def __init__(self, adapter_name="hci0", hubs: Dict[str, HubConfig] = None, **kwargs):
+    def __init__(
+        self, adapter_name="hci0", hubs: Dict[str, HubConfig] = None, **kwargs
+    ):
         super().__init__(**kwargs)
         self.hub_manager = lego_wireless.HubManager(adapter_name)
         self.hub_manager_thread = threading.Thread(target=self.hub_manager.run)
@@ -172,6 +186,7 @@ class PoweredUpController(Controller):
         if mac_address not in self.discovered_mac_addresses:
             self.discovered_mac_addresses.add(mac_address)
             self.hub_discovered.send(hub=hub, hub_config=self.hubs[mac_address])
+
     #
     # def on_hub_connected(self, sender, hub):
     #     mac_address = hub.mac_address.lower()
@@ -201,10 +216,11 @@ class PoweredUpController(Controller):
     def to_yaml(self) -> dict:
         return {
             **super().to_yaml(),
-            'hubs': {
+            "hubs": {
                 mac_address: {
-                    'active': hub_config.active,
-                    'color': hub_config.color.name if hub_config.color else None,
-                } for mac_address, hub_config in self.hubs.items()
-            }
+                    "active": hub_config.active,
+                    "color": hub_config.color.name if hub_config.color else None,
+                }
+                for mac_address, hub_config in self.hubs.items()
+            },
         }

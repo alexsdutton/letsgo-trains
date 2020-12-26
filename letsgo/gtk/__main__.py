@@ -3,7 +3,7 @@ import os
 import sys
 import gi
 
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 
 from letsgo.gtk.utils import get_builder
 from letsgo.gtk.window import LayoutWindow
@@ -75,6 +75,7 @@ class Application(Gtk.Application):
         self.window.load_from_filename(files[0].get_path())
         self.do_activate()
 
+
 def main():
     app = Application()
     app.run(sys.argv)
@@ -82,5 +83,6 @@ def main():
 
 if __name__ == "__main__":
     import logging
+
     logging.basicConfig(level=logging.DEBUG)
     main()

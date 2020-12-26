@@ -28,10 +28,11 @@ from letsgo.pieces import FlippablePiece, Piece
 
 logger = logging.getLogger(__name__)
 
+
 class LayoutWindow(Gtk.ApplicationWindow):
     def __new__(cls):
         builder = get_builder()
-        self = builder.get_object('layout-window')
+        self = builder.get_object("layout-window")
         self.__class__ = cls
         self.builder = builder
         return self
@@ -42,7 +43,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
         self.layout_area = self.builder.get_object("layout")
         self.layout = Layout()
 
-        self.builder.get_object('menu-button').set_menu_model(self.create_menu())
+        self.builder.get_object("menu-button").set_menu_model(self.create_menu())
 
         self.create_actions()
         self.connect_signals()
@@ -58,21 +59,33 @@ class LayoutWindow(Gtk.ApplicationWindow):
         # signals.tick.connect(self.topham_hatt.tick)
 
         self.controller_add_menu = Gio.Menu()
-        for name, controller_cls in sorted(controller_classes.items(), key=lambda pair: pair[1].label):
-            self.controller_add_menu.append(controller_cls.label, f'win.controller-add::{name}')
-        self.builder.get_object('controller-add-button').set_menu_model(self.controller_add_menu)
+        for name, controller_cls in sorted(
+            controller_classes.items(), key=lambda pair: pair[1].label
+        ):
+            self.controller_add_menu.append(
+                controller_cls.label, f"win.controller-add::{name}"
+            )
+        self.builder.get_object("controller-add-button").set_menu_model(
+            self.controller_add_menu
+        )
 
         self.controller_box = self.builder.get_object("controller-box")
         self.train_listbox = TrainListBox(self.layout, self.builder)
         self.layout_listbox = LayoutListBox(self.layout, self.builder)
         self.configure_dialog = ConfigureDialog(self.layout, self.builder)
 
-        about_action = Gio.SimpleAction.new('about', None)
-        about_action.connect('activate', lambda action, parameter: self.builder.get_object('about-dialog').run())
-        self.builder.get_object('about-dialog').connect('delete-event', self.hide_about_dialog)
-        self.builder.get_object('about-dialog').connect('response', self.hide_about_dialog)
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect(
+            "activate",
+            lambda action, parameter: self.builder.get_object("about-dialog").run(),
+        )
+        self.builder.get_object("about-dialog").connect(
+            "delete-event", self.hide_about_dialog
+        )
+        self.builder.get_object("about-dialog").connect(
+            "response", self.hide_about_dialog
+        )
         self.add_action(about_action)
-
 
         self.connect("delete-event", self.on_delete_event)
 
@@ -85,64 +98,49 @@ class LayoutWindow(Gtk.ApplicationWindow):
     def create_actions(self):
         self.actions = {
             # Layout actions
-            'layout-new': Gio.SimpleAction.new('layout-new', None),
-            'layout-open': Gio.SimpleAction.new('layout-open', None),
-            'layout-save': Gio.SimpleAction.new('layout-save', None),
-            'layout-save-as': Gio.SimpleAction.new('layout-save-as', None),
-            'layout-details': Gio.SimpleAction.new('layout-details', None),
-
+            "layout-new": Gio.SimpleAction.new("layout-new", None),
+            "layout-open": Gio.SimpleAction.new("layout-open", None),
+            "layout-save": Gio.SimpleAction.new("layout-save", None),
+            "layout-save-as": Gio.SimpleAction.new("layout-save-as", None),
+            "layout-details": Gio.SimpleAction.new("layout-details", None),
             # Piece actions
-            'piece-flip': Gio.SimpleAction.new('piece-flip', None),
-            'piece-rotate': Gio.SimpleAction.new('piece-rotate', GLib.VariantType.new('i')),
-
+            "piece-flip": Gio.SimpleAction.new("piece-flip", None),
+            "piece-rotate": Gio.SimpleAction.new(
+                "piece-rotate", GLib.VariantType.new("i")
+            ),
             # Anchor actions
-            'anchor-split': Gio.SimpleAction.new('anchor-split', None),
-
+            "anchor-split": Gio.SimpleAction.new("anchor-split", None),
             # Selection actions
-            'selection-delete': Gio.SimpleAction.new('selection-delete', None),
-
+            "selection-delete": Gio.SimpleAction.new("selection-delete", None),
             # Controller actions
-            'controller-add': Gio.SimpleAction.new('controller-add', GLib.VariantType.new('s')),
-            'controller-remove': Gio.SimpleAction.new('controller-remove', GLib.VariantType.new('s')),
-
-            'about': Gio.SimpleAction.new('about', None),
+            "controller-add": Gio.SimpleAction.new(
+                "controller-add", GLib.VariantType.new("s")
+            ),
+            "controller-remove": Gio.SimpleAction.new(
+                "controller-remove", GLib.VariantType.new("s")
+            ),
+            "about": Gio.SimpleAction.new("about", None),
         }
-        self.actions['controller-remove'].set_enabled(True)
+        self.actions["controller-remove"].set_enabled(True)
         for action in self.actions.values():
             self.add_action(action)
 
     def connect_signals(self):
         self.connect("window-state-event", self.on_window_state_event)
-        self.actions['layout-new'].connect('activate', self.on_layout_new)
-        self.actions['layout-open'].connect('activate', self.on_layout_open)
-        self.actions['layout-details'].connect(
-            "activate", self.on_configure_clicked
-        )
-        self.actions['layout-save'].connect(
-            "activate", self.on_layout_save
-        )
-        self.actions['layout-save-as'].connect(
-            "activate", self.on_layout_save_as
-        )
-        self.actions['piece-flip'].connect(
-            "activate", self.on_piece_flip
-        )
-        self.actions['anchor-split'].connect(
-            "activate", self.on_anchor_split
-        )
-        self.actions['selection-delete'].connect(
-            "activate", self.on_selection_delete
-        )
-        self.actions['controller-add'].connect(
-            "activate", self.on_controller_add
-        )
-        self.actions['controller-remove'].connect(
-            "activate", self.on_controller_remove
-        )
+        self.actions["layout-new"].connect("activate", self.on_layout_new)
+        self.actions["layout-open"].connect("activate", self.on_layout_open)
+        self.actions["layout-details"].connect("activate", self.on_configure_clicked)
+        self.actions["layout-save"].connect("activate", self.on_layout_save)
+        self.actions["layout-save-as"].connect("activate", self.on_layout_save_as)
+        self.actions["piece-flip"].connect("activate", self.on_piece_flip)
+        self.actions["anchor-split"].connect("activate", self.on_anchor_split)
+        self.actions["selection-delete"].connect("activate", self.on_selection_delete)
+        self.actions["controller-add"].connect("activate", self.on_controller_add)
+        self.actions["controller-remove"].connect("activate", self.on_controller_remove)
         signals.selection_changed.connect(self.on_selection_changed)
         signals.controller_added.connect(self.on_controller_added)
         signals.controller_removed.connect(self.on_controller_removed)
-        self.connect('destroy-event', self.on_destroy)
+        self.connect("destroy-event", self.on_destroy)
 
     def on_controller_add(self, action, parameter):
         controller = controller_classes[parameter.get_string()](layout=self.layout)
@@ -168,11 +166,10 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
     def create_menu(self):
         menu = Gio.Menu()
-        menu.append('Layout details', 'win.layout-details')
-        menu.append('Save _as…', 'win.layout-save-as')
-        menu.append('About', 'win.about')
+        menu.append("Layout details", "win.layout-details")
+        menu.append("Save _as…", "win.layout-save-as")
+        menu.append("About", "win.about")
         return menu
-
 
     def on_layout_new(self, action, parameter):
         self.layout.clear()
@@ -188,10 +185,13 @@ class LayoutWindow(Gtk.ApplicationWindow):
         return True
 
     def on_selection_changed(self, sender, selection):
-        self.actions['piece-flip'].set_enabled(isinstance(selection, FlippablePiece))
-        self.actions['piece-rotate'].set_enabled(isinstance(selection, Piece))
-        self.actions['anchor-split'].set_enabled(isinstance(selection, Anchor))
-        self.actions['selection-delete'].set_enabled(isinstance(selection, Piece) or (isinstance(selection, Anchor) and len(selection == 1)))
+        self.actions["piece-flip"].set_enabled(isinstance(selection, FlippablePiece))
+        self.actions["piece-rotate"].set_enabled(isinstance(selection, Piece))
+        self.actions["anchor-split"].set_enabled(isinstance(selection, Anchor))
+        self.actions["selection-delete"].set_enabled(
+            isinstance(selection, Piece)
+            or (isinstance(selection, Anchor) and len(selection == 1))
+        )
 
     def on_configure_clicked(self, action, parameter):
         if not self.configure_dialog.get_visible():
@@ -209,9 +209,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
         else:
             layout_name = ""
 
-        dialog = Gtk.MessageDialog(
-            parent=self, modal=True, destroy_with_parent=True,
-        )
+        dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True,)
 
         dialog.set_markup(
             f'<span weight="bold" size="larger">Save changes to layout{layout_name} before closing?</span>'
@@ -242,7 +240,6 @@ class LayoutWindow(Gtk.ApplicationWindow):
 
         return response == Gtk.ResponseType.CANCEL
 
-
     # File loading and saving
 
     def on_layout_open(self, action, parameter):
@@ -253,7 +250,6 @@ class LayoutWindow(Gtk.ApplicationWindow):
         supported_file_filter = Gtk.FileFilter()
         supported_file_filter.set_name("All supported files")
         file_chooser.add_filter(supported_file_filter)
-
 
         for parser_cls in parser_classes:
             file_filter = Gtk.FileFilter()
@@ -331,7 +327,6 @@ class LayoutWindow(Gtk.ApplicationWindow):
         else:
             return True
 
-
     # Currently unused
     def on_piece_added(self, sender, piece):
         if isinstance(piece, BasePoints):
@@ -352,7 +347,6 @@ class LayoutWindow(Gtk.ApplicationWindow):
             )
             grid.attach(configure, 2, 0, 1, 2)
             # self.control_listbox.add(grid)
-
 
     def on_control_switch_activated(self, switch, gparam, points):
         points.state = "branch" if switch.get_active() else "out"

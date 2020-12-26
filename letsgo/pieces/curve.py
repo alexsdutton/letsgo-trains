@@ -37,7 +37,11 @@ class BaseCurve(FlippablePiece):
         }
 
     def flip(self: BaseCurve) -> BaseCurve:
-        self.direction = CurveDirection.left if self.direction == CurveDirection.right else CurveDirection.right
+        self.direction = (
+            CurveDirection.left
+            if self.direction == CurveDirection.right
+            else CurveDirection.right
+        )
         self.placement_origin.update_connected_subset_positions()
         return self
 

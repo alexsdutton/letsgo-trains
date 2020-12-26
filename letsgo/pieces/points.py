@@ -39,7 +39,8 @@ class BasePoints(FlippablePiece):
             (16, 0),
             (
                 self.branch_point[0] - math.sin(math.tau * 5 / 16) * 16,
-                self.branch_point[1] + (math.cos(math.tau * 5 / 16) * 16) * self.coordinate_sign,
+                self.branch_point[1]
+                + (math.cos(math.tau * 5 / 16) * 16) * self.coordinate_sign,
             ),
         ]
 
@@ -96,7 +97,9 @@ class BasePoints(FlippablePiece):
                 new_anchor = anchor.split()
                 anchors[anchor_name] = anchor if self not in anchor else new_anchor
         self.layout.remove_piece(self)
-        new_points = self.flip_replace(layout=layout, id=self.id, state=self.state, placement=self.placement)
+        new_points = self.flip_replace(
+            layout=layout, id=self.id, state=self.state, placement=self.placement
+        )
         for anchor_name, anchor in anchors.items():
             new_points.anchors[anchor_name] += anchor
         self.layout.add_piece(new_points)
@@ -105,7 +108,6 @@ class BasePoints(FlippablePiece):
         placement_origin.placement = placement_origin_position
         placement_origin.update_connected_subset_positions()
         return new_points
-
 
     # Drawing
 
@@ -225,7 +227,9 @@ class BasePoints(FlippablePiece):
         return {
             **super().relative_positions(),
             "out": Position(32, 0, 0),
-            "branch": Position(*self.branch_point, math.tau / 16 * self.coordinate_sign),
+            "branch": Position(
+                *self.branch_point, math.tau / 16 * self.coordinate_sign
+            ),
         }
 
     def point_position(self, in_anchor, offset, out_anchor=None):
@@ -271,6 +275,7 @@ class LeftPoints(BasePoints):
 class RightPoints(BasePoints):
     direction = "right"
     label = "points (right)"
+
     @property
     def flip_replace(self):
         return LeftPoints

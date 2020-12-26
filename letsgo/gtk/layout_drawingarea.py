@@ -189,7 +189,6 @@ class LayoutDrawer:
             self.selected_item = next_selected_item
             self.drawing_area.queue_draw()
 
-
     def on_key_press(self, widget, event):
         if event.keyval in (Gdk.KEY_f, Gdk.KEY_F,):
             self.flip_selection()
