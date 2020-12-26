@@ -4,7 +4,6 @@ Sir Topham Hatt, teller of letsgo of where to go
 This module implements automated train control
 """
 import math
-from numbers import Number
 
 from letsgo.pieces.points import BasePoints
 
@@ -17,8 +16,8 @@ class TophamHatt:
         self,
         layout: Layout,
         slow_speed: float = 0.1,
-        stop_before_end_of_the_line: Number = 16,
-        slow_down_distance: Number = 64,
+        stop_before_end_of_the_line: float = 16,
+        slow_down_distance: float = 64,
     ):
         self.layout = layout
         self.slow_speed = slow_speed

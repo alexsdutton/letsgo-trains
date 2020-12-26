@@ -1,3 +1,5 @@
+import typing
+
 from gi.repository import GObject, Gtk
 from letsgo.layout import Layout
 
@@ -95,14 +97,16 @@ class TrainPopover(Gtk.Popover):
     def __new__(cls, builder: Gtk.Builder):
         self = builder.get_object("train-popover")
         self.__class__ = cls
-        self._train: Train = None
+        return self
+
+    def __init__(self, builder: Gtk.Builder):
+        self._train: typing.Optional[Train] = None
         self.pair_button: Gtk.Button = builder.get_object("train-powered-up-pair")
         self.pair_status: Gtk.Label = builder.get_object("train-powered-up-status")
         self.name_entry: Gtk.Entry = builder.get_object("train-name-entry")
         self.pair_button.connect("clicked", self.on_pair_clicked)
         self.name_entry.connect("changed", self.on_name_changed)
         self.connect("closed", self.on_closed)
-        return self
 
     @property
     def train(self):

@@ -5,14 +5,13 @@ from maestro import Maestro
 from maestro.enums import ChannelMode
 from letsgo.sensor import Sensor
 
-from .base import Controller
+from .base import SensorController
 
 __all__ = ["MaestroController"]
 
 
-class MaestroController(Controller):
+class MaestroController(SensorController):
     label = "Maestro servo controller"
-    controller_for = {Sensor}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

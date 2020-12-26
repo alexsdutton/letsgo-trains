@@ -1,23 +1,15 @@
 from __future__ import annotations
 
 import collections
-import weakref
-
 import math
-from numbers import Number
-from typing import Dict, Optional, Set, Tuple, TYPE_CHECKING
+import uuid
+import weakref
+from typing import Dict, Optional, TYPE_CHECKING
 
 import cairo
-import cmath
-import uuid
-
-from letsgo import signals
 
 if TYPE_CHECKING:
-    from letsgo.layout import Layout
     from letsgo.pieces import Piece
-
-from letsgo.registry_meta import WithRegistry
 
 
 class Position:
@@ -25,6 +17,9 @@ class Position:
         self.x = x
         self.y = y
         self.angle = angle
+
+    def __iter__(self):
+        return iter((self.x, self.y, self.angle))
 
     @classmethod
     def from_matrix(cls, matrix: cairo.Matrix):
@@ -88,7 +83,7 @@ class Anchor(dict):
         # self.layout = layout
         self.id = id or str(uuid.uuid4())
         self.position: Optional[Position] = None
-        self.subsumes: Set[Anchor] = weakref.WeakSet()
+        self.subsumes: weakref.WeakSet[Anchor] = weakref.WeakSet()
         # if self._position:
         #     signals.anchor_p
 

@@ -12,8 +12,7 @@ from lego_wireless.hub import Hub
 import lego_wireless
 from letsgo.train import Train
 
-from .base import Controller
-from .. import signals
+from .base import TrainController
 
 
 class HubConfig:
@@ -130,9 +129,8 @@ class HubConfig:
         self.updated.send(self)
 
 
-class PoweredUpController(Controller):
+class PoweredUpController(TrainController):
     label = "Powered UP"
-    controller_for = {Train}
 
     def __init__(
         self, adapter_name="hci0", hubs: Dict[str, HubConfig] = None, **kwargs
@@ -201,17 +199,17 @@ class PoweredUpController(Controller):
     # def on_hub_battery_level(self, sender, battery_level):
     #     pass  # self.trains[sender.mac_address.lower()].battery_level = battery_level
 
-    def set_train_lights(self, train: Train, value: bool):
-        hub = self.train_hubs.get(train)
-        if hub and hub.led_light:
-            hub.led_light.set_brightness(100 if value else 0)
-            return True
+    # def set_train_lights(self, train: Train, value: bool):
+    #     hub = self.train_hubs.get(train)
+    #     if hub and hub.led_light:
+    #         hub.led_light.set_brightness(100 if value else 0)
+    #         return True
 
-    def set_train_motor_speed(self, train: Train, value: float):
-        hub = self.train_hubs.get(train)
-        if hub and hub.train_motor:
-            hub.train_motor.set_speed(int(value * 100))
-            return True
+    # def set_train_motor_speed(self, train: Train, value: float):
+    #     hub = self.train_hubs.get(train)
+    #     if hub and hub.train_motor:
+    #         hub.train_motor.set_speed(int(value * 100))
+    #         return True
 
     def to_yaml(self) -> dict:
         return {

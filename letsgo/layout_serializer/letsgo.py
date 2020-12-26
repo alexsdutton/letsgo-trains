@@ -35,4 +35,4 @@ class LetsGoLayoutSerializer(LayoutSerializer):
         for piece in layout.pieces.values():
             doc["pieces"].append(piece.to_yaml())
 
-        yaml.safe_dump(doc, codecs.getwriter("utf-8")(fp))
+        yaml.safe_dump(doc, codecs.getwriter("utf-8")(fp))  # type: ignore

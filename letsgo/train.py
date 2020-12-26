@@ -1,5 +1,4 @@
 import uuid
-from numbers import Number
 from typing import List
 
 from letsgo.control import Controller

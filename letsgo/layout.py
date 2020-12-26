@@ -211,7 +211,7 @@ class Layout:
         train_seen, train_seen_offset, magnet_index_seen = None, None, None
 
         for train in self.trains.values():
-            car_offset = 0
+            car_offset = 0.0
 
             if train.speed == 0:
                 continue
@@ -289,24 +289,3 @@ class Layout:
         for piece in list(self.pieces.values()):
             self.remove_piece(piece, announce=True)
         self.changed(cleared=True)
-
-
-if __name__ == "__main__":
-    import pkg_resources
-    import yaml
-
-    data = yaml.safe_load(
-        pkg_resources.resource_stream("letsgo", "data/layouts/simple.yaml")
-    )
-    layout = Layout()
-    layout.load_from_yaml(data)
-    for piece in layout.pieces.values():
-        print(piece, piece.anchors)
-
-    print(yaml.dump(layout.to_yaml()))
-
-# piece_1 = track.Straight()
-# piece_2 = track.Curve()
-# piece_1.anchors['out'] += piece_2.anchors['out']
-# piece_3 = track.Points()
-# piece_3.anchors['branch'] += piece_2.anchors['in']

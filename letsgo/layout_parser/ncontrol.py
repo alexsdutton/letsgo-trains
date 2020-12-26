@@ -1,24 +1,20 @@
-import functools
-import xml.etree.ElementTree
-from typing import Type
-
 import math
-from letsgo.pieces.curve import Curve, CurveDirection
-
-from letsgo.track import Position
-
-from letsgo.pieces import LeftPoints, Piece, RightPoints, Straight, piece_classes
+import typing
+import xml.etree.ElementTree
+from typing import Dict, Type, no_type_check
 
 from letsgo.layout import Layout
-
 from letsgo.layout_parser.base import LayoutFileParseException, LayoutParser
+from letsgo.pieces import LeftPoints, Piece, RightPoints, Straight
+from letsgo.pieces.curve import Curve, CurveDirection
+from letsgo.track import Position
 
 
 class NControlLayoutParser(LayoutParser):
     name = "nControl"
     file_extension = ".ncp"
 
-    piece_mapping = {
+    piece_mapping: Dict[str, Type[Piece]] = {
         "TS_STRAIGHT": Straight,
         "TS_LEFTSWITCH": LeftPoints,
         "TS_RIGHTSWITCH": RightPoints,
@@ -34,6 +30,7 @@ class NControlLayoutParser(LayoutParser):
     #     'TS_CURVE': ('out', 'in')
     # }
 
+    @typing.no_type_check
     def parse(self, fp, layout: Layout):
         doc = xml.etree.ElementTree.parse(fp)
         root = doc.getroot()
@@ -46,11 +43,12 @@ class NControlLayoutParser(LayoutParser):
 
         nodes = {
             i: {
-                "x": float(node.find("coordinates").attrib["x"]) / 8,
-                "y": float(node.find("coordinates").attrib["y"]) / 8,
+                "x": float(coordinates.attrib["x"]) / 8,
+                "y": float(coordinates.attrib["y"]) / 8,
                 "anchor": None,
             }
             for i, node in enumerate(root.findall("node"))
+            if (coordinates := node.find("coordinates"))
         }
 
         for segment in root.findall("segment"):

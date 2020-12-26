@@ -3,7 +3,7 @@ from gi.repository import Gtk
 from letsgo.control import Controller
 
 
-class GtkController:
+class GtkController(Gtk.Box):
     entrypoint_group = "letsgo.gtk.controller"
 
     def __init__(self, controller: Controller):

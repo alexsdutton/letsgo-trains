@@ -42,7 +42,8 @@ class BaseCurve(FlippablePiece):
             if self.direction == CurveDirection.right
             else CurveDirection.right
         )
-        self.placement_origin.update_connected_subset_positions()
+        if self.placement_origin:
+            self.placement_origin.update_connected_subset_positions()
         return self
 
     # Drawing

@@ -37,6 +37,7 @@ def get_parser_for_filename(filename) -> Optional[LayoutParser]:
     for parser_cls in parser_classes:
         if parser_cls.file_extension == ext:
             return parser_cls()
+    return None
 
 
 parser_classes = _get_parser_classes()

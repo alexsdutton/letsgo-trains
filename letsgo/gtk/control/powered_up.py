@@ -20,6 +20,8 @@ class _HubFields(enum.IntEnum):
 
 
 class GtkPoweredUpController(GtkController, Gtk.Box):
+    controller: PoweredUpController
+
     def __init__(self, controller: PoweredUpController):
         super().__init__(controller)
         controller.hub_discovered.connect(self.on_hub_discovered)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import Dict, Type
 
 import cairo
 import cmath
@@ -8,7 +8,7 @@ import math
 
 from letsgo.drawing_options import DrawingOptions
 from .base import FlippablePiece, Piece
-from letsgo.track import Bounds, Position
+from letsgo.track import Anchor, Bounds, Position
 
 
 def _bezier(xy1, xy2, xy3, t):
@@ -89,12 +89,12 @@ class BasePoints(FlippablePiece):
         raise NotImplementedError
 
     def flip(self: BasePoints) -> BasePoints:
-        layout, placement_origin = self.layout, self.placement_origin
-        placement_origin_position = self.placement_origin.position
-        anchors = {}
+        layout = self.layout
+        anchors: Dict[str, Anchor] = {}
         for anchor_name, anchor in self.anchors.items():
             if len(anchor) > 1:
                 new_anchor = anchor.split()
+                assert new_anchor  # anchor.split() is not None if len(anchor) > 1
                 anchors[anchor_name] = anchor if self not in anchor else new_anchor
         self.layout.remove_piece(self)
         new_points = self.flip_replace(
@@ -103,10 +103,11 @@ class BasePoints(FlippablePiece):
         for anchor_name, anchor in anchors.items():
             new_points.anchors[anchor_name] += anchor
         self.layout.add_piece(new_points)
-        if placement_origin == self:
-            placement_origin = new_points
-        placement_origin.placement = placement_origin_position
-        placement_origin.update_connected_subset_positions()
+        if self.placement_origin and self.placement_origin.position:
+            if self.placement_origin == self:
+                placement_origin = new_points
+            placement_origin.placement = self.placement_origin.position
+            placement_origin.update_connected_subset_positions()
         return new_points
 
     # Drawing

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Any, Dict, Optional, Union
 
 import cairo
 import math
@@ -30,8 +30,8 @@ class LayoutDrawer:
     keyboard_piece_placement = {
         Gdk.KEY_q: pieces.Curve,
         Gdk.KEY_w: pieces.Straight,
-        Gdk.KEY_e: lambda *args, **kwargs: pieces.Curve(
-            *args, direction=CurveDirection.right, **kwargs
+        Gdk.KEY_e: lambda *, layout: pieces.Curve(
+            layout=layout, direction=CurveDirection.right
         ),
         Gdk.KEY_a: pieces.LeftPoints,
         Gdk.KEY_s: pieces.Crossover,
@@ -64,8 +64,8 @@ class LayoutDrawer:
         self.drawing_options = DrawingOptions(
             offset=(0, 0),
             scale=3,
-            rail_color=Colors.dark_bluish_gray,
-            sleeper_color=Colors.tan,
+            rail_color=Colors.dark_bluish_gray.rgb,
+            sleeper_color=Colors.tan.rgb,
         )
 
         self.highlight_drawing_options = DrawingOptions(
@@ -78,7 +78,7 @@ class LayoutDrawer:
         self.offset_orig = None
         self.mouse_down = None
         self.layout = layout
-        self.last_layout_state = None
+        self.last_layout_state: Optional[Dict[str, Any]] = None
 
         self.highlight_item: Union[None, Piece, Anchor] = None
         self._selected_item: Union[None, Piece, Anchor] = None
@@ -362,7 +362,7 @@ class LayoutDrawer:
             self.draw_piece(self.highlight_item, cr, self.highlight_drawing_options)
         if isinstance(self.selected_item, Piece):
             self.draw_piece(self.selected_item, cr, self.highlight_drawing_options)
-        elif isinstance(self.selected_item, Anchor):
+        elif isinstance(self.selected_item, Anchor) and self.selected_item.position:
             cr.arc(
                 self.selected_item.position.x,
                 self.selected_item.position.y,
@@ -456,12 +456,13 @@ class LayoutDrawer:
             self.draw_sensor(sensor, layout, cr)
 
     def draw_sensor(self, sensor: Sensor, layout: Layout, cr: Context):
-        piece = sensor.position.piece
-        px, py, angle = piece.point_position(
+        if not (sensor.position and sensor.position.piece.position):
+            return
+        px, py, angle = sensor.position.piece.point_position(
             sensor.position.anchor_name, sensor.position.offset
         )
         cr.save()
-        position_matrix = piece.position.as_matrix()
+        position_matrix = sensor.position.piece.position.as_matrix()
         cr.translate(*position_matrix.transform_point(px, py))
         cr.rotate(math.atan2(*position_matrix.transform_distance(0, 1)) - angle)
 

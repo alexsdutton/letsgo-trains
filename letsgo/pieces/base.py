@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-from numbers import Number
 from typing import Dict, Iterable, Optional, Tuple, TYPE_CHECKING
 
 
@@ -44,7 +42,7 @@ class Piece(WithRegistry):
         """An explicit placement of this piece"""
         self._placement_origin = self if placement else None
         """The piece controlling the placement of this connected subset of the network"""
-        self._position = None
+        self._position: Optional[Position] = None
         self.position = placement
         """The inferred position of this piece"""
 
@@ -123,7 +121,7 @@ class Piece(WithRegistry):
     def relative_positions(self) -> Dict[str, Position]:
         return {self.anchor_names[0]: Position(0, 0, math.pi)}
 
-    def traversals(self, anchor_from: str) -> Dict[str, Tuple[Number, bool]]:
+    def traversals(self, anchor_from: str) -> Dict[str, Tuple[float, bool]]:
         raise NotImplementedError
 
     def available_traversal(self, anchor_name):
@@ -135,6 +133,9 @@ class Piece(WithRegistry):
         raise NotImplementedError
 
     def draw(self, cr: Context, drawing_options: DrawingOptions):
+        raise NotImplementedError
+
+    def point_position(self, in_anchor: str, offset: float) -> Position:
         raise NotImplementedError
 
     @classmethod

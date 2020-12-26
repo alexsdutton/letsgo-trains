@@ -37,6 +37,7 @@ def get_serializer_for_filename(filename) -> Optional[LayoutSerializer]:
     for serializer_cls in serializer_classes:
         if serializer_cls.file_extension == ext:
             return serializer_cls()
+    return None
 
 
 serializer_classes = _get_serializer_classes()
