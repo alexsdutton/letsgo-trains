@@ -71,8 +71,15 @@ class LayoutDrawer:
         self.highlight_drawing_options = DrawingOptions(
             offset=self.drawing_options.offset,
             scale=self.drawing_options.scale,
-            rail_color=(0.2, 0.2, 1),
-            sleeper_color=(0.2, 0.2, 1),
+            rail_color=(0.5, 0.5, 1),
+            sleeper_color=(0.5, 0.5, 1),
+        )
+
+        self.selection_drawing_options = DrawingOptions(
+            offset=self.drawing_options.offset,
+            scale=self.drawing_options.scale,
+            rail_color=(0.1, 0.1, 1),
+            sleeper_color=(0.1, 0.1, 1),
         )
 
         self.offset_orig = None
@@ -367,7 +374,7 @@ class LayoutDrawer:
         if isinstance(self.highlight_item, Piece):
             self.draw_piece(self.highlight_item, cr, self.highlight_drawing_options)
         if isinstance(self.selected_item, Piece):
-            self.draw_piece(self.selected_item, cr, self.highlight_drawing_options)
+            self.draw_piece(self.selected_item, cr, self.selection_drawing_options)
         elif isinstance(self.selected_item, Anchor) and self.selected_item.position:
             cr.arc(
                 self.selected_item.position.x,
