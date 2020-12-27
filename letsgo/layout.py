@@ -15,7 +15,7 @@ from letsgo.pieces.points import BasePoints
 from letsgo.track import Anchor, Position
 
 from letsgo import track
-from letsgo.control import Controller
+from letsgo.control import Controller, SensorController, TrainController
 from letsgo.pieces import piece_classes, Piece
 from letsgo.routeing import Stop, Itinerary
 from letsgo.sensor import Sensor
@@ -72,6 +72,16 @@ class Layout:
             Station: self.stations,
             Itinerary: self.itineraries,
             Controller: self.controllers,
+            SensorController: {
+                k: v
+                for k, v in self.controllers.items()
+                if isinstance(v, SensorController)
+            },
+            TrainController: {
+                k: v
+                for k, v in self.controllers.items()
+                if isinstance(v, TrainController)
+            },
             Sensor: self.sensors,
         }
 

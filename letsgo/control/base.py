@@ -2,7 +2,7 @@ import threading
 
 from letsgo.registry_meta import WithRegistry
 
-__all__ = ["Controller"]
+__all__ = ["Controller", "SensorController", "TrainController"]
 
 
 class Controller(WithRegistry):

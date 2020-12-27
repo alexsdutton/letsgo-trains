@@ -3,7 +3,6 @@ import time
 
 from maestro import Maestro
 from maestro.enums import ChannelMode
-from letsgo.sensor import Sensor
 
 from .base import SensorController
 

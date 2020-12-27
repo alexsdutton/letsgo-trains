@@ -28,11 +28,9 @@ class LetsGoLayoutSerializer(LayoutSerializer):
             doc["sensors"].append(sensor.to_yaml())
         for train in layout.trains.values():
             doc["trains"].append(train.to_yaml())
-        for sensor in layout.sensors.values():
-            doc["sensors"].append(sensor.to_yaml())
         for station in layout.stations.values():
             doc["station"].append(station.to_yaml())
         for piece in layout.pieces.values():
             doc["pieces"].append(piece.to_yaml())
 
-        yaml.safe_dump(doc, codecs.getwriter("utf-8")(fp))  # type: ignore
+        yaml.safe_dump(doc, codecs.getwriter("utf-8")(fp), sort_keys=False)  # type: ignore

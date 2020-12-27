@@ -1,18 +1,18 @@
+import logging
 import threading
+import typing
 from typing import Dict
 
 import blinker
-import typing
-
-import lego_wireless.signals
-from lego_wireless.enums import ColorNo
-
-from lego_wireless.hub import Hub
 
 import lego_wireless
+import lego_wireless.signals
+from lego_wireless.enums import ColorNo
+from lego_wireless.hub import Hub
 from letsgo.train import Train
-
 from .base import TrainController
+
+logger = logging.getLogger(__name__)
 
 
 class HubConfig:
@@ -159,16 +159,22 @@ class PoweredUpController(TrainController):
     def start(self):
         try:
             if self.hub_manager.is_adapter_powered:
+                logger.info("Starting Powered UP controller")
                 self.device_present.set()
                 self.hub_manager.start_discovery()
                 self.hub_manager_thread.start()
                 for device in self.hub_manager.devices():
                     pass
-                    # self.hub_manager.device_discovered(device)
+            else:
+                logger.warning(
+                    "Attempted to start Powered UP controller, but Bluetooth adapter not powered"
+                )
+                # self.hub_manager.device_discovered(device)
         except:
             pass
 
     def stop(self):
+        logger.info("Stopping Powered Up controller")
         self.hub_manager.stop()
 
     def register_train(self, train, mac_address):
@@ -176,6 +182,7 @@ class PoweredUpController(TrainController):
         train.connected = False
 
     def on_hub_discovered(self, sender, hub):
+        logger.info("Powered UP hub discovered: %r", hub)
         mac_address = hub.mac_address.lower()
         if mac_address not in self.hubs:
             self.hubs[mac_address] = HubConfig(hub=hub)

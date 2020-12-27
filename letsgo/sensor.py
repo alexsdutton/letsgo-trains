@@ -1,14 +1,14 @@
 import time
 
 from letsgo import signals
-from letsgo.control import Controller
 from letsgo.control.base import SensorController
 from letsgo.registry_meta import WithRegistry
-from letsgo.track import Position
 from letsgo.track_point import TrackPoint
 
 
 class Sensor(WithRegistry):
+    entrypoint_group = "letsgo.sensor"
+
     def __init__(
         self,
         position: TrackPoint,
@@ -25,19 +25,14 @@ class Sensor(WithRegistry):
         self._activated = False
         super().__init__(**kwargs)
 
-    def serialize(self):
-        data = {
-            **super().serialize(),
+    def to_yaml(self) -> dict:
+        return {
+            **super().to_yaml(),
+            "position": self.position.to_yaml(),
+            "controller_id": self.controller.id,
+            "controller_parameters": self.controller_parameters,
             "single_direction": self.single_direction,
         }
-        if self.controller:
-            data.update(
-                {
-                    "controller_id": self.controller.id,
-                    "controller_parameters": self.controller_parameters,
-                }
-            )
-        return data
 
     @property
     def activated(self):
@@ -53,4 +48,4 @@ class Sensor(WithRegistry):
 
 
 class HallEffectSensor(Sensor):
-    registry_type = "hall"
+    pass

@@ -1,0 +1,108 @@
+meta: {}
+controllers:
+  - id: 4b872e42-dac4-46a3-b16a-ee905f4c67d5
+    type: powered-up
+    hubs:
+      01:23:45:67:89:ab:
+        active: true
+        color: Orange
+  - id: dd5fa65f-6775-4793-9535-b43182dd1855
+    type: maestro
+sensors:
+  - id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
+    type: hall-effect
+    position:
+      piece_id: 834c352c-cfce-4522-86b6-792f16303885
+      anchor_name: in
+      offset: 8
+    controller_id: dd5fa65f-6775-4793-9535-b43182dd1855
+    controller_parameters:
+      index: 0
+    single_direction: true
+trains: []
+stations: []
+pieces:
+- id: 834c352c-cfce-4522-86b6-792f16303885
+  type: curve
+  anchors:
+    in: a434ad2e-ae4a-4379-8bfc-e7ab1044f90d
+    out: 1b5651b5-c134-4da7-9834-49cee53edc1e
+  placement:
+    x: 0.0
+    y: 40.0
+    angle: 0
+- id: a410ccbe-9c81-4af0-a18a-fb234d72ccca
+  type: curve
+  anchors:
+    in: 1b5651b5-c134-4da7-9834-49cee53edc1e
+    out: ffe34e13-5c3b-4db3-abb1-79ca8a5114f8
+- id: 9e91d0c9-680e-4e0d-871d-758b8f44d20b
+  type: curve
+  anchors:
+    in: ffe34e13-5c3b-4db3-abb1-79ca8a5114f8
+    out: 34188cac-7b05-4d6b-90e1-edb646bc7f02
+- id: a2f26641-8927-4cdf-9d18-23745ee8b133
+  type: curve
+  anchors:
+    in: 34188cac-7b05-4d6b-90e1-edb646bc7f02
+    out: b8f9dcef-8d04-4017-b9f1-ce3d4db1b84c
+- id: bd3b9cc5-9286-4143-a9c2-0019be291b14
+  type: curve
+  anchors:
+    in: b8f9dcef-8d04-4017-b9f1-ce3d4db1b84c
+    out: b5ec11ae-8b81-4b25-af2e-c2dfbf653ad5
+- id: 5386f6b8-d676-40b6-bcb4-8878068eae69
+  type: curve
+  anchors:
+    in: b5ec11ae-8b81-4b25-af2e-c2dfbf653ad5
+    out: c1d6ae9e-98fc-494c-a36a-3a9100ced38e
+- id: bbbb11fc-d888-4ef1-b4f8-aad4bc7b16b8
+  type: curve
+  anchors:
+    in: c1d6ae9e-98fc-494c-a36a-3a9100ced38e
+    out: 49a10994-5bf0-4cbd-90dc-0ba9fedeaab9
+- id: abc7b35e-e2b7-41ab-bc19-3ec30d93717c
+  type: curve
+  anchors:
+    in: 49a10994-5bf0-4cbd-90dc-0ba9fedeaab9
+    out: 2c3bda22-fa86-497f-8719-5a8e83f95c5a
+- id: 508e414a-6f7c-49f3-a782-da3d0723118a
+  type: curve
+  anchors:
+    in: 2c3bda22-fa86-497f-8719-5a8e83f95c5a
+    out: 01d7c981-c23d-474f-b1fc-4fe3511e4e27
+- id: 1d3fba15-cffc-4d61-9a63-d5c82a3ce197
+  type: curve
+  anchors:
+    in: 01d7c981-c23d-474f-b1fc-4fe3511e4e27
+    out: e70c6b60-1a41-4837-be29-e87ecee654e2
+- id: c5a19484-4019-453c-b9e4-3bfde660b9b4
+  type: curve
+  anchors:
+    in: e70c6b60-1a41-4837-be29-e87ecee654e2
+    out: b79fab6c-8ddc-4805-aa8d-cc3a64f01f4d
+- id: 5b77e603-dc29-4af9-b540-9dc09e69a350
+  type: curve
+  anchors:
+    in: b79fab6c-8ddc-4805-aa8d-cc3a64f01f4d
+    out: 328035c7-719f-47aa-8f38-c30a7665550e
+- id: d131eb92-1b3c-457e-b195-8f22d350d540
+  type: curve
+  anchors:
+    in: 328035c7-719f-47aa-8f38-c30a7665550e
+    out: 2ff85e39-0053-4f8c-b818-c5a199a12ec7
+- id: 925b33a6-2e61-4171-8626-812e6369a49f
+  type: curve
+  anchors:
+    in: 2ff85e39-0053-4f8c-b818-c5a199a12ec7
+    out: 73d108cb-3ea5-45f9-8210-297acea62dc8
+- id: 6bf13e85-6046-4d73-ab16-47fb54960f55
+  type: curve
+  anchors:
+    in: 73d108cb-3ea5-45f9-8210-297acea62dc8
+    out: 01448c61-34e2-499f-963a-e5b6f688b3d3
+- id: 52a9811d-6ed9-4451-b7de-83a775b4cae7
+  type: curve
+  anchors:
+    in: 01448c61-34e2-499f-963a-e5b6f688b3d3
+    out: a434ad2e-ae4a-4379-8bfc-e7ab1044f90d

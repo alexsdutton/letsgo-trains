@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import functools
 import importlib
 import inspect
@@ -22,7 +23,7 @@ class WithRegistryMeta(type):
             return cls._entrypoint_name
         except AttributeError:
             for ep in pkg_resources.iter_entry_points(cls.entrypoint_group):
-                if ep.load() is cls:
+                if ep.load() in cls.__mro__:
                     cls._entrypoint_name: str = ep.name
                     return cls._entrypoint_name
         raise AttributeError(
@@ -51,7 +52,7 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
     if isinstance(type_hint, type) and isinstance(obj, type_hint):
         return obj
 
-    if getattr(type_hint, "__origin__", None) == typing.Dict:
+    if getattr(type_hint, "__origin__", None) in (typing.Dict, dict):
         key_type_hint, value_type_hint = type_hint.__args__
         assert isinstance(obj, dict)
         for key, value in obj.items():
@@ -61,9 +62,9 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
                 del obj[key]
             else:
                 obj[key] = cast_to_type_hint(layout, value, value_type_hint)
-    elif getattr(type_hint, "__origin__", None) == typing.List:
+    elif getattr(type_hint, "__origin__", None) == (typing.List, list):
         raise NotImplementedError
-    elif getattr(type_hint, "__origin__", None) == typing.Tuple:
+    elif getattr(type_hint, "__origin__", None) == (typing.Tuple, tuple):
         raise NotImplementedError
     elif isinstance(type_hint, type) and isinstance(obj, dict):
         cls = type_hint
@@ -85,13 +86,11 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
                 get_type_hints(supercls.__init__, mod_globals)  # type: ignore
             )
 
-        for key, value in obj.items():
-            if key not in type_hints:
-                continue
-            if isinstance(key, str) and key.endswith("_id"):
-                obj[key[:-3]] = layout.collections[type_hints[key]][value]
+        for key, value in list(obj.items()):
+            if isinstance(key, str) and key.endswith("_id") and key[:-3] in type_hints:
+                obj[key[:-3]] = layout.collections[type_hints[key[:-3]]][value]
                 del obj[key]
-            else:
+            elif key in type_hints:
                 obj[key] = cast_to_type_hint(layout, value, type_hints[key])
 
         constructor = getattr(type_hint, "from_yaml", type_hint)
@@ -102,11 +101,14 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
             constructor = functools.partial(constructor, layout=layout)
 
         if isinstance(obj, dict):
+            print(constructor, obj)
             obj = constructor(**obj)
         else:
             obj = constructor(obj)
+    elif issubclass(type_hint, enum.Enum):
+        # Enums are by name, not value
+        obj = type_hint[obj]
     elif isinstance(type_hint, type):
-        # for e.g. enums
         obj = type_hint(obj)
 
     return obj
@@ -146,13 +148,11 @@ class WithRegistry(metaclass=WithRegistryMeta):
 
             type_hints.update(get_type_hints(supercls.__init__, mod_globals))
 
-        for key, value in obj.items():
-            if key not in type_hints:
-                continue
-            if isinstance(key, str) and key.endswith("_id"):
-                obj[key[:-3]] = layout.collections[type_hints[key]][value]
+        for key, value in list(obj.items()):
+            if isinstance(key, str) and key.endswith("_id") and key[:-3] in type_hints:
+                obj[key[:-3]] = layout.collections[type_hints[key[:-3]]][value]
                 del obj[key]
-            else:
+            elif key in type_hints:
                 obj[key] = cast_to_type_hint(layout, value, type_hints[key])
 
         return obj
@@ -160,7 +160,12 @@ class WithRegistry(metaclass=WithRegistryMeta):
     @classmethod
     def from_yaml(cls, layout, /, **data):
         entrypoint_name = data.pop("type")
-        actual_cls = next(
-            pkg_resources.iter_entry_points(cls.entrypoint_group, entrypoint_name)
-        ).load()
+        try:
+            actual_cls = next(
+                pkg_resources.iter_entry_points(cls.entrypoint_group, entrypoint_name)
+            ).load()
+        except StopIteration as e:
+            raise ValueError(
+                f"Couldn't find entrypoint {entrypoint_name} in group {cls.entrypoint_group}"
+            ) from e
         return actual_cls(layout=layout, **actual_cls.cast_yaml_data(layout, **data))

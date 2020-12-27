@@ -31,7 +31,7 @@ class TrackPoint:
         self.branch_decisions = branch_decisions or {}
         self.train = train
 
-    def serialize(self):
+    def to_yaml(self):
         return {
             "piece_id": self.piece.id,
             "anchor_name": self.anchor_name,

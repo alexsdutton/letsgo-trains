@@ -7,6 +7,7 @@ from letsgo.layout import Layout
 from letsgo.layout_parser import LayoutParser
 from letsgo.pieces import Piece, piece_classes
 from letsgo.pieces.curve import CurveDirection
+from letsgo.sensor import Sensor
 from letsgo.track import Anchor, Position
 
 
@@ -27,6 +28,10 @@ class LetsGoLayoutParser(LayoutParser):
         for controller_data in doc.get("controllers", ()):
             controller = Controller.from_yaml(layout, **controller_data)
             layout.add_controller(controller)
+
+        for sensor_data in doc.get("sensors", ()):
+            sensor = Sensor.from_yaml(layout, **sensor_data)
+            layout.add_sensor(sensor)
 
         # for station_object in yaml.get('stations', []):
         #     platforms = []
