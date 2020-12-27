@@ -62,8 +62,8 @@ class LayoutListBox(Gtk.IconView):
         drawing_options = DrawingOptions(
             offset=(0, 0),
             scale=3,
-            rail_color=Colors.dark_bluish_gray,
-            sleeper_color=Colors.tan,
+            rail_color=Colors.dark_bluish_gray.rgb,
+            sleeper_color=Colors.tan.rgb,
         )
 
         for piece_id, piece_cls in sorted(
