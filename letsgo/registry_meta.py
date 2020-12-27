@@ -10,8 +10,24 @@ from typing import TYPE_CHECKING, get_type_hints
 import pkg_resources
 import typing
 
+
 if TYPE_CHECKING:
     from letsgo.layout import Layout
+
+
+def is_optional(type_hint):
+    return (
+        getattr(type_hint, "__origin__", None) == typing.Union
+        and len(type_hint.__args__) == 2
+        and type_hint.__args__[1] is type(None)
+    )
+
+
+def resolve_optional(type_hint):
+    if is_optional(type_hint):
+        return type_hint.__args__[0]
+    else:
+        return type_hint
 
 
 class WithRegistryMeta(type):
@@ -36,15 +52,12 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
     from letsgo.track import Position
     from letsgo.track import Anchor
     from letsgo.track_point import TrackPoint
+    from letsgo.sensor import Sensor
 
     if not type_hint:
         return obj
 
-    if (
-        getattr(type_hint, "__origin__", None) == typing.Union
-        and len(type_hint.__args__) == 2
-        and type_hint.__args__[1] is type(None)
-    ):
+    if is_optional(type_hint):
         if obj is None:
             return None
         type_hint = type_hint.__args__[0]
@@ -80,6 +93,7 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
                 "Position": Position,
                 "Anchor": Anchor,
                 "TrackPoint": TrackPoint,
+                "Sensor": Sensor,
             }
 
             type_hints.update(
@@ -88,7 +102,8 @@ def cast_to_type_hint(layout: Layout, obj, type_hint):
 
         for key, value in list(obj.items()):
             if isinstance(key, str) and key.endswith("_id") and key[:-3] in type_hints:
-                obj[key[:-3]] = layout.collections[type_hints[key[:-3]]][value]
+                arg_type_hint = resolve_optional(type_hints[key[:-3]])
+                obj[key[:-3]] = layout.collections[arg_type_hint][value]
                 del obj[key]
             elif key in type_hints:
                 obj[key] = cast_to_type_hint(layout, value, type_hints[key])
@@ -133,18 +148,24 @@ class WithRegistry(metaclass=WithRegistryMeta):
         from letsgo.track import Position
         from letsgo.track import Anchor
         from letsgo.track_point import TrackPoint
+        from letsgo.sensor import Sensor
 
         type_hints = {}
         for supercls in reversed(cls.__mro__[:-1]):  # ignore <class 'object'>
-            mod_globals = {
-                # 'typing': typing,
-                # **typing.__dict__,
-                **supercls.__init__.__globals__,
-                "Layout": Layout,
-                "Position": Position,
-                "Anchor": Anchor,
-                "TrackPoint": TrackPoint,
-            }
+
+            try:
+                mod_globals = {
+                    # 'typing': typing,
+                    # **typing.__dict__,
+                    **supercls.__init__.__globals__,
+                    "Layout": Layout,
+                    "Position": Position,
+                    "Anchor": Anchor,
+                    "TrackPoint": TrackPoint,
+                    "Sensor": Sensor,
+                }
+            except AttributeError:
+                continue  # Base classes without an explicit __init__ don't have __globals__
 
             type_hints.update(get_type_hints(supercls.__init__, mod_globals))
 
@@ -159,6 +180,8 @@ class WithRegistry(metaclass=WithRegistryMeta):
 
     @classmethod
     def from_yaml(cls, layout, /, **data):
+        if "type" not in data:
+            breakpoint()
         entrypoint_name = data.pop("type")
         try:
             actual_cls = next(

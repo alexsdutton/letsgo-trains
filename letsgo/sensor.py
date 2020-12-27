@@ -1,26 +1,16 @@
 import time
 
 from letsgo import signals
-from letsgo.control.base import SensorController
+from letsgo.control.base import Controllable, SensorController
 from letsgo.registry_meta import WithRegistry
 from letsgo.track_point import TrackPoint
 
 
-class Sensor(WithRegistry):
+class Sensor(Controllable, WithRegistry):
     entrypoint_group = "letsgo.sensor"
 
-    def __init__(
-        self,
-        position: TrackPoint,
-        controller: SensorController,
-        controller_parameters: dict = None,
-        single_direction: bool = False,
-        **kwargs
-    ):
+    def __init__(self, position: TrackPoint, single_direction: bool = False, **kwargs):
         self.position = position
-        self.controller = controller
-        self.controller_parameters = controller_parameters or {}
-        self.controller.register_sensor(self, **self.controller_parameters)
         self.single_direction = single_direction
         self._activated = False
         super().__init__(**kwargs)
@@ -29,8 +19,6 @@ class Sensor(WithRegistry):
         return {
             **super().to_yaml(),
             "position": self.position.to_yaml(),
-            "controller_id": self.controller.id,
-            "controller_parameters": self.controller_parameters,
             "single_direction": self.single_direction,
         }
 

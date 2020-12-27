@@ -25,13 +25,13 @@ class LetsGoLayoutParser(LayoutParser):
             piece = Piece.from_yaml(layout, **piece_data)
             layout.add_piece(piece, announce=False)
 
-        for controller_data in doc.get("controllers", ()):
-            controller = Controller.from_yaml(layout, **controller_data)
-            layout.add_controller(controller)
-
         for sensor_data in doc.get("sensors", ()):
             sensor = Sensor.from_yaml(layout, **sensor_data)
             layout.add_sensor(sensor)
+
+        for controller_data in doc.get("controllers", ()):
+            controller = Controller.from_yaml(layout, **controller_data)
+            layout.add_controller(controller)
 
         # for station_object in yaml.get('stations', []):
         #     platforms = []

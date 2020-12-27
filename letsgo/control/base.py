@@ -1,8 +1,38 @@
+from __future__ import annotations
+
 import threading
+from typing import Optional
 
 from letsgo.registry_meta import WithRegistry
 
 __all__ = ["Controller", "SensorController", "TrainController"]
+
+
+class BinaryControl:
+    pass
+
+
+class Controllable:
+    _controller = None
+    _controller_kwargs = None
+
+    @property
+    def controller(self):
+        return self._controller
+
+    @property
+    def controller_kwarg(self):
+        return self._controller_kwargs
+
+    def set_controller(self, controller: Optional[Controller], **kwargs):
+        if self._controller:
+            raise ValueError("Controller must be unset first")
+        if controller:
+            self._controller = controller
+            self._controller_kwargs = kwargs
+        else:
+            self._controller = None
+            self._controller_kwargs = None
 
 
 class Controller(WithRegistry):

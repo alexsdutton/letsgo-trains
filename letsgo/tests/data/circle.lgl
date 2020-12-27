@@ -1,4 +1,12 @@
 meta: {}
+sensors:
+  - id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
+    type: hall-effect
+    position:
+      piece_id: 834c352c-cfce-4522-86b6-792f16303885
+      anchor_name: in
+      offset: 8
+    single_direction: true
 controllers:
   - id: 4b872e42-dac4-46a3-b16a-ee905f4c67d5
     type: powered-up
@@ -8,17 +16,9 @@ controllers:
         color: Orange
   - id: dd5fa65f-6775-4793-9535-b43182dd1855
     type: maestro
-sensors:
-  - id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
-    type: hall-effect
-    position:
-      piece_id: 834c352c-cfce-4522-86b6-792f16303885
-      anchor_name: in
-      offset: 8
-    controller_id: dd5fa65f-6775-4793-9535-b43182dd1855
-    controller_parameters:
-      index: 0
-    single_direction: true
+    channels:
+      0:
+        sensor_id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
 trains: []
 stations: []
 pieces:
