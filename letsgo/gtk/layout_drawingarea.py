@@ -91,6 +91,7 @@ class LayoutDrawer:
         self._selected_item: Union[None, Piece, Anchor] = None
 
         signals.tick.connect(self.tick)
+        signals.layout_changed.connect(self.on_layout_changed)
 
     @property
     def selected_item(self):
@@ -133,6 +134,9 @@ class LayoutDrawer:
             self.drawing_area.queue_draw()
         elif self.highlight_item != previous_highlight_item:
             self.drawing_area.queue_draw()
+
+    def on_layout_changed(self, sender, cleared):
+        self.drawing_area.queue_draw()
 
     def on_drag_motion(self, widget, drag_context, x, y, time):
         pass
