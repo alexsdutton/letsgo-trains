@@ -255,9 +255,10 @@ class LayoutDrawer:
                 self.drawing_options = self.drawing_options.replace(
                     scale=self.drawing_options.scale / 0.8
                 )
-            # elif event.direction == Gdk.ScrollDirection.SMOOTH:
-            #     self.drawing_options = self.drawing_options.replace(scale=self.drawing_options.scale / 0.8)
-            #     dx, dy = - 20 * event.delta_x / self.drawing_options.scale, - 20 * event.delta_y / self.drawing_options.scale
+            elif event.direction == Gdk.ScrollDirection.SMOOTH:
+                self.drawing_options = self.drawing_options.replace(
+                    scale=self.drawing_options.scale * (1.05 ** event.delta_y)
+                )
             else:
                 return
         else:
