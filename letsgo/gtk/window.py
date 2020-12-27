@@ -190,7 +190,7 @@ class LayoutWindow(Gtk.ApplicationWindow):
         self.actions["anchor-split"].set_enabled(isinstance(selection, Anchor))
         self.actions["selection-delete"].set_enabled(
             isinstance(selection, Piece)
-            or (isinstance(selection, Anchor) and len(selection == 1))
+            or (isinstance(selection, Anchor) and len(selection) == 1)
         )
 
     def on_configure_clicked(self, action, parameter):
