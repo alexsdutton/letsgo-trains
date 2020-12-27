@@ -114,6 +114,7 @@ class LayoutDrawer:
 
     def mouse_motion(self, widget, event):
         x, y = self.xy_to_layout(event.x, event.y)
+        previous_highlight_item = self.highlight_item
         self.highlight_item = self.get_item_under_cursor(event)
         if self.mouse_down:
             self.drawing_options = self.drawing_options.replace(
@@ -122,6 +123,8 @@ class LayoutDrawer:
                     self.offset_orig[1] + event.y - self.mouse_down[1],
                 )
             )
+            self.drawing_area.queue_draw()
+        elif self.highlight_item != previous_highlight_item:
             self.drawing_area.queue_draw()
 
     def on_drag_motion(self, widget, drag_context, x, y, time):
@@ -166,7 +169,10 @@ class LayoutDrawer:
 
     def flip_selection(self):
         if isinstance(self.selected_item, FlippablePiece):
+            original_selected_item = self.selected_item
             self.selected_item = self.selected_item.flip()
+            if self.highlight_item == original_selected_item:
+                self.highlight_item = self.selected_item
             self.layout.changed()
 
     def split_selection(self):
