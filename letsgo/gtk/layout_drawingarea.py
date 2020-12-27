@@ -158,25 +158,26 @@ class LayoutDrawer:
             y = 8 * ((y + 4) // 8)
             piece = piece_cls(layout=self.layout, placement=Position(x, y, angle=0))
 
-        for anchor in piece.anchors.values():
-            epsilon = 0.0001
-            for other_anchor in self.layout.anchors_qtree.intersect(
-                (
-                    anchor.position.x - epsilon,
-                    anchor.position.y - epsilon,
-                    anchor.position.x + epsilon,
-                    anchor.position.y + epsilon,
-                )
-            ):
-                if (
-                    anchor != other_anchor
-                    and len(anchor) == 1
-                    and len(other_anchor) == 1
-                ):
-                    other_anchor += anchor
-                    break
-
+        self.connect_coincident_anchors(piece)
         self.layout.add_piece(piece)
+
+    def connect_coincident_anchors(self, piece: Piece):
+        for anchor in piece.anchors.values():
+            self.connect_coincident_anchor(anchor)
+
+    def connect_coincident_anchor(self, anchor: Anchor):
+        epsilon = 0.0001
+        for other_anchor in self.layout.anchors_qtree.intersect(
+            (
+                anchor.position.x - epsilon,
+                anchor.position.y - epsilon,
+                anchor.position.x + epsilon,
+                anchor.position.y + epsilon,
+            )
+        ):
+            if anchor != other_anchor and len(anchor) == 1 and len(other_anchor) == 1:
+                other_anchor += anchor
+                break
 
     def flip_selection(self):
         if isinstance(self.selected_item, FlippablePiece):
@@ -189,6 +190,15 @@ class LayoutDrawer:
     def split_selection(self):
         if isinstance(self.selected_item, Anchor):
             self.selected_item.split()
+            self.layout.changed()
+
+    def join_selection(self):
+        if isinstance(self.selected_item, Piece):
+            self.connect_coincident_anchors(self.selected_item)
+            self.layout.changed()
+        elif isinstance(self.selected_item, Anchor):
+            self.connect_coincident_anchor(self.selected_item)
+            self.layout.changed()
 
     def delete_selection(self):
         if isinstance(self.selected_item, Piece):
@@ -211,6 +221,8 @@ class LayoutDrawer:
             self.flip_selection()
         if event.keyval in (Gdk.KEY_p, Gdk.KEY_P):
             self.split_selection()
+        if event.keyval in (Gdk.KEY_j, Gdk.KEY_J):
+            self.join_selection()
         if event.keyval in (Gdk.KEY_Delete, Gdk.KEY_BackSpace):
             self.delete_selection()
         if (
@@ -228,10 +240,11 @@ class LayoutDrawer:
                     new_piece = self.keyboard_piece_placement[event.keyval](
                         layout=self.layout
                     )
-                    self.layout.add_piece(new_piece)
                     self.selected_item.anchors[anchor_name] += new_piece.anchors[
                         new_piece.anchor_names[0]
                     ]
+                    self.connect_coincident_anchors(new_piece)
+                    self.layout.add_piece(new_piece)
                     self.selected_item = new_piece
                     break
 
@@ -241,8 +254,9 @@ class LayoutDrawer:
             and event.keyval in self.keyboard_piece_placement
         ):
             new_piece = self.keyboard_piece_placement[event.keyval](layout=self.layout)
-            self.layout.add_piece(new_piece)
             new_piece.anchors[new_piece.anchor_names[0]] += self.selected_item
+            self.connect_coincident_anchors(new_piece)
+            self.layout.add_piece(new_piece)
             if len(new_piece.anchor_names) > 1:
                 self.selected_item = new_piece.anchors[new_piece.anchor_names[1]]
             else:
