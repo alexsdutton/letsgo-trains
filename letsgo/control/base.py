@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 from typing import Optional
 
+from letsgo import signals
 from letsgo.registry_meta import WithRegistry
 
 __all__ = ["Controller", "SensorController", "TrainController"]
@@ -41,7 +42,17 @@ class Controller(WithRegistry):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.device_present = threading.Event()
+        self._device_present = False
+
+    @property
+    def device_present(self):
+        return self._device_present
+
+    @device_present.setter
+    def device_present(self, present: bool):
+        if present != self._device_present:
+            self._device_present = present
+            signals.controller_presence_changed.send(self, present=present)
 
     def start(self):
         raise NotImplemented

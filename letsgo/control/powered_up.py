@@ -160,9 +160,9 @@ class PoweredUpController(TrainController):
         try:
             if self.hub_manager.is_adapter_powered:
                 logger.info("Starting Powered UP controller")
-                self.device_present.set()
                 self.hub_manager.start_discovery()
                 self.hub_manager_thread.start()
+                self.device_present = True
                 for device in self.hub_manager.devices():
                     pass
             else:

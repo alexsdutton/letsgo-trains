@@ -36,6 +36,7 @@ sensor_removed = signal("sensor-removed")
 sensor_activity = signal("sensor-activity")
 
 controller_changed = signal("controller-changed")
+controller_presence_changed = signal("controller-presence-changed")
 
 connected_changed = signal("connected-changed")
 battery_level_changed = signal("battery-level-changed")

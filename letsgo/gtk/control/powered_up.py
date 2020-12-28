@@ -89,14 +89,6 @@ class GtkPoweredUpController(GtkController, Gtk.Box):
 
         self.pack_start(self.view, True, True, 0)
 
-        self._connect_signals()
-
-    def _connect_signals(self):
-        self.connect("destroy-event", self._disconnect_signals)
-
-    def _disconnect_signals(self, *args):
-        pass
-
     def on_hub_discovered(self, sender, hub: Hub, hub_config: HubConfig):
         self.model.append(
             [
