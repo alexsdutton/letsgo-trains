@@ -21,6 +21,11 @@ from letsgo.track import Anchor, Bounds, Position
 
 
 class Piece(WithRegistry):
+    """Base class for all track pieces.
+
+    Each non-abstract subclass should be registered with a ``letsgo.piece`` entry point.
+    """
+
     entrypoint_group = "letsgo.piece"
 
     anchor_names: Tuple[str, ...]
@@ -44,7 +49,6 @@ class Piece(WithRegistry):
         """The piece controlling the placement of this connected subset of the network"""
         self._position: Optional[Position] = None
         self.position = placement
-        """The inferred position of this piece"""
 
         self.claimed_by = None
         self.reservations: Dict[Train, Dict] = {}
@@ -66,6 +70,7 @@ class Piece(WithRegistry):
 
     @property
     def position(self) -> Optional[Position]:
+        """The inferred position of this piece"""
         return self._position
 
     @position.setter
@@ -119,6 +124,25 @@ class Piece(WithRegistry):
                     seen_pieces.add(next_piece)
 
     def relative_positions(self) -> Dict[str, Position]:
+        """Returns a mapping from anchor name to that anchor's relative position.
+
+        The base implementation provides a relative position for the first anchor,
+        which should always be backwards out from the piece position (i.e. x=0, y=0,
+        theta=pi).
+
+        Subclasses should override and extend this method to provide relative positions
+        for other anchors. e.g., for a hypothetical 90° 40R curve piece:
+
+        >>> def relative_positions(self):
+        >>>     return {
+        >>>         **super().relative_positions(),
+        >>>         'out': Position(40, -40, math.pi / 2),
+        >>>     }
+
+        This method is used when calculating positions for connected pieces, starting
+        from the placement origin (i.e. the piece in a connected subset which has
+        `self.placement` set).
+        """
         return {self.anchor_names[0]: Position(0, 0, math.pi)}
 
     def traversals(self, anchor_from: str) -> Dict[str, Tuple[float, bool]]:
