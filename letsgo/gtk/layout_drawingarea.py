@@ -1,9 +1,11 @@
-from typing import Any, Dict, Optional, Union
+import json
+from typing import Any, Dict, Optional, Type, Union
 
 import cairo
 import math
 
 import gi
+import pkg_resources
 from cairo import Context
 from letsgo import pieces
 
@@ -17,6 +19,8 @@ from letsgo.sensor import Sensor
 from letsgo.track import Anchor, Position
 from .. import signals
 from ..pieces.curve import BaseCurve, CurveDirection
+from ..pieces.points import BasePoints
+from ..track_point import TrackPoint
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -141,10 +145,33 @@ class LayoutDrawer:
     def on_drag_motion(self, widget, drag_context, x, y, time):
         pass
 
-    def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
-        piece_cls = piece_classes[data.get_text()]
+    def on_drag_data_received(self, widget, drag_context, x, y, selection, info, time):
+        try:
+            data = json.loads(selection.get_text())
+        except ValueError:
+            return
+        if not ("entrypoint_group" in data and "entrypoint_name" in data):
+            return
+
+        try:
+            cls = next(
+                pkg_resources.iter_entry_points(
+                    data["entrypoint_group"], data["entrypoint_name"]
+                )
+            ).load()
+        except StopIteration:
+            return
+        except ImportError:
+            return
+
         x, y = self.xy_to_layout(x, y)
 
+        if isinstance(cls, type) and issubclass(cls, Piece):
+            self.place_piece(cls, x, y)
+        elif isinstance(cls, type) and issubclass(cls, Sensor):
+            self.place_sensor(cls, x, y)
+
+    def place_piece(self, piece_cls: Type[Piece], x: float, y: float):
         possible_anchors = self.layout.anchors_qtree.intersect(
             (x - 8, y - 8, x + 8, y + 8)
         )
@@ -160,6 +187,63 @@ class LayoutDrawer:
 
         self.connect_coincident_anchors(piece)
         self.layout.add_piece(piece)
+
+    def place_sensor(self, sensor_cls: Type[Sensor], x: float, y: float):
+        possible_pieces = self.layout.pieces_qtree.intersect(
+            (x - 8, y - 8, x + 8, y + 8)
+        )
+        candidates = []
+        for piece in possible_pieces:
+            for in_anchor in piece.anchor_names:
+                for out_anchor, (length, _) in piece.traversals(in_anchor).items():
+                    offset = 0
+                    try:
+                        step = length / piece.sleepers
+                    except AttributeError:
+                        step = 4
+                    while offset <= length:
+                        pp = piece.point_position(
+                            in_anchor=in_anchor, out_anchor=out_anchor, offset=offset
+                        )
+                        px, py = (
+                            piece.position.x
+                            + pp.x * math.cos(piece.position.angle)
+                            - pp.y * math.sin(piece.position.angle),
+                            piece.position.y
+                            + pp.x * math.sin(piece.position.angle)
+                            + pp.y * math.cos(piece.position.angle),
+                        )
+                        distance = math.dist((x, y), (px, py))
+                        candidates.append(
+                            {
+                                "distance": distance,
+                                "in_anchor": in_anchor,
+                                "out_anchor": out_anchor,
+                                "piece": piece,
+                                "offset": offset,
+                            }
+                        )
+                        offset += step
+        # Always go for the closest, but prefer positions that aren't on points, and
+        # which are coming from the in anchor
+        candidates.sort(
+            key=lambda c: (
+                c["distance"],
+                not isinstance(c["piece"], BasePoints),
+                c["piece"].anchor_names.index(c["in_anchor"]),
+            )
+        )
+        if candidates:
+            candidate = candidates[0]
+            sensor = sensor_cls(
+                layout=self.layout,
+                position=TrackPoint(
+                    piece=candidate["piece"],
+                    anchor_name=candidate["in_anchor"],
+                    offset=candidate["offset"],
+                ),
+            )
+            self.layout.add_sensor(sensor)
 
     def connect_coincident_anchors(self, piece: Piece):
         for anchor in piece.anchors.values():

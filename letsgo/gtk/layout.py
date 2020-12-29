@@ -1,10 +1,12 @@
 import enum
+import json
 
 from gi.repository import GObject, Gtk, Gdk, GdkPixbuf
 from letsgo.drawing import Colors
 
 from letsgo.drawing_options import DrawingOptions
 from letsgo.pieces import piece_classes
+from letsgo.sensor import sensor_classes
 
 
 class PieceColumn(enum.IntEnum):
@@ -38,7 +40,7 @@ class LayoutListBox(Gtk.IconView):
         self.set_pixbuf_column(PieceColumn.pixbuf)
         self.set_columns(2)
 
-        model = Gtk.ListStore(str, str, GdkPixbuf.Pixbuf)
+        model = Gtk.ListStore(object, str, GdkPixbuf.Pixbuf)
         self.set_model(model)
 
         self.populate()
@@ -55,8 +57,16 @@ class LayoutListBox(Gtk.IconView):
         selected_path = self.get_selected_items()[0]
         selected_iter = self.get_model().get_iter(selected_path)
 
-        piece_id = self.get_model().get_value(selected_iter, PieceColumn.id)
-        data.set_text(piece_id, -1)
+        cls = self.get_model().get_value(selected_iter, PieceColumn.id)
+        data.set_text(
+            json.dumps(
+                {
+                    "entrypoint_group": cls.entrypoint_group,
+                    "entrypoint_name": cls.entrypoint_name,
+                }
+            ),
+            -1,
+        )
 
     def populate(self):
         drawing_options = DrawingOptions(
@@ -75,4 +85,9 @@ class LayoutListBox(Gtk.IconView):
             pixbuf = Gdk.pixbuf_get_from_surface(
                 image, 0, 0, image.get_width(), image.get_height()
             )
-            self.get_model().append([piece_id, piece.label, pixbuf])
+            self.get_model().append([piece_cls, piece.label, pixbuf])
+
+        for sensor_id, sensor_cls in sorted(
+            sensor_classes.items(), key=lambda id_cls: id_cls[1].label
+        ):
+            self.get_model().append([sensor_cls, sensor_cls.label, None])
