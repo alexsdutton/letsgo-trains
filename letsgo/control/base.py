@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import threading
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from letsgo import signals
 from letsgo.registry_meta import WithRegistry
@@ -14,8 +14,8 @@ class BinaryControl:
 
 
 class Controllable:
-    _controller = None
-    _controller_kwargs = None
+    _controller: Optional[Controller] = None
+    _controller_kwargs: Optional[Dict[str, Any]] = None
 
     @property
     def controller(self):

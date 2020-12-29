@@ -34,7 +34,7 @@ class MaestroChannelDefinition:
 
     @property
     def subject(self) -> Controllable:
-        return self.binary_control or self.sensor
+        return self.binary_control or self.sensor  # type: ignore
 
     @property
     def mode(self) -> ChannelMode:
@@ -65,7 +65,7 @@ class MaestroController(SensorController):
         self.serial_number = serial_number
         self.channels = channels or {}
         self.pending_channel_definitions: List[
-            Tuple[int, MaestroChannelDefinition]
+            Tuple[int, Optional[MaestroChannelDefinition]]
         ] = list(self.channels.items())
         self._running = threading.Event()
         self._thread = threading.Thread(target=self._process)
@@ -75,6 +75,8 @@ class MaestroController(SensorController):
         return self.maestro.channel_count if self.maestro else None
 
     def set_channel(self, index: int, channel: MaestroChannelDefinition):
+        if not self.channel_count:
+            raise ValueError("Cannot assign channels when not connected")
         if not (0 <= index < self.channel_count):
             raise ValueError("Channel index out of range")
         if channel:

@@ -166,6 +166,7 @@ class LayoutDrawer:
             self.connect_coincident_anchor(anchor)
 
     def connect_coincident_anchor(self, anchor: Anchor):
+        assert anchor.position
         epsilon = 0.0001
         for other_anchor in self.layout.anchors_qtree.intersect(
             (
