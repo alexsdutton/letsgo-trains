@@ -1,4 +1,7 @@
 import time
+from typing import Dict, Type
+
+from pkg_resources import iter_entry_points
 
 from letsgo import signals
 from letsgo.control.base import Controllable, SensorController
@@ -8,6 +11,7 @@ from letsgo.track_point import TrackPoint
 
 class Sensor(Controllable, WithRegistry):
     entrypoint_group = "letsgo.sensor"
+    label: str
 
     def __init__(self, position: TrackPoint, single_direction: bool = False, **kwargs):
         self.position = position
@@ -36,4 +40,13 @@ class Sensor(Controllable, WithRegistry):
 
 
 class HallEffectSensor(Sensor):
-    pass
+    label = "Hall-effect sensor"
+
+
+class BeamSensor(Sensor):
+    label = "Beam sensor"
+
+
+sensor_classes: Dict[str, Type[Sensor]] = {
+    ep.name: ep.load() for ep in iter_entry_points("letsgo.sensor")
+}
