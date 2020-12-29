@@ -57,7 +57,6 @@ class Application(Gtk.Application):
 
     def run(self, *args, **kwargs):
         super().run(*args, **kwargs)
-        self.window.layout.start()
 
     def do_activate(self):
         Gtk.Application.do_activate(self)
