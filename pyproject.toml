@@ -54,6 +54,7 @@ pyqtree = "*"
 
 [tool.poetry.dev-dependencies]
 coverage = "^5.3.1"
+Sphinx = "^3.4.1"
 
 [tool.poetry.scripts]
 letsgo-trains-gtk = "letsgo.gtk.__main__:main"
