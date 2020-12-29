@@ -95,6 +95,7 @@ maestro = "letsgo.gtk.control:GtkMaestroController"
 
 [tool.poetry.plugins."letsgo.sensor"]
 hall-effect = "letsgo.sensor:HallEffectSensor"
+beam = "letsgo.sensor:BeamSensor"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
