@@ -584,16 +584,16 @@ class LayoutDrawer:
             sensor.position.anchor_name, sensor.position.offset
         )
         cr.save()
-        position_matrix = sensor.position.piece.position.as_matrix()
-        cr.translate(*position_matrix.transform_point(px, py))
-        cr.rotate(math.atan2(*position_matrix.transform_distance(0, 1)) - angle)
+        cr.translate(sensor.position.piece.position.x, sensor.position.piece.position.y)
+        cr.rotate(sensor.position.piece.position.angle)
+        cr.translate(px, py)
 
         cr.set_source_rgb(0.1, 0.1, 0)
-        cr.rectangle(-1, 3, 2, 6)
+        cr.rectangle(-1, 4, 2, 2)
         cr.fill()
 
         cr.set_source_rgb(*(SENSOR_ACTIVATED if sensor.activated else SENSOR_NORMAL))
-        cr.arc(0, 8, 0.8, 0, math.tau)
+        cr.arc(0, 5, 0.8, 0, math.tau)
         cr.fill()
 
         cr.restore()
