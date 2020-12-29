@@ -1,3 +1,5 @@
+from typing import Dict, Tuple
+
 import cairo
 import math
 
@@ -53,11 +55,11 @@ class BaseStraight(Piece):
             "out": Position(self.length, 0, 0),
         }
 
-    def point_position(self, in_anchor, offset):
+    def point_position(self, in_anchor, offset, out_anchor=None):
         if in_anchor == "in":
-            return offset, 0, 0
+            return Position(offset, 0, 0)
         elif in_anchor == "out":
-            return self.length - offset, 0, math.pi
+            return Position(self.length - offset, 0, math.pi)
 
 
 class Straight(BaseStraight):

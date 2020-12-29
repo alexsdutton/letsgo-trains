@@ -237,7 +237,7 @@ class BasePoints(FlippablePiece):
         out_anchor = out_anchor or self.state
 
         if in_anchor == "in" and out_anchor == "out":
-            return offset, 0, 0
+            return Position(offset, 0, 0)
         if in_anchor == "in" and out_anchor == "branch":
             t = self.intermediate_branch_t[
                 max(0, min(int(offset / self.branch_length * 100), 99))
@@ -248,7 +248,7 @@ class BasePoints(FlippablePiece):
             x2, y2 = self.branch_bezier(t + 1e-6)
             theta = math.atan2(y2 - y1, x2 - x1)
 
-            return x, y, theta
+            return Position(x, y, theta)
         if in_anchor == "branch":
             t = self.intermediate_branch_t[
                 max(0, min(99 - int(offset / self.branch_length * 100), 99))
@@ -259,9 +259,9 @@ class BasePoints(FlippablePiece):
             x2, y2 = self.branch_bezier(t + 1e-6)
             theta = math.atan2(y2 - y1, x2 - x1)
 
-            return x, y, theta
+            return Position(x, y, theta)
         if in_anchor == "out":
-            return 32 - offset, 0, math.pi
+            return Position(32 - offset, 0, math.pi)
 
 
 class LeftPoints(BasePoints):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+from typing import Dict, Tuple
 
 import cairo
 import cmath
@@ -115,13 +116,13 @@ class BaseCurve(FlippablePiece):
             "out": Position(x.real, x.imag * flip, rotate * flip),
         }
 
-    def point_position(self, in_anchor, offset):
+    def point_position(self, in_anchor, offset, out_anchor=None):
         theta = offset / self.radius
         if in_anchor == "out":
             theta = math.tau / self.per_circle - theta
         x = (cmath.rect(self.radius, theta) - self.radius) * cmath.rect(1, -math.pi / 2)
         flip = -1 if self.direction == CurveDirection.left else 1
-        return x.real, x.imag * flip, theta * flip
+        return Position(x.real, x.imag * flip, theta * flip)
 
     # @classmethod
     # def cast_yaml_data(cls, layout, data):

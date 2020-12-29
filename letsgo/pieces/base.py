@@ -135,7 +135,9 @@ class Piece(WithRegistry):
     def draw(self, cr: Context, drawing_options: DrawingOptions):
         raise NotImplementedError
 
-    def point_position(self, in_anchor: str, offset: float) -> Position:
+    def point_position(
+        self, in_anchor: str, offset: float, out_anchor: str = None
+    ) -> Position:
         raise NotImplementedError
 
     @classmethod

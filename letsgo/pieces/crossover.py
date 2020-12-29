@@ -1,4 +1,5 @@
 import math
+from typing import Dict, Tuple
 
 from letsgo.track import Bounds, Position
 
@@ -58,15 +59,17 @@ class BaseCrossover(Piece):
             "right": Position(self.length / 2, self.length / 2, math.pi / 2),
         }
 
-    def point_position(self, in_anchor, offset):
+    def point_position(self, in_anchor, offset, out_anchor=None) -> Position:
         if in_anchor == "in":
-            return offset, 0, 0
+            return Position(offset, 0, 0)
         elif in_anchor == "out":
-            return self.length - offset, 0, math.pi
+            return Position(self.length - offset, 0, math.pi)
         elif in_anchor == "left":
-            return self.length / 2, self.length / 2 - offset, -math.pi / 2
+            return Position(self.length / 2, self.length / 2 - offset, -math.pi / 2)
         elif in_anchor == "right":
-            return self.length / 2, offset - self.length / 2, math.pi / 2
+            return Position(self.length / 2, offset - self.length / 2, math.pi / 2)
+        else:
+            raise AssertionError
 
 
 class Crossover(BaseCrossover):
