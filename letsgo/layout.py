@@ -236,7 +236,7 @@ class Layout:
                 expected_magnet_position = train.position - train_offset
 
                 distance_forward = expected_magnet_position.distance_to(
-                    sender.position, maximum_distance
+                    sender.track_point, maximum_distance
                 )
                 if distance_forward:
                     train_seen, train_seen_offset, magnet_index_seen = (
@@ -245,7 +245,7 @@ class Layout:
                         i,
                     )
                     maximum_distance = min(distance_forward, maximum_distance)
-                distance_backward = sender.position.distance_to(
+                distance_backward = sender.track_point.distance_to(
                     expected_magnet_position, maximum_distance
                 )
                 if distance_backward:
@@ -262,7 +262,7 @@ class Layout:
         if train_seen:
             self.sensor_magnets_last_seen[sender] = train_seen, magnet_index_seen, when
             branch_decisions = train_seen.position.branch_decisions
-            train_seen.position = sender.position + train_seen_offset
+            train_seen.position = sender.track_point + train_seen_offset
             train_seen.position.branch_decisions = branch_decisions
             signals.train_spotted.send(
                 train_seen, sensor=sender, position=train_seen.position, when=when

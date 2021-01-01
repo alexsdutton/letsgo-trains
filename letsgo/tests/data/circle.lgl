@@ -2,7 +2,7 @@ meta: {}
 sensors:
   - id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
     type: hall-effect
-    position:
+    track_point:
       piece_id: 834c352c-cfce-4522-86b6-792f16303885
       anchor_name: in
       offset: 8

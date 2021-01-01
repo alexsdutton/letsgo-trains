@@ -13,8 +13,10 @@ class Sensor(Controllable, WithRegistry):
     entrypoint_group = "letsgo.sensor"
     label: str
 
-    def __init__(self, position: TrackPoint, single_direction: bool = False, **kwargs):
-        self.position = position
+    def __init__(
+        self, track_point: TrackPoint, single_direction: bool = False, **kwargs
+    ):
+        self.track_point = track_point
         self.single_direction = single_direction
         self._activated = False
         super().__init__(**kwargs)
@@ -22,7 +24,7 @@ class Sensor(Controllable, WithRegistry):
     def to_yaml(self) -> dict:
         return {
             **super().to_yaml(),
-            "position": self.position.to_yaml(),
+            "track_point": self.track_point.to_yaml(),
             "single_direction": self.single_direction,
         }
 

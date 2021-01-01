@@ -584,14 +584,16 @@ class LayoutDrawer:
             self.draw_sensor(sensor, layout, cr)
 
     def draw_sensor(self, sensor: Sensor, layout: Layout, cr: Context):
-        if not (sensor.position and sensor.position.piece.position):
+        if not (sensor.track_point and sensor.track_point.piece.position):
             return
-        px, py, angle = sensor.position.piece.point_position(
-            sensor.position.anchor_name, sensor.position.offset
+        px, py, angle = sensor.track_point.piece.point_position(
+            sensor.track_point.anchor_name, sensor.track_point.offset
         )
         cr.save()
-        cr.translate(sensor.position.piece.position.x, sensor.position.piece.position.y)
-        cr.rotate(sensor.position.piece.position.angle)
+        cr.translate(
+            sensor.track_point.piece.position.x, sensor.track_point.piece.position.y
+        )
+        cr.rotate(sensor.track_point.piece.position.angle)
         cr.translate(px, py)
 
         cr.set_source_rgb(0.1, 0.1, 0)
