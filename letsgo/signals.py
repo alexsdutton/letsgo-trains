@@ -5,6 +5,7 @@ layout_changed = signal("layout-changed")
 
 piece_added = signal("piece-added")
 piece_removed = signal("piece-removed")
+piece_positioned = signal("piece-positioned")
 
 train_added = signal("train-added")
 train_removed = signal("train-removed")

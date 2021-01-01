@@ -80,13 +80,14 @@ class Layout:
     @_changes_layout
     def add_piece(self, piece):
         self.pieces[piece.id] = piece
+        signals.piece_positioned.connect(self.on_piece_positioned, piece)
         for anchor in piece.anchors.values():
             if anchor.id in self.anchors and anchor != self.anchors[anchor.id]:
                 self.anchors[anchor.id] += anchor
             else:
                 self.anchors[anchor.id] = anchor
 
-        self.piece_positioned(piece)
+        self.on_piece_positioned(piece)
         signals.piece_added.send(self, piece=piece)
 
     @_changes_layout
@@ -98,6 +99,7 @@ class Layout:
             del self.anchors[piece.anchors[anchor_name].id]
         del self.pieces[piece.id]
         self.pieces_qtree.remove_item(piece)
+        signals.piece_positioned.disconnect(self.on_piece_positioned, piece)
         signals.piece_removed.send(self, piece=piece)
 
     def add_train(self, train):
@@ -150,12 +152,12 @@ class Layout:
         signals.sensor_removed.send(self, sensor=sensor)
         signals.sensor_activity.disconnect(self.on_sensor_activity, sender=sensor)
 
-    def piece_positioned(self, piece):
-        if piece.position:
-            self.pieces_qtree.insert_item(piece, piece.position)
+    def on_piece_positioned(self, sender: Piece):
+        if sender.position:
+            self.pieces_qtree.insert_item(sender, sender.position)
         else:
-            self.pieces_qtree.remove_item(piece)
-        for anchor in piece.anchors.values():
+            self.pieces_qtree.remove_item(sender)
+        for anchor in sender.anchors.values():
             self.anchor_positioned(anchor)
         self.changed()
 
