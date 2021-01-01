@@ -64,6 +64,12 @@ class Position:
             "angle": self.angle,
         }
 
+    def angle_is_opposite(self, other: Position):
+        r = (self.angle - other.angle - math.pi) % math.tau
+        if r >= math.pi:
+            r -= math.tau
+        return abs(r) < 0.001
+
 
 Bounds = collections.namedtuple("Bounds", ("x", "y", "width", "height"))
 

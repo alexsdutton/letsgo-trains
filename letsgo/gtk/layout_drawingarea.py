@@ -260,7 +260,13 @@ class LayoutDrawer:
                 anchor.position.y + epsilon,
             )
         ):
-            if anchor != other_anchor and len(anchor) == 1 and len(other_anchor) == 1:
+            other_anchor: Anchor
+            if (
+                anchor != other_anchor
+                and len(anchor) == 1
+                and len(other_anchor) == 1
+                and anchor.position.angle_is_opposite(other_anchor.position)
+            ):
                 other_anchor += anchor
                 break
 
