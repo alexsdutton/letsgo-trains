@@ -16,9 +16,11 @@ controllers:
         color: Orange
   - id: dd5fa65f-6775-4793-9535-b43182dd1855
     type: maestro
+    serial_number: null
     channels:
       0:
         sensor_id: 9a8f49a7-4b7f-4755-acf1-11a0e9cdf10c
+        normally_high: true
 trains: []
 stations: []
 pieces:
