@@ -3,25 +3,17 @@ from __future__ import annotations
 import functools
 import logging
 import threading
-import time
-from typing import Dict, Union
+from typing import Dict
 
-import pyqtree
-from letsgo.utils.quadtree import ResizingIndex
-
-from letsgo.pieces.curve import CurveDirection
-from letsgo.pieces.points import BasePoints
-
-from letsgo.track import Anchor, Position
-
-from letsgo import track
 from letsgo.control import Controller, SensorController, TrainController
-from letsgo.pieces import piece_classes, Piece
-from letsgo.routeing import Stop, Itinerary
+from letsgo.pieces import Piece
+from letsgo.pieces.points import BasePoints
+from letsgo.routeing import Itinerary
 from letsgo.sensor import Sensor
-from letsgo.station import Station, Platform
-from letsgo.train import Train, TrackPoint, Car
-
+from letsgo.station import Station
+from letsgo.track import Anchor
+from letsgo.train import Train
+from letsgo.utils.quadtree import ResizingIndex
 from . import signals
 
 logger = logging.getLogger(__name__)

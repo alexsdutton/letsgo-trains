@@ -1,7 +1,6 @@
 import typing
 
 from gi.repository import GObject, Gtk
-from letsgo.layout import Layout
 
 from letsgo.train import Train
 from .. import signals

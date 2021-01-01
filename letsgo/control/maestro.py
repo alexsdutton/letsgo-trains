@@ -8,9 +8,7 @@ import usb
 
 from maestro import Maestro
 from maestro.enums import ChannelMode
-
 from .base import BinaryControl, Controllable, SensorController
-from .. import signals
 
 if TYPE_CHECKING:
     from ..sensor import Sensor
