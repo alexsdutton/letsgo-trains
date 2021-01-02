@@ -3,6 +3,7 @@ import enum
 from letsgo.pieces import Piece
 
 from . import track
+from .track import Position
 
 _sentinel = object()
 
@@ -46,6 +47,12 @@ class TrackPoint:
             "out_anchor": self.out_anchor,
             "offset": self.offset,
         }
+
+    @property
+    def position(self) -> Position:
+        self.piece.point_position(
+            in_anchor=self.in_anchor, out_anchor=self.out_anchor, offset=self.offset
+        )
 
     def next_piece(self, distance=0, use_branch_decisions=False):
         anchor_distance = self.piece.traversals(self.in_anchor)[self.out_anchor][0]
