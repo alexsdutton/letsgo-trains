@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import math
 import time
-from typing import Dict, Type
+from typing import Dict, Type, TYPE_CHECKING
 
 from cairo import Context
 from pkg_resources import iter_entry_points
@@ -13,6 +15,9 @@ from letsgo.registry_meta import WithRegistry
 from letsgo.track import Bounds, Position
 from letsgo.track_point import TrackPoint
 from letsgo.trackside_item import TracksideItem
+
+if TYPE_CHECKING:
+    from letsgo.layout import Layout
 
 # Colors, red and green
 SENSOR_NORMAL = (1, 0, 0)
@@ -34,6 +39,9 @@ class Sensor(Controllable, TracksideItem, WithRegistry):
         signals.piece_positioned.connect(
             self.on_piece_positioned, self.track_point.piece
         )
+        signals.piece_removed.connect(
+            self.on_piece_removed, self.track_point.piece.layout
+        )
         if track_point.position:
             self.on_piece_positioned(track_point.piece)
 
@@ -47,6 +55,10 @@ class Sensor(Controllable, TracksideItem, WithRegistry):
         if position != self._position:
             self._position = position
             signals.sensor_positioned.send(self)
+
+    def on_piece_removed(self, sender: Layout, piece: Piece):
+        if piece == self.track_point.piece:
+            self.layout.remove_sensor(self)
 
     @property
     def position(self):

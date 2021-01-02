@@ -305,6 +305,10 @@ class LayoutDrawer:
                 self.highlight_item = None
             self.selected_item = next_selected_item
             self.drawing_area.queue_draw()
+        if isinstance(self.selected_item, Sensor):
+            self.layout.remove_sensor(self.selected_item)
+            self.selected_item = None
+            self.drawing_area.queue_draw()
 
     def on_key_press(self, widget, event):
         if event.keyval in (Gdk.KEY_f, Gdk.KEY_F):

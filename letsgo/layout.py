@@ -155,6 +155,7 @@ class Layout:
     @_changes_layout
     def remove_sensor(self, sensor):
         del self.sensors[sensor.id]
+        self.trackside_items_qtree.remove_item(sensor)
         signals.sensor_positioned.disconnect(self.on_trackside_item_positioned, sensor)
         signals.sensor_removed.send(self, sensor=sensor)
         signals.sensor_activity.disconnect(self.on_sensor_activity, sender=sensor)
