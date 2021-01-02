@@ -148,10 +148,10 @@ class Piece(WithRegistry):
     def traversals(self, anchor_from: str) -> Dict[str, Tuple[float, bool]]:
         raise NotImplementedError
 
-    def available_traversal(self, anchor_name):
-        for anchor_name, (distance, available) in self.traversals(anchor_name).items():
+    def available_traversal(self, in_anchor) -> Optional[Tuple[str, float]]:
+        for out_anchor, (distance, available) in self.traversals(in_anchor).items():
             if available:
-                return anchor_name, distance
+                return out_anchor, distance
 
     def bounds(self) -> Bounds:
         raise NotImplementedError
