@@ -48,7 +48,7 @@ class Router:
             distance, track_point, choices = track_points.pop(
                 0
             )  # type: float, TrackPoint, Tuple[Any, ...]
-            traversals = track_point.piece.traversals(track_point.anchor_name)
+            traversals = track_point.piece.traversals(track_point.in_anchor)
             for anchor_to, (anchor_distance, _) in traversals.items():
                 anchor_distance -= track_point.offset
                 next_piece, next_anchor = track_point.piece.anchors[anchor_to].next(
@@ -59,7 +59,7 @@ class Router:
                     anchor_choices += ((track_point.piece, anchor_to),)
                 if (
                     next_piece == to_trackpoint.piece
-                    and next_anchor == to_trackpoint.anchor_name
+                    and next_anchor == to_trackpoint.in_anchor
                 ):
                     for choice_piece, choice_anchor in anchor_choices:
                         routes[choice_piece].add(choice_anchor)

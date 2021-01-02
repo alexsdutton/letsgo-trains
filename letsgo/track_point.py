@@ -22,31 +22,40 @@ class TrackPoint:
     def __init__(
         self,
         piece: Piece,
-        anchor_name: str,
+        in_anchor: str,
+        out_anchor: str = None,
         offset: float = 0,
         branch_decisions=None,
         train=None,
     ):
-        self.piece, self.anchor_name, self.offset = piece, anchor_name, offset
+        self.piece = piece
+        self.in_anchor = in_anchor
+        self.out_anchor = out_anchor or piece.available_traversal(in_anchor)[0]
+        self.offset = offset
         self.branch_decisions = branch_decisions or {}
+        """Intended to be used for backtracking
+
+        This is so we know which way we came through points when there were multiple
+        options."""
         self.train = train
 
     def to_yaml(self):
         return {
             "piece_id": self.piece.id,
-            "anchor_name": self.anchor_name,
+            "in_anchor": self.in_anchor,
+            "out_anchor": self.out_anchor,
             "offset": self.offset,
         }
 
     def next_piece(self, distance=0, use_branch_decisions=False):
-        out_anchor_name, anchor_distance = self._get_traversal(
-            self.piece, self.anchor_name, use_branch_decisions
+        anchor_distance = self.piece.traversals(self.in_anchor)[self.out_anchor][0]
+        next_piece, next_in_anchor = self.piece.anchors[self.out_anchor].next(
+            self.piece
         )
-        next_piece, anchor_name = self.piece.anchors[out_anchor_name].next(self.piece)
         return (
             TrackPoint(
                 piece=next_piece,
-                anchor_name=anchor_name,
+                in_anchor=next_in_anchor,
                 offset=0,
                 train=self.train,
                 branch_decisions=self.branch_decisions,
@@ -65,26 +74,27 @@ class TrackPoint:
             )
             return out_anchor_name, anchor_distance
 
-    def _add(self, piece, anchor_name, offset, use_branch_decisions=False):
+    def _add(self, piece, in_anchor, out_anchor, offset, use_branch_decisions=False):
         out_anchor_name, anchor_distance = self._get_traversal(
-            piece, anchor_name, use_branch_decisions
+            piece, in_anchor, use_branch_decisions
         )
         while offset > anchor_distance:
-            next_piece, anchor_name = piece.anchors[out_anchor_name].next(piece)
+            next_piece, in_anchor = piece.anchors[out_anchor_name].next(piece)
             offset -= anchor_distance
             if not next_piece:
                 raise EndOfTheLine(piece, out_anchor_name, offset)
             else:
                 piece = next_piece
                 out_anchor_name, anchor_distance = self._get_traversal(
-                    piece, anchor_name, use_branch_decisions
+                    piece, in_anchor, use_branch_decisions
                 )
-        return piece, anchor_name, offset
+        return piece, in_anchor, None, offset
 
     def copy(self, train=_sentinel):
         return type(self)(
             piece=self.piece,
-            anchor_name=self.anchor_name,
+            in_anchor=self.in_anchor,
+            out_anchor=self.out_anchor,
             offset=self.offset,
             branch_decisions=self.branch_decisions,
             train=self.train if train == _sentinel else train,
@@ -92,7 +102,7 @@ class TrackPoint:
 
     def reversed(self):
         anchor_name, anchor_distance = self._get_traversal(
-            self.piece, self.anchor_name, True
+            self.piece, self.in_anchor, True
         )
         return TrackPoint(
             piece=self.piece,
@@ -104,39 +114,43 @@ class TrackPoint:
 
     def __add__(self, distance):
         return TrackPoint(
-            *self._add(self.piece, self.anchor_name, self.offset + distance),
+            *self._add(
+                self.piece, self.in_anchor, self.out_anchor, self.offset + distance
+            ),
             branch_decisions=self.branch_decisions.copy(),
         )
 
     def __iadd__(self, distance):
-        self.piece, self.anchor_name, self.offset = self._add(
-            self.piece, self.anchor_name, self.offset + distance
+        self.piece, self.in_anchor, self.out_anchor, self.offset = self._add(
+            self.piece, self.in_anchor, self.out_anchor, self.offset + distance
         )
         return self
 
-    def _sub(self, piece, anchor_name, offset):
-        anchor_name, anchor_distance = self._get_traversal(piece, anchor_name, True)
-        piece, anchor_name, offset = self._add(
-            piece, anchor_name, anchor_distance + offset, True
+    def _sub(self, piece, in_anchor, offset):
+        in_anchor, anchor_distance = self._get_traversal(piece, in_anchor, True)
+        piece, in_anchor, out_anchor, offset = self._add(
+            piece, in_anchor, anchor_distance + offset, True
         )
-        anchor_name, anchor_distance = self._get_traversal(piece, anchor_name, True)
-        return piece, anchor_name, anchor_distance - offset
+        anchor_name, anchor_distance = self._get_traversal(piece, in_anchor, True)
+        return piece, in_anchor, None, anchor_distance - offset
 
     def __sub__(self, distance):
         return TrackPoint(
-            *self._sub(self.piece, self.anchor_name, distance - self.offset),
+            *self._sub(self.piece, self.in_anchor, distance - self.offset),
             branch_decisions=self.branch_decisions.copy(),
             train=self.train,
         )
 
     def __isub__(self, distance):
-        self.piece, self.anchor_name, self.offset = self._sub(
-            self.piece, self.anchor_name, distance - self.offset
+        self.piece, self.in_anchor, self.out_anchor, self.offset = self._sub(
+            self.piece, self.in_anchor, distance - self.offset
         )
         return self
 
     def __str__(self):
-        return f"TrackPoint({self.piece} {self.anchor_name} {self.offset})"
+        return (
+            f"TrackPoint({self.piece} {self.in_anchor} {self.out_anchor} {self.offset})"
+        )
 
     def distance_to(self, other, maximum_distance=1000):
         distance = 0

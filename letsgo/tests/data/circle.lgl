@@ -4,7 +4,8 @@ sensors:
     type: hall-effect
     track_point:
       piece_id: 834c352c-cfce-4522-86b6-792f16303885
-      anchor_name: in
+      in_anchor: in
+      out_anchor: out
       offset: 8
     single_direction: true
 controllers:
