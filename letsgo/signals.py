@@ -35,6 +35,7 @@ controller_removed = signal("controller-removed")
 sensor_added = signal("sensor-added")
 sensor_removed = signal("sensor-removed")
 sensor_activity = signal("sensor-activity")
+sensor_positioned = signal("sensor-positioned")
 
 controller_changed = signal("controller-changed")
 controller_presence_changed = signal("controller-presence-changed")

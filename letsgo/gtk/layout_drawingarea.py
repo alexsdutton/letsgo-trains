@@ -21,13 +21,11 @@ from .. import signals
 from ..pieces.curve import BaseCurve, CurveDirection
 from ..pieces.points import BasePoints
 from ..track_point import TrackPoint
+from ..trackside_item import TracksideItem
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import GObject, Gdk, Gtk
-
-SENSOR_NORMAL = (1, 0, 0)
-SENSOR_ACTIVATED = (0, 1, 0)
 
 
 class LayoutDrawer:
@@ -237,9 +235,10 @@ class LayoutDrawer:
             candidate = candidates[0]
             sensor = sensor_cls(
                 layout=self.layout,
-                position=TrackPoint(
+                track_point=TrackPoint(
                     piece=candidate["piece"],
-                    anchor_name=candidate["in_anchor"],
+                    in_anchor=candidate["in_anchor"],
+                    out_anchor=candidate["out_anchor"],
                     offset=candidate["offset"],
                 ),
             )
@@ -402,6 +401,9 @@ class LayoutDrawer:
 
     def get_item_under_cursor(self, event):
         x, y = self.xy_to_layout(event.x, event.y)
+        trackside_items = self.layout.trackside_items_qtree.intersect((x, y, x, y))
+        if trackside_items:
+            return trackside_items[0]
         anchors = self.layout.anchors_qtree.intersect((x - 2, y - 2, x + 2, y + 2))
         if anchors:
             return anchors[0]
@@ -505,6 +507,13 @@ class LayoutDrawer:
             )
             cr.set_source_rgb(0.2, 0.2, 1)
             cr.fill()
+        elif (
+            isinstance(self.selected_item, TracksideItem)
+            and self.selected_item.position
+        ):
+            self.draw_sensor(
+                self.selected_item, layout, cr, self.selection_drawing_options
+            )
 
     def draw_piece(self, piece: Piece, cr: Context, drawing_options: DrawingOptions):
         if not piece.position:
@@ -583,26 +592,20 @@ class LayoutDrawer:
         for sensor in layout.sensors.values():
             self.draw_sensor(sensor, layout, cr)
 
-    def draw_sensor(self, sensor: Sensor, layout: Layout, cr: Context):
-        if not (sensor.track_point and sensor.track_point.piece.position):
+    def draw_sensor(
+        self,
+        sensor: Sensor,
+        layout: Layout,
+        cr: Context,
+        drawing_options: DrawingOptions = None,
+    ):
+        if not sensor.position:
             return
-        px, py, angle = sensor.track_point.piece.point_position(
-            sensor.track_point.anchor_name, sensor.track_point.offset
-        )
         cr.save()
-        cr.translate(
-            sensor.track_point.piece.position.x, sensor.track_point.piece.position.y
-        )
-        cr.rotate(sensor.track_point.piece.position.angle)
-        cr.translate(px, py)
+        cr.translate(sensor.position.x, sensor.position.y)
+        cr.rotate(sensor.position.angle)
 
-        cr.set_source_rgb(0.1, 0.1, 0)
-        cr.rectangle(-1, 4, 2, 2)
-        cr.fill()
-
-        cr.set_source_rgb(*(SENSOR_ACTIVATED if sensor.activated else SENSOR_NORMAL))
-        cr.arc(0, 5, 0.8, 0, math.tau)
-        cr.fill()
+        sensor.draw(cr, drawing_options or self.drawing_options)
 
         cr.restore()
 

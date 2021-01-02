@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from letsgo.pieces import Piece
 
@@ -49,10 +50,11 @@ class TrackPoint:
         }
 
     @property
-    def position(self) -> Position:
-        self.piece.point_position(
-            in_anchor=self.in_anchor, out_anchor=self.out_anchor, offset=self.offset
-        )
+    def position(self) -> Optional[Position]:
+        if self.piece.position:
+            return self.piece.position + self.piece.point_position(
+                in_anchor=self.in_anchor, out_anchor=self.out_anchor, offset=self.offset
+            )
 
     def next_piece(self, distance=0, use_branch_decisions=False):
         anchor_distance = self.piece.traversals(self.in_anchor)[self.out_anchor][0]

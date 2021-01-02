@@ -15,6 +15,7 @@ from letsgo.track import Anchor
 from letsgo.train import Train
 from letsgo.utils.quadtree import ResizingIndex
 from . import signals
+from .trackside_item import TracksideItem
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,8 @@ class Layout:
 
         self.pieces_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
         self.anchors_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+        self.trackside_items_qtree = ResizingIndex(bbox=(-80, -80, 80, 80))
+        """QTree for things like sensors, lights, and boom barriers"""
 
         self.running = threading.Event()
         self._epoch = 0
@@ -143,12 +146,16 @@ class Layout:
     @_changes_layout
     def add_sensor(self, sensor):
         self.sensors[sensor.id] = sensor
+        signals.sensor_positioned.connect(self.on_trackside_item_positioned, sensor)
+        if sensor.position:
+            self.on_trackside_item_positioned(sensor)
         signals.sensor_added.send(self, sensor=sensor)
         signals.sensor_activity.connect(self.on_sensor_activity, sender=sensor)
 
     @_changes_layout
     def remove_sensor(self, sensor):
         del self.sensors[sensor.id]
+        signals.sensor_positioned.disconnect(self.on_trackside_item_positioned, sensor)
         signals.sensor_removed.send(self, sensor=sensor)
         signals.sensor_activity.disconnect(self.on_sensor_activity, sender=sensor)
 
@@ -168,6 +175,14 @@ class Layout:
             self.anchors_qtree.remove_item(anchor)
         while anchor.subsumes:
             self.anchors_qtree.remove_item(anchor.subsumes.pop())
+
+    def on_trackside_item_positioned(self, trackside_item: TracksideItem):
+        if trackside_item.position:
+            self.trackside_items_qtree.insert_item(
+                trackside_item, trackside_item.position
+            )
+        else:
+            self.trackside_items_qtree.remove_item(trackside_item)
 
     def tick(self, sender, time, time_elapsed):
         for train in self.trains.values():
